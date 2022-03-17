@@ -34,3 +34,7 @@ func NewHelper(config config.Config) *Helper {
 	search := elasticSearchHelper.NewElasticSearchHelper(config.ElasticSearch.ElasticSearchOn)
 	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search}
 }
+
+func main() {
+
+}

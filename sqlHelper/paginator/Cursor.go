@@ -2,8 +2,8 @@ package paginator
 
 import (
 	"fmt"
+	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/uptrace/bun"
-	"mdgkb/mdgkb-server/helpers/sqlHelper/filter"
 )
 
 type Cursor struct {
