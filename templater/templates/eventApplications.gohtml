@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        .title {
+               text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="title">
+    <h3>Заявки на мероприятие </h3>
+    <h4>{{.News.Title}}</h4>
+</div>
+<ul>
+    {{range .EventApplications}}
+        <li>
+           ФИО: {{ .User.Human.GetFullName}} <br/>
+           Email: {{range .User.Human.ContactInfo.Emails}} {{ .Address}} {{end}}<br/>
+           Телефон: {{range .User.Human.ContactInfo.TelephoneNumbers}} {{ .Number}} {{end}} <br/>
+        </li>
+        {{range .FieldValues}}
+            <li>
+                {{.Field.Name}}: {{.Value}}
+            </li>
+        {{end}}
+    {{end}}
+    <hr>
+</ul>
+
+
+
+</body>
+</html>
+
