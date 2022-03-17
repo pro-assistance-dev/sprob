@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/spf13/viper"
+	"os"
 )
 
 type Config struct {
@@ -51,8 +52,8 @@ type ElasticSearch struct {
 	ElasticSearchOn  bool   `mapstructure:"ELASTIC_SEARCH_ON"`
 }
 
-func LoadConfig(configPath string) (config *Config, err error) {
-	viper.AddConfigPath(configPath)
+func LoadConfig() (config *Config, err error) {
+	viper.AddConfigPath(getEnvLocation())
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
@@ -62,4 +63,16 @@ func LoadConfig(configPath string) (config *Config, err error) {
 	}
 	err = viper.Unmarshal(&config)
 	return config, err
+}
+
+func getEnvLocation() string {
+	envLocation := os.Getenv("ENV_LOCATION")
+	if envLocation != "" {
+		return envLocation
+	}
+	envLocation, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	return envLocation
 }
