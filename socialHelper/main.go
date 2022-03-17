@@ -3,39 +3,32 @@ package socialHelper
 import (
 	"context"
 	"fmt"
+	"github.com/pro-assistance/pro-assister/config"
 	"log"
-	"mdgkb/mdgkb-server/helpers/config"
-	"mdgkb/mdgkb-server/models"
 	"net/http"
 )
 
-type Social struct {
+type SocialHelper struct {
 	config.Social
 }
 
-func (i *Social) buildInstagramURL() string {
+func (i *SocialHelper) buildInstagramURL() string {
 	instagramApi := "https://graph.instagram.com"
 	fields := "id,media_url,media_type,thumbnail_url,permalink,caption"
 	return fmt.Sprintf("%s/%s/media?fields=%s&access_token=%s", instagramApi, i.InstagramID, fields, i.InstagramToken)
 }
 
-func (i *Social) buildYouTubeURL() string {
+func (i *SocialHelper) buildYouTubeURL() string {
 	const youTubeApi = "https://www.googleapis.com/youtube/v3/search"
 	options := "&part=snippet&maxResults=6&order=date&type=video"
 	return fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options)
 }
 
-type SocialType string
-
-const (
-	Instagram SocialType = "Instagram"
-)
-
-func NewSocial(config config.Social) *Social {
-	return &Social{config}
+func NewSocial(config config.Social) *SocialHelper {
+	return &SocialHelper{config}
 }
 
-func (i *Social) sendRequest(url string) *http.Response {
+func (i *SocialHelper) sendRequest(url string) *http.Response {
 	ctx := context.Background()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -49,7 +42,7 @@ func (i *Social) sendRequest(url string) *http.Response {
 	return resp
 }
 
-func (i *Social) GetWebFeed() models.Socials {
+func (i *SocialHelper) GetWebFeed() Socials {
 	//instagram := instagramStruct{}
 	//resp := i.sendRequest(i.buildInstagramURL())
 	//instagram.decode(resp)

@@ -13,7 +13,7 @@ type instagramElement struct {
 	MediaUrlSnake string     `json:"media_url"`
 	MediaUrlCamel string     `json:"mediaUrl"`
 	ThumbnailUrl  string     `json:"thumbnail_url"`
-	MediaType     mediaType  `json:"media_type"`
+	MediaType     MediaType  `json:"media_type"`
 }
 
 func (i *instagramElement) setMediaSRC() {
@@ -42,11 +42,3 @@ func (i *instagramStruct) decode(data *http.Response) {
 		i.InstagramElements[index].setMediaSRC()
 	}
 }
-
-type mediaType string
-
-const (
-	MediaTypeImage         mediaType = "IMAGE"
-	MediaTypeVideo         mediaType = "VIDEO"
-	MediaTypeCarouselAlbum mediaType = "CAROUSEL_ALBUM"
-)

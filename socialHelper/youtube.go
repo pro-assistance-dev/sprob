@@ -3,7 +3,6 @@ package socialHelper
 import (
 	"encoding/json"
 	"log"
-	"mdgkb/mdgkb-server/models"
 	"net/http"
 )
 
@@ -35,16 +34,16 @@ type youTubeStruct struct {
 	Items youTubeElements `json:"items"`
 }
 
-func (i *youTubeStruct) getWebFeed(data *http.Response) models.Socials {
+func (i *youTubeStruct) getWebFeed(data *http.Response) Socials {
 	i.decode(data)
-	socials := make(models.Socials, 0)
+	socials := make(Socials, 0)
 	for index := range i.Items {
-		item := models.Social{
-			Type:        models.SocialTypeYouTube,
+		item := Social{
+			Type:        SocialTypeYouTube,
 			Description: i.Items[index].Snippet.Description,
 			Link:        "https://www.youtube.com/watch?v=" + i.Items[index].YouTubeID.VideoID,
 			Image:       i.Items[index].Snippet.YouTubeThumbnails.Medium.Url,
-			MediaType:   models.MediaTypeImage,
+			MediaType:   MediaTypeImage,
 		}
 		socials = append(socials, &item)
 	}

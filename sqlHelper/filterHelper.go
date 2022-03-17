@@ -2,9 +2,9 @@ package sqlHelper
 
 import (
 	"github.com/gin-gonic/gin"
-	"mdgkb/mdgkb-server/helpers/sqlHelper/filter"
-	"mdgkb/mdgkb-server/helpers/sqlHelper/paginator"
-	"mdgkb/mdgkb-server/helpers/sqlHelper/sorter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
+	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
 )
 
 type QueryFilter struct {

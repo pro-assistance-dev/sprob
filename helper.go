@@ -20,7 +20,7 @@ type Helper struct {
 	SQL      *sqlHelper.SQLHelper
 	Token    *tokenHelper.TokenHelper
 	Email    *emailHelper.EmailHelper
-	Social   *socialHelper.Social
+	Social   *socialHelper.SocialHelper
 }
 
 func NewHelper(config config.Config) *Helper {
