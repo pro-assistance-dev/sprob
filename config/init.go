@@ -51,8 +51,8 @@ type ElasticSearch struct {
 	ElasticSearchOn  bool   `mapstructure:"ELASTIC_SEARCH_ON"`
 }
 
-func LoadConfig() (config *Config, err error) {
-	viper.AddConfigPath(".")
+func LoadConfig(configPath string) (config *Config, err error) {
+	viper.AddConfigPath(configPath)
 	viper.SetConfigName(".env")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
