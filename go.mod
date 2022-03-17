@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.12.0
 	github.com/spf13/viper v1.10.1
-	github.com/uptrace/bun v1.1.1
+	github.com/uptrace/bun v1.0.22
 )
 
 require (
