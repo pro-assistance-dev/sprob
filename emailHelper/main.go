@@ -44,6 +44,7 @@ func (e *EmailHelper) sendEmail() error {
 		e.config.Password,
 		e.config.Server,
 	)
+
 	header := map[string]string{}
 	header["To"] = strings.Join(e.request.To, ",")
 	header["From"] = e.config.From
@@ -59,16 +60,17 @@ func (e *EmailHelper) sendEmail() error {
 	message += "\r\n" + e.request.Body
 	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
 	host, _, _ := net.SplitHostPort(servername)
-	//TLS config
+
 	tlsconfig := &tls.Config{
 		InsecureSkipVerify: false, //nolint:gosec
 		ServerName:         host,
 	}
-	c, err := smtp.Dial(servername)
+	conn, err := tls.Dial("tcp", servername, tlsconfig)
 	if err != nil {
 		return err
 	}
-	if err = c.StartTLS(tlsconfig); err != nil {
+	c, err := smtp.NewClient(conn, host)
+	if err != nil {
 		return err
 	}
 	//Auth
