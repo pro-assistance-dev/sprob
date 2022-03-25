@@ -7,6 +7,7 @@ import (
 
 type Config struct {
 	ServerPort string `mapstructure:"SERVER_PORT"`
+	ServerHost string `mapstructure:"SERVER_HOST"`
 
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
