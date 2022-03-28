@@ -22,6 +22,7 @@ func NewTokenHelper(tokenSecret string) *TokenHelper {
 type AccessDetails struct {
 	AccessUuid string
 	UserID     string
+	UserRole   string
 }
 
 type TokenDetails struct {
@@ -33,7 +34,7 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-func (h *TokenHelper) CreateToken(userID string) (*TokenDetails, error) {
+func (h *TokenHelper) CreateToken(userID string, userRole string) (*TokenDetails, error) {
 	td := &TokenDetails{}
 	td.AtExpires = time.Now().Add(time.Second).Unix()
 	td.AccessUuid = uuid.NewString()
@@ -48,6 +49,7 @@ func (h *TokenHelper) CreateToken(userID string) (*TokenDetails, error) {
 	atClaims["authorized"] = true
 	atClaims["access_uuid"] = td.AccessUuid
 	atClaims["user_id"] = userID
+	atClaims["user_role"] = userRole
 	atClaims["exp"] = td.AtExpires
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	td.AccessToken, err = at.SignedString([]byte(h.TokenSecret))
@@ -81,16 +83,14 @@ func (h *TokenHelper) RefreshToken(refreshToken string) (*TokenDetails, error) {
 			return nil, err
 		}
 	}
-	return h.CreateToken(userID)
-}
-
-func (h *TokenHelper) GetUserID(c *gin.Context) (*uuid.UUID, error) {
-	accessDetail, err := h.extractTokenMetadata(c.Request)
-	if err != nil {
-		return nil, err
+	var userRole string
+	if ok && token.Valid {
+		userRole, ok = claims["user_role"].(string)
+		if !ok {
+			return nil, err
+		}
 	}
-	uuidFromString, err := uuid.Parse(accessDetail.UserID)
-	return &uuidFromString, err
+	return h.CreateToken(userID, userRole)
 }
 
 func (h *TokenHelper) VerifyToken(tokenString string) (*jwt.Token, error) {
@@ -121,9 +121,14 @@ func (h *TokenHelper) extractTokenMetadata(r *http.Request) (*AccessDetails, err
 		if !ok {
 			return nil, err
 		}
+		userRole, ok := claims["user_role"].(string)
+		if !ok {
+			return nil, err
+		}
 		return &AccessDetails{
 			AccessUuid: accessUuid,
 			UserID:     userID,
+			UserRole:   userRole,
 		}, nil
 	}
 	return nil, err
@@ -136,6 +141,23 @@ func (h *TokenHelper) extractToken(r *http.Request) string {
 		return strArr[1]
 	}
 	return bearToken
+}
+
+func (h *TokenHelper) GetUserID(c *gin.Context) (*uuid.UUID, error) {
+	accessDetail, err := h.extractTokenMetadata(c.Request)
+	if err != nil {
+		return nil, err
+	}
+	uuidFromString, err := uuid.Parse(accessDetail.UserID)
+	return &uuidFromString, err
+}
+
+func (h *TokenHelper) GetUserRole(c *gin.Context) (string, error) {
+	accessDetail, err := h.extractTokenMetadata(c.Request)
+	if err != nil {
+		return "", err
+	}
+	return accessDetail.UserRole, err
 }
 
 //
