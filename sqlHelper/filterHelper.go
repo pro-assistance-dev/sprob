@@ -8,13 +8,16 @@ import (
 )
 
 type QueryFilter struct {
-	ID        *string
+	Col       string
+	Value     string
 	Filter    *filter.Filter
 	Sorter    *sorter.Sorter
 	Paginator *paginator.Paginator
 }
 
 func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
+	col := c.Query("col")
+	value := c.Query("value")
 	filterItem, err := filter.NewFilter(c)
 	if err != nil {
 		return nil, err
@@ -27,6 +30,5 @@ func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
 	if err != nil {
 		return nil, err
 	}
-	id := c.Param("id")
-	return &QueryFilter{ID: &id, Filter: filterItem, Sorter: sorterItem, Paginator: paginatorItem}, nil
+	return &QueryFilter{Col: col, Value: value, Filter: filterItem, Sorter: sorterItem, Paginator: paginatorItem}, nil
 }
