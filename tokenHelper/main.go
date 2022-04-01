@@ -35,12 +35,12 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-func (h *TokenHelper) CreateToken(userID string, userRole string) (*TokenDetails, error) {
+func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID string) (*TokenDetails, error) {
 	td := &TokenDetails{}
-	td.AtExpires = time.Now().Add(time.Second).Unix()
+	td.AtExpires = time.Now().Add(time.Hour).Unix()
 	td.AccessUuid = uuid.NewString()
 
-	td.RtExpires = time.Now().Add(time.Minute).Unix()
+	td.RtExpires = time.Now().Add(time.Hour).Unix()
 	td.RefreshUuid = td.AccessUuid + "++" + userID
 
 	var err error
@@ -51,6 +51,7 @@ func (h *TokenHelper) CreateToken(userID string, userRole string) (*TokenDetails
 	atClaims["access_uuid"] = td.AccessUuid
 	atClaims["user_id"] = userID
 	atClaims["user_role"] = userRole
+	atClaims["user_role_id"] = userRoleID
 	atClaims["exp"] = td.AtExpires
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 	td.AccessToken, err = at.SignedString([]byte(h.TokenSecret))
@@ -72,7 +73,6 @@ func (h *TokenHelper) CreateToken(userID string, userRole string) (*TokenDetails
 }
 func (h *TokenHelper) RefreshToken(refreshToken string) (*TokenDetails, error) {
 	token, err := h.VerifyToken(refreshToken)
-	fmt.Println(err)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,14 @@ func (h *TokenHelper) RefreshToken(refreshToken string) (*TokenDetails, error) {
 			return nil, err
 		}
 	}
-	return h.CreateToken(userID, userRole)
+	var userRoleID string
+	if ok && token.Valid {
+		userRoleID, ok = claims["user_role_id"].(string)
+		if !ok {
+			return nil, err
+		}
+	}
+	return h.CreateToken(userID, userRole, userRoleID)
 }
 
 func (h *TokenHelper) VerifyToken(tokenString string) (*jwt.Token, error) {
