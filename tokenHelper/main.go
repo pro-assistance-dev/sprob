@@ -23,6 +23,7 @@ type AccessDetails struct {
 	AccessUuid string
 	UserID     string
 	UserRole   string
+	UserRoleID string
 }
 
 type TokenDetails struct {
@@ -125,10 +126,18 @@ func (h *TokenHelper) extractTokenMetadata(r *http.Request) (*AccessDetails, err
 		if !ok {
 			return nil, err
 		}
+		if !ok {
+			return nil, err
+		}
+		userRoleID, ok := claims["user_role_id"].(string)
+		if !ok {
+			return nil, err
+		}
 		return &AccessDetails{
 			AccessUuid: accessUuid,
 			UserID:     userID,
 			UserRole:   userRole,
+			UserRoleID: userRoleID,
 		}, nil
 	}
 	return nil, err
@@ -144,20 +153,28 @@ func (h *TokenHelper) extractToken(r *http.Request) string {
 }
 
 func (h *TokenHelper) GetUserID(c *gin.Context) (*uuid.UUID, error) {
-	accessDetail, err := h.extractTokenMetadata(c.Request)
+	accessDetails, err := h.extractTokenMetadata(c.Request)
 	if err != nil {
 		return nil, err
 	}
-	uuidFromString, err := uuid.Parse(accessDetail.UserID)
+	uuidFromString, err := uuid.Parse(accessDetails.UserID)
 	return &uuidFromString, err
 }
 
 func (h *TokenHelper) GetUserRole(c *gin.Context) (string, error) {
-	accessDetail, err := h.extractTokenMetadata(c.Request)
+	accessDetails, err := h.extractTokenMetadata(c.Request)
 	if err != nil {
 		return "", err
 	}
-	return accessDetail.UserRole, err
+	return accessDetails.UserRole, err
+}
+
+func (h *TokenHelper) GetAccessDetail(c *gin.Context) (*AccessDetails, error) {
+	accessDetails, err := h.extractTokenMetadata(c.Request)
+	if err != nil {
+		return nil, err
+	}
+	return accessDetails, err
 }
 
 //
