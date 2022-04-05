@@ -74,9 +74,6 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	if f.isNull() {
 		q = fmt.Sprintf("%s %s", f.getTableAndCol(), *f.Operator)
 	}
-	if f.isLike() {
-		q = fmt.Sprintf("%s %s", f.getTableAndCol(), *f.Operator)
-	}
 	query = query.Where(q)
 }
 
