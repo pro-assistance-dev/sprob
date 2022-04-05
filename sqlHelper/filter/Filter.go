@@ -20,9 +20,6 @@ func (i *Filter) CreateFilter(query *bun.SelectQuery) {
 			filterModel.datesToString()
 			filterModel.constructWhere(query)
 		case StringType, BooleanType, NumberType:
-			if filterModel.isLike() {
-				filterModel.likeToString()
-			}
 			filterModel.constructWhere(query)
 		case JoinType:
 			filterModel.constructJoin(query)

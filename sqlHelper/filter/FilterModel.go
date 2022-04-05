@@ -60,6 +60,10 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	if f.isUnary() {
 		if *f.Type == BooleanType {
 			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), *f.Operator, f.Boolean)
+		} else if f.isLike() {
+			f.likeToString()
+			col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
+			q = fmt.Sprintf("%s %s '%s'", col, *f.Operator, f.Value1)
 		} else {
 			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), *f.Operator, f.Value1)
 		}
@@ -68,6 +72,9 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 		q = fmt.Sprintf("%s %s '%s' and '%s'", f.getTableAndCol(), *f.Operator, f.Value1, f.Value2)
 	}
 	if f.isNull() {
+		q = fmt.Sprintf("%s %s", f.getTableAndCol(), *f.Operator)
+	}
+	if f.isLike() {
 		q = fmt.Sprintf("%s %s", f.getTableAndCol(), *f.Operator)
 	}
 	query = query.Where(q)
