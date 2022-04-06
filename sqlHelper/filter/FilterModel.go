@@ -65,7 +65,7 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 			f.Value1 = utilHelper.NewUtilHelper().TranslitToRu(f.Value1)
 			f.likeToString()
 			col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
-			q = fmt.Sprintf("%s %s '%s'", col, *f.Operator, f.Value1)
+			q = fmt.Sprintf("%s %s lower('%s')", col, *f.Operator, f.Value1)
 		} else {
 			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), *f.Operator, f.Value1)
 		}
