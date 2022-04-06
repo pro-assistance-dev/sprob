@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"github.com/pro-assistance/pro-assister/helper"
 	"github.com/uptrace/bun"
 	"time"
 )
@@ -62,6 +63,8 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), *f.Operator, f.Boolean)
 		} else if f.isLike() {
 			f.likeToString()
+			helpForTranslit := helper.Helper{}
+			f.Value1 = helpForTranslit.TranslitToRu(f.Value1)
 			col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
 			q = fmt.Sprintf("%s %s '%s'", col, *f.Operator, f.Value1)
 		} else {
