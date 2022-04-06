@@ -1,4 +1,4 @@
-package helper
+package utilHelper
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ var baseRuEn = map[string]string{
 	"/": ".",
 }
 
-func (h *Helper) TranslitToRu(text string) string {
+func (h *UtilHelper) TranslitToRu(text string) string {
 	if text == "" {
 		return ""
 	}

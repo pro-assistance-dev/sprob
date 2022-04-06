@@ -1,10 +1,10 @@
-package helper
+package utilHelper
 
 import (
 	"time"
 )
 
-func (h *Helper) GetMonthDays() []time.Time {
+func (h *UtilHelper) GetMonthDays() []time.Time {
 	now := time.Now()
 	currentYear, currentMonth, _ := now.Date()
 	currentLocation := now.Location()

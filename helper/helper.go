@@ -10,6 +10,7 @@ import (
 	"github.com/pro-assistance/pro-assister/sqlHelper"
 	"github.com/pro-assistance/pro-assister/tokenHelper"
 	"github.com/pro-assistance/pro-assister/uploadHelper"
+	"github.com/pro-assistance/pro-assister/utilHelper"
 )
 
 type Helper struct {
@@ -21,6 +22,7 @@ type Helper struct {
 	Token    *tokenHelper.TokenHelper
 	Email    *emailHelper.EmailHelper
 	Social   *socialHelper.SocialHelper
+	Util     *utilHelper.UtilHelper
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -32,7 +34,8 @@ func NewHelper(config config.Config) *Helper {
 	email := emailHelper.NewEmailHelper(config.Email)
 	social := socialHelper.NewSocial(config.Social)
 	search := elasticSearchHelper.NewElasticSearchHelper(config.ElasticSearch.ElasticSearchOn)
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search}
+	util := utilHelper.NewUtilHelper()
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util}
 }
 
 func main() {
