@@ -5,6 +5,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/pro-assistance/pro-assister/config"
 	"net/http"
 	"os"
 	"strings"
@@ -12,11 +13,13 @@ import (
 )
 
 type TokenHelper struct {
-	TokenSecret string
+	TokenSecret        string
+	TokenAccessMinutes int
+	TokenRefreshHours  int
 }
 
-func NewTokenHelper(tokenSecret string) *TokenHelper {
-	return &TokenHelper{TokenSecret: tokenSecret}
+func NewTokenHelper(conf config.Token) *TokenHelper {
+	return &TokenHelper{TokenSecret: conf.TokenSecret, TokenAccessMinutes: conf.TokenAccessMinutes, TokenRefreshHours: conf.TokenRefreshHours}
 }
 
 type AccessDetails struct {
@@ -37,10 +40,10 @@ type TokenDetails struct {
 
 func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID string) (*TokenDetails, error) {
 	td := &TokenDetails{}
-	td.AtExpires = time.Now().Add(time.Hour).Unix()
+	td.AtExpires = time.Now().Add(time.Minute * time.Duration(h.TokenAccessMinutes)).Unix()
 	td.AccessUuid = uuid.NewString()
 
-	td.RtExpires = time.Now().Add(time.Hour).Unix()
+	td.RtExpires = time.Now().Add(time.Hour * time.Duration(h.TokenRefreshHours)).Unix()
 	td.RefreshUuid = td.AccessUuid + "++" + userID
 
 	var err error

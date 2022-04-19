@@ -32,7 +32,7 @@ func NewHelper(config config.Config) *Helper {
 	pdf := pdfHelper.NewPDFHelper(config)
 	sql := sqlHelper.NewSQLHelper()
 	uploader := uploadHelper.NewLocalUploader(&config.UploadPath)
-	token := tokenHelper.NewTokenHelper(config.TokenSecret)
+	token := tokenHelper.NewTokenHelper(config.Token)
 	email := emailHelper.NewEmailHelper(config.Email)
 	social := socialHelper.NewSocial(config.Social)
 	search := elasticSearchHelper.NewElasticSearchHelper(config.ElasticSearch.ElasticSearchOn)

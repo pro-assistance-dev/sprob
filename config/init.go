@@ -11,9 +11,7 @@ type Config struct {
 
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
-
-	TokenSecret string `mapstructure:"TOKEN_SECRET"`
-
+	
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisPort string `mapstructure:"REDIS_PORT"`
 
@@ -21,6 +19,13 @@ type Config struct {
 	Email         Email         `mapstructure:",squash"`
 	Social        Social        `mapstructure:",squash"`
 	ElasticSearch ElasticSearch `mapstructure:",squash"`
+	Token         Token         `mapstructure:",squash"`
+}
+
+type Token struct {
+	TokenSecret        string `mapstructure:"TOKEN_SECRET"`
+	TokenAccessMinutes int    `mapstructure:"TOKEN_ACCESS_MINUTES"`
+	TokenRefreshHours  int    `mapstructure:"TOKEN_REFRESH_HOURS"`
 }
 
 type DB struct {
