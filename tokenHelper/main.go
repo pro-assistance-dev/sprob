@@ -66,6 +66,8 @@ func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID str
 	rtClaims := jwt.MapClaims{}
 	rtClaims["refresh_uuid"] = td.RefreshUuid
 	rtClaims["user_id"] = userID
+	rtClaims["user_role"] = userRole
+	rtClaims["user_role_id"] = userRoleID
 	rtClaims["exp"] = td.RtExpires
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	td.RefreshToken, err = rt.SignedString([]byte(h.TokenSecret))
