@@ -16,17 +16,19 @@ import (
 )
 
 type Helper struct {
-	HTTP      *httpHelper.HTTPHelper
-	Search    *elasticSearchHelper.ElasticSearchHelper
-	PDF       *pdfHelper.PDFHelper
-	Uploader  uploadHelper.Uploader
-	SQL       *sqlHelper.SQLHelper
-	Token     *tokenHelper.TokenHelper
-	Email     *emailHelper.EmailHelper
-	Social    *socialHelper.SocialHelper
-	Util      *utilHelper.UtilHelper
-	Templater *templater.Templater
-	Broker    *broker.Broker
+	HTTP              *httpHelper.HTTPHelper
+	Search            *elasticSearchHelper.ElasticSearchHelper
+	PDF               *pdfHelper.PDFHelper
+	Uploader          uploadHelper.Uploader
+	SQL               *sqlHelper.SQLHelper
+	Token             *tokenHelper.TokenHelper
+	Email             *emailHelper.EmailHelper
+	Social            *socialHelper.SocialHelper
+	Util              *utilHelper.UtilHelper
+	Templater         *templater.Templater
+	Broker            *broker.Broker
+	NotificationEvent *broker.NotificationEvent
+	NotifierChan      *broker.NotifierChan
 }
 
 func NewHelper(config config.Config) *Helper {
