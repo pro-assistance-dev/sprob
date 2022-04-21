@@ -14,39 +14,43 @@ import (
 const patience time.Duration = time.Second * 1
 
 type (
-	NotificationEvent struct {
+	notificationEvent struct {
 		EventName string
 		Payload   interface{}
 	}
 
-	NotifierChan chan NotificationEvent
+	notifierChan chan notificationEvent
 
 	Broker struct {
 
 		// Events are pushed to this channel by the main events-gathering routine
-		Notifier NotifierChan
+		notifier notifierChan
 
 		// New client connections
-		newClients chan NotifierChan
+		newClients chan notifierChan
 
 		// Closed client connections
-		closingClients chan NotifierChan
+		closingClients chan notifierChan
 
 		// Client connections registry
-		clients map[NotifierChan]struct{}
+		clients map[notifierChan]struct{}
 	}
 )
 
 func NewBroker() (broker *Broker) {
 	// Instantiate a broker
 	b := &Broker{
-		Notifier:       make(NotifierChan, 1),
-		newClients:     make(chan NotifierChan),
-		closingClients: make(chan NotifierChan),
-		clients:        make(map[NotifierChan]struct{}),
+		notifier:       make(notifierChan, 1),
+		newClients:     make(chan notifierChan),
+		closingClients: make(chan notifierChan),
+		clients:        make(map[notifierChan]struct{}),
 	}
 	go b.Listen()
 	return b
+}
+func (broker *Broker) SendEvent(eventName string, item interface{}) {
+	event := notificationEvent{Payload: item, EventName: eventName}
+	broker.notifier <- event
 }
 
 func (broker *Broker) ServeHTTP(c *gin.Context) {
@@ -57,7 +61,7 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 	c.Header("Connection", "keep-alive")
 	c.Header("Access-Control-Allow-Origin", "*")
 
-	messageChan := make(NotifierChan)
+	messageChan := make(notifierChan)
 	broker.newClients <- messageChan
 
 	defer func() {
@@ -89,7 +93,7 @@ func (broker *Broker) Listen() {
 			broker.clients[s] = struct{}{}
 		case s := <-broker.closingClients:
 			delete(broker.clients, s)
-		case event := <-broker.Notifier:
+		case event := <-broker.notifier:
 			for clientMessageChan := range broker.clients {
 				select {
 				case clientMessageChan <- event:
