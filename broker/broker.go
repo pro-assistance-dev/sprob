@@ -3,7 +3,6 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -75,8 +74,11 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("streaming unsupported"))
 		return
 	}
-	c.Stream(func(w io.Writer) bool {
-		event := <-messageChan
+	for {
+		event, open := <-messageChan
+		if !open {
+			break
+		}
 		switch eventName {
 		case event.EventName:
 			payload, err := json.Marshal(event.Payload)
@@ -85,29 +87,27 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 			}
 			fmt.Fprintf(w, "data: %s\n\n", payload)
 			f.Flush()
-			return true
 		}
-		return true
-	})
-}
+	}
 
-// Listen for new notifications and redistribute them to clients
-func (broker *Broker) Listen() {
-	for {
-		select {
-		case s := <-broker.newClients:
-			broker.clients[s] = struct{}{}
-		case s := <-broker.closingClients:
-			delete(broker.clients, s)
-		case event := <-broker.notifier:
-			for clientMessageChan := range broker.clients {
-				select {
-				case clientMessageChan <- event:
-				case <-time.After(patience):
-					log.Print("Skipping client.")
+	// Listen for new notifications and redistribute them to clients
+	func(broker *Broker) Listen()
+	{
+		for {
+			select {
+			case s := <-broker.newClients:
+				broker.clients[s] = struct{}{}
+			case s := <-broker.closingClients:
+				delete(broker.clients, s)
+			case event := <-broker.notifier:
+				for clientMessageChan := range broker.clients {
+					select {
+					case clientMessageChan <- event:
+					case <-time.After(patience):
+						log.Print("Skipping client.")
 
+					}
 				}
 			}
 		}
 	}
-}
