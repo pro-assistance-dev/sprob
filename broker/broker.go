@@ -1,6 +1,7 @@
 package broker
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -77,7 +78,11 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 		event := <-messageChan
 		switch eventName {
 		case event.EventName:
-			fmt.Fprintf(w, "data: %s\n\n", event)
+			payload, err := json.Marshal(event.Payload)
+			if err != nil {
+				c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+			}
+			fmt.Fprintf(w, "data: %s\n\n", payload)
 			f.Flush()
 			return true
 		}
