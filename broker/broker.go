@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -102,11 +103,11 @@ func (broker *Broker) Listen() {
 			for clientMessageChan := range broker.clients {
 				select {
 				case clientMessageChan <- event:
-					//case <-time.After(patience):
-					//	log.Print("Skipping client.")
-					//}
+				case <-time.After(patience):
+					log.Print("Skipping client.")
 				}
 			}
 		}
 	}
+}
 }
