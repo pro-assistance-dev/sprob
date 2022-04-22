@@ -105,9 +105,9 @@ func (broker *Broker) Listen() {
 				case clientMessageChan <- event:
 				case <-time.After(patience):
 					log.Print("Skipping client.")
+
 				}
 			}
 		}
 	}
-}
 }
