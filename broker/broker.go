@@ -42,7 +42,7 @@ type (
 func NewBroker() (broker *Broker) {
 	// Instantiate a broker
 	b := &Broker{
-		notifier:       make(notifierChan, 1),
+		notifier:       make(notifierChan, 10),
 		newClients:     make(chan notifierChan),
 		closingClients: make(chan notifierChan),
 		clients:        make(map[notifierChan]struct{}),
