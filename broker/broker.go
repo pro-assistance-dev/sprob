@@ -99,6 +99,7 @@ func (broker *Broker) Listen() {
 			broker.clients[s] = struct{}{}
 		case s := <-broker.closingClients:
 			delete(broker.clients, s)
+			close(s)
 		case event := <-broker.notifier:
 			for clientMessageChan := range broker.clients {
 				select {
