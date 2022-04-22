@@ -89,25 +89,25 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 			f.Flush()
 		}
 	}
+}
 
-	// Listen for new notifications and redistribute them to clients
-	func(broker *Broker) Listen()
-	{
-		for {
-			select {
-			case s := <-broker.newClients:
-				broker.clients[s] = struct{}{}
-			case s := <-broker.closingClients:
-				delete(broker.clients, s)
-			case event := <-broker.notifier:
-				for clientMessageChan := range broker.clients {
-					select {
-					case clientMessageChan <- event:
-					case <-time.After(patience):
-						log.Print("Skipping client.")
+// Listen for new notifications and redistribute them to clients
+func (broker *Broker) Listen() {
+	for {
+		select {
+		case s := <-broker.newClients:
+			broker.clients[s] = struct{}{}
+		case s := <-broker.closingClients:
+			delete(broker.clients, s)
+		case event := <-broker.notifier:
+			for clientMessageChan := range broker.clients {
+				select {
+				case clientMessageChan <- event:
+				case <-time.After(patience):
+					log.Print("Skipping client.")
 
-					}
 				}
 			}
 		}
 	}
+}
