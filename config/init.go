@@ -6,12 +6,12 @@ import (
 )
 
 type Config struct {
-	ServerPort string `mapstructure:"SERVER_PORT"`
-	ServerHost string `mapstructure:"SERVER_HOST"`
-
+	ServerPort    string `mapstructure:"SERVER_PORT"`
+	ServerHost    string `mapstructure:"SERVER_HOST"`
+	BinPath       string `mapstructure:"BIN_PATH"`
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
-	
+
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisPort string `mapstructure:"REDIS_PORT"`
 
