@@ -38,7 +38,7 @@ func NewHelper(config config.Config) *Helper {
 	email := emailHelper.NewEmailHelper(config.Email)
 	social := socialHelper.NewSocial(config.Social)
 	search := elasticSearchHelper.NewElasticSearchHelper(config.ElasticSearch.ElasticSearchOn)
-	util := utilHelper.NewUtilHelper()
+	util := utilHelper.NewUtilHelper(config.BinPath)
 	templ := templater.NewTemplater(config)
 	brok := broker.NewBroker()
 	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok}
