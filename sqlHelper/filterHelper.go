@@ -5,14 +5,15 @@ import (
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/uptrace/bun"
 )
 
 type QueryFilter struct {
-	Col       string
-	Value     string
-	Filter    *filter.Filter
-	Sorter    *sorter.Sorter
-	Paginator *paginator.Paginator
+	col       string
+	value     string
+	filter    *filter.Filter
+	sorter    *sorter.Sorter
+	paginator *paginator.Paginator
 }
 
 func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
@@ -30,5 +31,11 @@ func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &QueryFilter{Col: col, Value: value, Filter: filterItem, Sorter: sorterItem, Paginator: paginatorItem}, nil
+	return &QueryFilter{col: col, value: value, filter: filterItem, sorter: sorterItem, paginator: paginatorItem}, nil
+}
+
+func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
+	i.paginator.CreatePagination(query)
+	i.filter.CreateFilter(query)
+	i.sorter.CreateOrder(query)
 }
