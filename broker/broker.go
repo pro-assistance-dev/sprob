@@ -14,34 +14,23 @@ import (
 // a slow client or a client that closed after `range clients` started.
 const patience time.Duration = time.Second * 1
 
-type (
-	notificationEvent struct {
-		EventName string
-		Payload   interface{}
-	}
+type notificationEvent struct {
+	EventName string
+	Payload   interface{}
+}
 
-	notifierChan chan notificationEvent
+type notifierChan chan notificationEvent
 
-	Broker struct {
-
-		// Events are pushed to this channel by the main events-gathering routine
-		notifier notifierChan
-
-		// New client connections
-		newClients chan notifierChan
-
-		// Closed client connections
-		closingClients chan notifierChan
-
-		// Client connections registry
-		clients map[notifierChan]bool
-	}
-)
+type Broker struct {
+	notifier       notifierChan
+	newClients     chan notifierChan
+	closingClients chan notifierChan
+	clients        map[notifierChan]bool
+}
 
 func NewBroker() (broker *Broker) {
-	// Instantiate a broker
 	b := &Broker{
-		notifier:       make(notifierChan, 100000),
+		notifier:       make(notifierChan, 1),
 		newClients:     make(chan notifierChan),
 		closingClients: make(chan notifierChan),
 		clients:        make(map[notifierChan]bool),
