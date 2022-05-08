@@ -3,7 +3,7 @@ package broker
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"log"
 	"net/http"
 	"time"
 
@@ -34,7 +34,7 @@ type (
 		closingClients chan notifierChan
 
 		// Client connections registry
-		clients map[notifierChan]struct{}
+		clients map[notifierChan]bool
 	}
 )
 
@@ -44,7 +44,7 @@ func NewBroker() (broker *Broker) {
 		notifier:       make(notifierChan, 100000),
 		newClients:     make(chan notifierChan),
 		closingClients: make(chan notifierChan),
-		clients:        make(map[notifierChan]struct{}),
+		clients:        make(map[notifierChan]bool),
 	}
 	go b.Listen()
 	return b
@@ -55,7 +55,7 @@ func (broker *Broker) SendEvent(eventName string, item interface{}) {
 }
 
 func (broker *Broker) ServeHTTP(c *gin.Context) {
-	eventName := c.Param("channel")
+	//eventName := c.Param("channel")
 
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -68,26 +68,44 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 	defer func() {
 		broker.closingClients <- messageChan
 	}()
+
 	w := c.Writer
+	notify := w.(http.CloseNotifier).CloseNotify()
 	f, ok := w.(http.Flusher)
+
 	if !ok {
 		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("streaming unsupported"))
 		return
 	}
-	c.Stream(func(w io.Writer) bool {
-		event := <-messageChan
-		switch eventName {
-		case event.EventName:
+
+	for {
+		select {
+		case <-notify:
+			return
+		default:
+			event := <-messageChan
 			payload, err := json.Marshal(event.Payload)
 			if err != nil {
 				c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
 			}
 			fmt.Fprintf(w, "data: %s\n\n", payload)
 			f.Flush()
-			return true
 		}
-		return true
-	})
+	}
+
+	//c.Stream(func(w io.Writer) bool {
+	//	event := <-messageChan
+	//	switch eventName {
+	//	case event.EventName:
+	//		payload, err := json.Marshal(event.Payload)
+	//		if err != nil {
+	//			c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+	//		}
+	//		fmt.Fprintf(w, "data: %s\n\n", payload)
+	//		f.Flush()
+	//	}
+	//	return true
+	//})
 }
 
 // Listen for new notifications and redistribute them to clients
@@ -95,18 +113,18 @@ func (broker *Broker) Listen() {
 	for {
 		select {
 		case s := <-broker.newClients:
-			broker.clients[s] = struct{}{}
+			broker.clients[s] = true
 		case s := <-broker.closingClients:
 			delete(broker.clients, s)
 		case event := <-broker.notifier:
 			for clientMessageChan := range broker.clients {
 				select {
 				case clientMessageChan <- event:
-					//case <-time.After(patience):
-					//	log.Print("Skipping client.")
-					//}
+				case <-time.After(patience):
+					log.Print("Skipping client.")
 				}
 			}
 		}
 	}
 }
+
