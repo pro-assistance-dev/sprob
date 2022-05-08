@@ -9,8 +9,8 @@ import (
 )
 
 type QueryFilter struct {
-	col       string
-	value     string
+	Col       string
+	Value     string
 	filter    *filter.Filter
 	sorter    *sorter.Sorter
 	paginator *paginator.Paginator
@@ -31,7 +31,7 @@ func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &QueryFilter{col: col, value: value, filter: filterItem, sorter: sorterItem, paginator: paginatorItem}, nil
+	return &QueryFilter{Col: col, Value: value, filter: filterItem, sorter: sorterItem, paginator: paginatorItem}, nil
 }
 
 func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
