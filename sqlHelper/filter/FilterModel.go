@@ -36,6 +36,7 @@ type Operator string
 
 const (
 	Eq      Operator = "="
+	Ne               = "!="
 	Gt               = ">"
 	Ge               = "<"
 	Btw              = "between"
@@ -172,7 +173,7 @@ func (f *FilterModel) getJoinCondition() string {
 }
 
 func (f *FilterModel) isUnary() bool {
-	return *f.Operator == Eq || *f.Operator == Gt || *f.Operator == Ge || *f.Operator == Like
+	return *f.Operator == Eq || *f.Operator == Ne || *f.Operator == Gt || *f.Operator == Ge || *f.Operator == Like
 }
 
 func (f *FilterModel) isLike() bool {
