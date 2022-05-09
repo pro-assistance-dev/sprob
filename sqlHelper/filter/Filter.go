@@ -10,7 +10,7 @@ func (i *Filter) CreateFilter(query *bun.SelectQuery) {
 		return
 	}
 	for _, filterModel := range i.FilterModels {
-		switch *filterModel.Type {
+		switch filterModel.Type {
 		case SetType:
 			if len(filterModel.Set) == 0 {
 				break
