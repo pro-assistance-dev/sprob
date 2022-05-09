@@ -93,14 +93,11 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	if f.JoinTableID != "" {
 		join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
 		query = query.Join(join)
-		where := ""
 		if f.Operator != In {
-			where = fmt.Sprintf("%s.%s = '%s' ", f.JoinTable, f.JoinTableIDCol, f.JoinTableID)
+			query = query.Where("?.? =? ", f.JoinTable, f.JoinTableIDCol, f.JoinTableID)
 		} else {
-			where = fmt.Sprintf("%s.%s in (%s) ", f.JoinTable, f.JoinTableIDCol, bun.In(f.Set))
+			query = query.Where("?.?in  (?) ", f.JoinTable, f.JoinTableIDCol, f.JoinTableID)
 		}
-
-		query = query.Where(where)
 		return
 	}
 	join := fmt.Sprintf("JOIN %s ON %s", f.JoinTable, f.getJoinCondition())
