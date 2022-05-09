@@ -85,7 +85,7 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 		query = query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), *f.Operator), bun.In(f.Set))
 		return
 	}
-	q := fmt.Sprintf("EXISTS (SELECT NULL from patient_diagnosis where %s and %s in (?))", f.getJoinCondition(), f.getTableAndCol())
+	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
 	query = query.Where(q, bun.In(f.Set))
 }
 
