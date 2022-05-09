@@ -12,8 +12,8 @@ type FilterModel struct {
 	Table string `json:"table"`
 	Col   string `json:"col"`
 
-	Type     *DataType `json:"type,omitempty"`
-	Operator *Operator `json:"operator,omitempty"`
+	Type     DataType  `json:"type,omitempty"`
+	Operator Operator  `json:"operator,omitempty"`
 	Date1    time.Time `json:"date1,omitempty"`
 	Date2    time.Time `json:"date2,omitempty"`
 
@@ -60,29 +60,29 @@ const (
 func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	q := ""
 	if f.isUnary() {
-		if *f.Type == BooleanType {
-			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), *f.Operator, f.Boolean)
+		if f.Type == BooleanType {
+			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), f.Operator, f.Boolean)
 		} else if f.isLike() {
 			f.Value1 = utilHelper.NewUtilHelper("null").TranslitToRu(f.Value1)
 			f.likeToString()
 			col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
-			q = fmt.Sprintf("%s %s lower('%s')", col, *f.Operator, f.Value1)
+			q = fmt.Sprintf("%s %s lower('%s')", col, f.Operator, f.Value1)
 		} else {
-			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), *f.Operator, f.Value1)
+			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
 		}
 	}
 	if f.isBetween() {
-		q = fmt.Sprintf("%s %s '%s' and '%s'", f.getTableAndCol(), *f.Operator, f.Value1, f.Value2)
+		q = fmt.Sprintf("%s %s '%s' and '%s'", f.getTableAndCol(), f.Operator, f.Value1, f.Value2)
 	}
 	if f.isNull() {
-		q = fmt.Sprintf("%s %s", f.getTableAndCol(), *f.Operator)
+		q = fmt.Sprintf("%s %s", f.getTableAndCol(), f.Operator)
 	}
 	query = query.Where(q)
 }
 
 func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 	if f.JoinTable == "" {
-		query = query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), *f.Operator), bun.In(f.Set))
+		query = query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
 		return
 	}
 	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
@@ -93,7 +93,13 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	if f.JoinTableID != "" {
 		join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
 		query = query.Join(join)
-		where := fmt.Sprintf("%s.%s = '%s' ", f.JoinTable, f.JoinTableIDCol, f.JoinTableID)
+		where := ""
+		if f.Operator != In {
+			where = fmt.Sprintf("%s.%s = '%s' ", f.JoinTable, f.JoinTableIDCol, f.JoinTableID)
+		} else {
+			where = fmt.Sprintf("%s.%s in (%s) ", f.JoinTable, f.JoinTableIDCol, bun.In(f.Set))
+		}
+
 		query = query.Where(where)
 		return
 	}
@@ -173,21 +179,21 @@ func (f *FilterModel) getJoinCondition() string {
 }
 
 func (f *FilterModel) isUnary() bool {
-	return *f.Operator == Eq || *f.Operator == Ne || *f.Operator == Gt || *f.Operator == Ge || *f.Operator == Like
+	return f.Operator == Eq || f.Operator == Ne || f.Operator == Gt || f.Operator == Ge || f.Operator == Like
 }
 
 func (f *FilterModel) isLike() bool {
-	return *f.Operator == Like
+	return f.Operator == Like
 }
 
 func (f *FilterModel) isBetween() bool {
-	return *f.Operator == Btw
+	return f.Operator == Btw
 }
 
 func (f *FilterModel) isNull() bool {
-	return *f.Operator == Null || *f.Operator == NotNull
+	return f.Operator == Null || f.Operator == NotNull
 }
 
 func (f *FilterModel) isSet() bool {
-	return *f.Operator == In
+	return f.Operator == In
 }
