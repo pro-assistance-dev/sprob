@@ -9,6 +9,7 @@ import (
 	"github.com/pro-assistance/pro-assister/emailHelper"
 	"github.com/pro-assistance/pro-assister/httpHelper"
 	"github.com/pro-assistance/pro-assister/pdfHelper"
+	"github.com/pro-assistance/pro-assister/search"
 	"github.com/pro-assistance/pro-assister/socialHelper"
 	"github.com/pro-assistance/pro-assister/sqlHelper"
 	"github.com/pro-assistance/pro-assister/templater"
@@ -56,6 +57,7 @@ func (i *Helper) Init(migrations *migrate.Migrations) {
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
 	i.Mode = Mode(*mode)
+	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
 }
 
