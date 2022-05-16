@@ -44,7 +44,7 @@ func NewHelper(config config.Config) *Helper {
 	templ := templater.NewTemplater(config)
 	dbHelper := db.NewDBHelper(config.DB)
 	brok := broker.NewBroker()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: ddbHelper}
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper}
 }
 
 func main() {
