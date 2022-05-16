@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"flag"
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
 	"github.com/pro-assistance/pro-assister/db"
@@ -14,9 +15,11 @@ import (
 	"github.com/pro-assistance/pro-assister/tokenHelper"
 	"github.com/pro-assistance/pro-assister/uploadHelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
+	"github.com/uptrace/bun/migrate"
 )
 
 type Helper struct {
+	Mode      Mode
 	HTTP      *httpHelper.HTTPHelper
 	Search    *elasticSearchHelper.ElasticSearchHelper
 	PDF       *pdfHelper.PDFHelper
@@ -47,6 +50,19 @@ func NewHelper(config config.Config) *Helper {
 	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper}
 }
 
-func main() {
+func (i *Helper) Init(migrations *migrate.Migrations) {
+	mode := flag.String("mode", "run", "init/create")
+	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
+	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
+	flag.Parse()
+	i.Mode = Mode(*mode)
+	i.DB.DoAction(migrations, name, action)
+}
 
+func (i *Helper) MigrateMode() bool {
+	return i.Mode == Migrate
+}
+
+func (i *Helper) RunMode() bool {
+	return i.Mode == Run
 }

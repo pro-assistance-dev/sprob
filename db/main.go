@@ -18,6 +18,7 @@ import (
 
 type DB struct {
 	config config.DB
+	DB     *bun.DB
 }
 
 func NewDBHelper(config config.DB) *DB {
@@ -34,8 +35,8 @@ func (i *DB) InitDB() *bun.DB {
 	return db
 }
 
-func (i *DB) DoAction(db *bun.DB, migrations *migrate.Migrations, name *string, action *string) {
-	migrator := migrate.NewMigrator(db, migrations)
+func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *string) {
+	migrator := migrate.NewMigrator(i.DB, migrations)
 	switch *action {
 	case "init":
 		initMigration(migrator)
