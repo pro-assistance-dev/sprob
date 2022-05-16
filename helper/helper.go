@@ -3,6 +3,7 @@ package helper
 import (
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance/pro-assister/db"
 	"github.com/pro-assistance/pro-assister/elasticSearchHelper"
 	"github.com/pro-assistance/pro-assister/emailHelper"
 	"github.com/pro-assistance/pro-assister/httpHelper"
@@ -27,6 +28,7 @@ type Helper struct {
 	Util      *utilHelper.UtilHelper
 	Templater *templater.Templater
 	Broker    *broker.Broker
+	DB        *db.DB
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -40,8 +42,9 @@ func NewHelper(config config.Config) *Helper {
 	search := elasticSearchHelper.NewElasticSearchHelper(config.ElasticSearch.ElasticSearchOn)
 	util := utilHelper.NewUtilHelper(config.BinPath)
 	templ := templater.NewTemplater(config)
+	dbHelper := db.NewDBHelper(config.DB)
 	brok := broker.NewBroker()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok}
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: ddbHelper}
 }
 
 func main() {
