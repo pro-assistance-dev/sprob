@@ -35,6 +35,9 @@ func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
 }
 
 func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
+	if i == nil {
+		return
+	}
 	i.paginator.CreatePagination(query)
 	i.filter.CreateFilter(query)
 	i.sorter.CreateOrder(query)
