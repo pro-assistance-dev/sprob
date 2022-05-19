@@ -44,7 +44,7 @@ func (broker *Broker) SendEvent(eventName string, item interface{}) {
 }
 
 func (broker *Broker) ServeHTTP(c *gin.Context) {
-	//eventName := c.Param("channel")
+	eventName := c.Param("channel")
 
 	c.Header("Content-Type", "text/event-stream")
 	c.Header("Cache-Control", "no-cache")
@@ -73,12 +73,15 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 			return
 		default:
 			event := <-messageChan
-			payload, err := json.Marshal(event.Payload)
-			if err != nil {
-				c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+			switch eventName {
+			case event.EventName:
+				payload, err := json.Marshal(event.Payload)
+				if err != nil {
+					c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+				}
+				fmt.Fprintf(w, "data: %s\n\n", payload)
+				f.Flush()
 			}
-			fmt.Fprintf(w, "data: %s\n\n", payload)
-			f.Flush()
 		}
 	}
 
@@ -116,4 +119,3 @@ func (broker *Broker) Listen() {
 		}
 	}
 }
-
