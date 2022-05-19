@@ -62,6 +62,8 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	if f.isUnary() {
 		if f.Type == BooleanType {
 			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), f.Operator, f.Boolean)
+		} else if f.Type == DateType {
+			q = fmt.Sprintf("date(%s) %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
 		} else if f.isLike() {
 			f.Value1 = utilHelper.NewUtilHelper("null").TranslitToRu(f.Value1)
 			f.likeToString()
