@@ -2,6 +2,8 @@ package uploadHelper
 
 import (
 	"errors"
+	"io/ioutil"
+	"log"
 	"math/rand"
 	"mime/multipart"
 	"os"
@@ -64,9 +66,35 @@ func BuildPath(idFile *string) string {
 	return fullPath
 }
 
+func (u *LocalUploader) ReadFiles(paths ...string) ([][]byte, error) {
+	basePath := u.GetUploaderPath()
+	files := make([][]byte, 0)
+	for _, path := range paths {
+		b, err := u.readFile(filepath.Join(*basePath, path))
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, b)
+	}
+	return files, nil
+}
+
 func randomString() string {
 	rand.Seed(time.Now().UnixNano())
 	min := 0
 	max := 1000
 	return strconv.Itoa(rand.Intn(max-min+1) + min)
+}
+
+func (u *LocalUploader) readFile(path string) ([]byte, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err = file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	return ioutil.ReadAll(file)
 }
