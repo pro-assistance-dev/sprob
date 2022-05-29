@@ -19,6 +19,7 @@ type Uploader interface {
 	GetUploaderPath() *string
 	GetFullPath(*string) *string
 	Upload(*gin.Context, []*multipart.FileHeader, *string) error
+	ReadFiles(paths ...string) ([][]byte, error)
 }
 
 type LocalUploader struct {
