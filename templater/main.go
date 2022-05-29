@@ -3,12 +3,13 @@ package templater
 import (
 	"bytes"
 	"fmt"
-	"github.com/pro-assistance/pro-assister/config"
 	"log"
 	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
+
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 type Templater struct {
@@ -44,5 +45,10 @@ func (i *Templater) ParseTemplate(data interface{}, templates ...string) (string
 		return "", err
 	}
 
+	// err := ioutil.WriteFile("./application-generate.html", []byte(buf.String()), 0644)
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	return buf.String(), nil
 }

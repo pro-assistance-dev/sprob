@@ -2,12 +2,12 @@ package emailHelper
 
 import (
 	"crypto/tls"
-	"encoding/base64"
 	"fmt"
-	"github.com/pro-assistance/pro-assister/config"
 	"net"
 	"net/smtp"
 	"strings"
+
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 // Email struct
@@ -51,12 +51,12 @@ func (e *EmailHelper) sendEmail() error {
 	header["Subject"] = e.request.Subject
 	header["MIME-Version"] = "1.0"
 	header["Content-Type"] = "text/html; charset=\"utf-8\""
-	header["Content-Transfer-Encoding"] = "base64"
+	// header["Content-Transfer-Encoding"] = "base64"
 	message := ""
 	for k, v := range header {
 		message += fmt.Sprintf("%s: %s\r\n", k, v)
 	}
-	message += "\r\n" + base64.StdEncoding.EncodeToString([]byte(e.request.Body))
+	// message += "\r\n" + base64.StdEncoding.EncodeToString([]byte(e.request.Body))
 	message += "\r\n" + e.request.Body
 	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
 	host, _, _ := net.SplitHostPort(servername)
@@ -103,6 +103,12 @@ func (e *EmailHelper) sendEmail() error {
 	if err != nil {
 		return err
 	}
+
+	// err = ioutil.WriteFile("./application-generate_send.html", []byte(message), 0644)
+
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	return nil
 }
