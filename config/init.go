@@ -12,6 +12,8 @@ type Config struct {
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
 
+	LogPath string `mapstructure:"LOG_PATH"`
+
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisPort string `mapstructure:"REDIS_PORT"`
 
