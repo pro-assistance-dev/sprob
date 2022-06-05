@@ -12,8 +12,6 @@ type Config struct {
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
 
-	LogPath string `mapstructure:"LOG_PATH"`
-
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisPort string `mapstructure:"REDIS_PORT"`
 
@@ -37,6 +35,7 @@ type DB struct {
 	Host     string `mapstructure:"DB_HOST"`
 	Port     string `mapstructure:"DB_PORT"`
 	Name     string `mapstructure:"DB_NAME"`
+	LogPath  string `mapstructure:"DB_LOG_PATH"`
 }
 
 type Email struct {
