@@ -39,11 +39,12 @@ type DB struct {
 }
 
 type Email struct {
-	User     string `mapstructure:"EMAIL_USER"`
-	Password string `mapstructure:"EMAIL_PASSWORD"`
-	From     string `mapstructure:"EMAIL_FROM"`
-	Server   string `mapstructure:"EMAIL_SERVER"`
-	Port     string `mapstructure:"EMAIL_PORT"`
+	User          string `mapstructure:"EMAIL_USER"`
+	Password      string `mapstructure:"EMAIL_PASSWORD"`
+	From          string `mapstructure:"EMAIL_FROM"`
+	Server        string `mapstructure:"EMAIL_SERVER"`
+	Port          string `mapstructure:"EMAIL_PORT"`
+	WriteTestFile bool   `mapstructure:"EMAIL_WRITE_TEST_FILE"`
 }
 
 type Social struct {

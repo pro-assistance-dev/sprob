@@ -3,6 +3,8 @@ package emailHelper
 import (
 	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"net"
 	"net/smtp"
 	"strings"
@@ -103,12 +105,13 @@ func (e *EmailHelper) sendEmail() error {
 	if err != nil {
 		return err
 	}
-
-	// err = ioutil.WriteFile("./application-generate_send.html", []byte(message), 0644)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	
+	if e.config.WriteTestFile {
+		err = ioutil.WriteFile("./application-generate_send.html", []byte(message), 0644)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 
 	return nil
 }
