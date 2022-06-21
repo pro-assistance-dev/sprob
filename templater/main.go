@@ -3,6 +3,7 @@ package templater
 import (
 	"bytes"
 	"fmt"
+	"github.com/lukasjarosch/go-docx"
 	"log"
 	"path"
 	"path/filepath"
@@ -51,4 +52,22 @@ func (i *Templater) ParseTemplate(data interface{}, templates ...string) (string
 	// 	log.Fatal(err)
 	// }
 	return buf.String(), nil
+}
+
+func (i *Templater) ReplaceDoc(dataForReplacing map[string]interface{}, templatePath string) ([]byte, error) {
+	templatePath = path.Join(i.templatesPath, templatePath)
+	doc, err := docx.Open(templatePath)
+	if err != nil {
+		return nil, err
+	}
+	buf := new(bytes.Buffer)
+	err = doc.ReplaceAll(dataForReplacing)
+	if err != nil {
+		return nil, err
+	}
+	err = doc.Write(buf)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), err
 }
