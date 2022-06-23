@@ -40,7 +40,7 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	uploadPath := u.GetUploaderPath()
 	fullPath := filepath.Join(*uploadPath, *path)
 	parts := strings.Split(fullPath, string(os.PathSeparator))
-	err = os.MkdirAll(filepath.Join(parts[:len(parts)-1]...), os.ModePerm)
+	err = os.MkdirAll("/"+filepath.Join(parts[:len(parts)-1]...), os.ModePerm)
 	if err != nil {
 		return err
 	}
