@@ -38,13 +38,13 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 		return errors.New("file does not relate to anything")
 	}
 	uploadPath := u.GetUploaderPath()
-	fullPath := filepath.Join(*uploadPath, *path)
-	parts := strings.Split(fullPath, string(os.PathSeparator))
-	err = os.MkdirAll("/"+filepath.Join(parts[:len(parts)-1]...), os.ModePerm)
+	pathDirs := strings.Split(*path, string(os.PathSeparator))
+	pathToFile := filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...))
+	err = os.MkdirAll(pathToFile, os.ModePerm)
 	if err != nil {
 		return err
 	}
-
+	fullPath := filepath.Join(*uploadPath, *path)
 	err = c.SaveUploadedFile(file[0], fullPath)
 	if err != nil {
 		return err
