@@ -39,12 +39,12 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	}
 	uploadPath := u.GetUploaderPath()
 	pathDirs := strings.Split(*path, string(os.PathSeparator))
-	pathToFile := filepath.ToSlash(filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...)))
+	pathToFile := filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...))
 	err = os.MkdirAll(pathToFile, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	fullPath := filepath.ToSlash(filepath.Join(*uploadPath, *path))
+	fullPath := filepath.Join(*uploadPath, *path)
 	err = c.SaveUploadedFile(file[0], fullPath)
 	if err != nil {
 		return err
