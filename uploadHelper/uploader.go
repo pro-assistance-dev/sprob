@@ -27,7 +27,7 @@ type LocalUploader struct {
 }
 
 func NewLocalUploader(path *string) *LocalUploader {
-	staticPath := filepath.Join(*path)
+	staticPath := filepath.ToSlash(filepath.Join(*path))
 	return &LocalUploader{
 		UploadPath: &staticPath,
 	}
@@ -39,12 +39,12 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	}
 	uploadPath := u.GetUploaderPath()
 	pathDirs := strings.Split(*path, string(os.PathSeparator))
-	pathToFile := filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...))
+	pathToFile := filepath.ToSlash(filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...)))
 	err = os.MkdirAll(pathToFile, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	fullPath := filepath.Join(*uploadPath, *path)
+	fullPath := filepath.ToSlash(filepath.Join(*uploadPath, *path))
 	err = c.SaveUploadedFile(file[0], fullPath)
 	if err != nil {
 		return err
@@ -58,12 +58,12 @@ func (u *LocalUploader) GetUploaderPath() *string {
 
 func (u *LocalUploader) GetFullPath(path *string) *string {
 	basePath := u.GetUploaderPath()
-	fullPath := filepath.Join(*basePath, *path)
+	fullPath := filepath.ToSlash(filepath.Join(*basePath, *path))
 	return &fullPath
 }
 
 func BuildPath(idFile *string) string {
-	fullPath := filepath.Join(randomString(), randomString(), *idFile)
+	fullPath := filepath.ToSlash(filepath.Join(randomString(), randomString(), *idFile))
 	return fullPath
 }
 
@@ -71,7 +71,7 @@ func (u *LocalUploader) ReadFiles(paths ...string) ([][]byte, error) {
 	basePath := u.GetUploaderPath()
 	files := make([][]byte, 0)
 	for _, path := range paths {
-		b, err := u.readFile(filepath.Join(*basePath, path))
+		b, err := u.readFile(filepath.ToSlash(filepath.Join(*basePath, path)))
 		if err != nil {
 			return nil, err
 		}
