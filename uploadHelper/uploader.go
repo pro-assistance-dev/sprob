@@ -7,7 +7,9 @@ import (
 	"math/rand"
 	"mime/multipart"
 	"os"
+	"path"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +29,7 @@ type LocalUploader struct {
 }
 
 func NewLocalUploader(path *string) *LocalUploader {
-	staticPath := filepath.ToSlash(filepath.Join(*path))
+	staticPath := filepath.Join(*path)
 	return &LocalUploader{
 		UploadPath: &staticPath,
 	}
@@ -37,15 +39,16 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	if path == nil {
 		return errors.New("file does not relate to anything")
 	}
-	uploadPath := u.GetUploaderPath()
-	pathDirs := strings.Split(*path, string(os.PathSeparator))
-	pathToFile := filepath.Join(*uploadPath, filepath.Join(pathDirs[:len(pathDirs)-1]...))
-	err = os.MkdirAll(pathToFile, os.ModePerm)
+	fullPathParts := strings.Split(filepath.Join(*u.GetUploaderPath(), *path), string(os.PathSeparator))
+	dirsToFile, fileName := filepath.Join(fullPathParts[:len(fullPathParts)-1]...), fullPathParts[len(fullPathParts)-1]
+	if runtime.GOOS == "linux" {
+		dirsToFile = string(os.PathSeparator) + dirsToFile
+	}
+	err = os.MkdirAll(dirsToFile, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	fullPath := filepath.Join(*uploadPath, *path)
-	err = c.SaveUploadedFile(file[0], fullPath)
+	err = c.SaveUploadedFile(file[0], filepath.Join([]string{dirsToFile, fileName}...))
 	if err != nil {
 		return err
 	}
@@ -58,12 +61,12 @@ func (u *LocalUploader) GetUploaderPath() *string {
 
 func (u *LocalUploader) GetFullPath(path *string) *string {
 	basePath := u.GetUploaderPath()
-	fullPath := filepath.ToSlash(filepath.Join(*basePath, *path))
+	fullPath := filepath.Join(*basePath, *path)
 	return &fullPath
 }
 
 func BuildPath(idFile *string) string {
-	fullPath := filepath.ToSlash(filepath.Join(randomString(), randomString(), *idFile))
+	fullPath := path.Join(randomString(), randomString(), *idFile)
 	return fullPath
 }
 
@@ -71,7 +74,7 @@ func (u *LocalUploader) ReadFiles(paths ...string) ([][]byte, error) {
 	basePath := u.GetUploaderPath()
 	files := make([][]byte, 0)
 	for _, path := range paths {
-		b, err := u.readFile(filepath.ToSlash(filepath.Join(*basePath, path)))
+		b, err := u.readFile(filepath.Join(*basePath, path))
 		if err != nil {
 			return nil, err
 		}
