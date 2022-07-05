@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -39,8 +38,7 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	if path == nil {
 		return errors.New("file does not relate to anything")
 	}
-	fullPathParts := strings.Split(filepath.Join(*u.GetUploaderPath(), *path), string(os.PathSeparator))
-	dirsToFile, fileName := filepath.Join(fullPathParts[:len(fullPathParts)-1]...), fullPathParts[len(fullPathParts)-1]
+	dirsToFile, fileName := filepath.Split(filepath.Join(*u.GetUploaderPath(), *path))
 	if runtime.GOOS == "linux" {
 		dirsToFile = string(os.PathSeparator) + dirsToFile
 	}
