@@ -22,17 +22,19 @@ type DB struct {
 }
 
 func NewDBHelper(config config.DB) *DB {
-	return &DB{config: config}
+	h := &DB{config: config}
+	h.initDB()
+	return h
 }
 
-func (i *DB) InitDB() *bun.DB {
+func (i *DB) initDB() {
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", i.config.DB, i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, sqlitedialect.New())
 	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS tablefunc;`)
-	return db
+	i.DB = db
 }
 
 func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *string) {

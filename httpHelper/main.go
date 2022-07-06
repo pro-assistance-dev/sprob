@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/config"
+	"log"
+	"net/http"
 )
 
 type HTTPHelper struct {
@@ -18,4 +20,11 @@ func NewHTTPHelper(config config.Config) *HTTPHelper {
 func (i *HTTPHelper) SetFileHeaders(c *gin.Context, fileName string) {
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
+}
+
+func (i *HTTPHelper) ListenAndServe(handler http.Handler) {
+	err := http.ListenAndServe(fmt.Sprintf(":%s", i.Port), handler)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }

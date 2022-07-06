@@ -17,10 +17,10 @@ import (
 	"github.com/pro-assistance/pro-assister/uploadHelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
 	"github.com/uptrace/bun/migrate"
+	"net/http"
 )
 
 type Helper struct {
-	Mode      Mode
 	HTTP      *httpHelper.HTTPHelper
 	Search    *elasticSearchHelper.ElasticSearchHelper
 	PDF       *pdfHelper.PDFHelper
@@ -51,20 +51,16 @@ func NewHelper(config config.Config) *Helper {
 	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper}
 }
 
-func (i *Helper) Init(migrations *migrate.Migrations) {
+func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 	mode := flag.String("mode", "run", "init/create")
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
-	i.Mode = Mode(*mode)
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
-}
-
-func (i *Helper) MigrateMode() bool {
-	return i.Mode == Migrate
-}
-
-func (i *Helper) RunMode() bool {
-	return i.Mode == Run
+	if Mode(*mode) == Migrate {
+		return
+	}
+	defer i.DB.DB.Close()
+	i.HTTP.ListenAndServe(handler)
 }
