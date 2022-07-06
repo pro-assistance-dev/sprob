@@ -9,12 +9,13 @@ import (
 )
 
 type HTTPHelper struct {
-	Host string
-	Port string
+	Host       string
+	Port       string
+	middleware *middleware
 }
 
 func NewHTTPHelper(config config.Config) *HTTPHelper {
-	return &HTTPHelper{Host: config.ServerHost, Port: config.ServerPort}
+	return &HTTPHelper{Host: config.ServerHost, Port: config.ServerPort, middleware: createMiddleware()}
 }
 
 func (i *HTTPHelper) SetFileHeaders(c *gin.Context, fileName string) {
@@ -27,4 +28,8 @@ func (i *HTTPHelper) ListenAndServe(handler http.Handler) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+}
+
+func (i *HTTPHelper) CORSMiddleware() gin.HandlerFunc {
+	return i.middleware.corsMiddleware()
 }
