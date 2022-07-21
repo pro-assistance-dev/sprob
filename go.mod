@@ -10,7 +10,7 @@ require (
 	github.com/gosimple/slug v1.12.0
 	github.com/spf13/viper v1.11.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
-	github.com/uptrace/bun v1.1.5
+	github.com/uptrace/bun v1.1.6
 	github.com/uptrace/bun/dialect/sqlitedialect v1.1.5
 	github.com/uptrace/bun/driver/pgdriver v1.1.5
 	github.com/uptrace/bun/extra/bundebug v1.1.5
