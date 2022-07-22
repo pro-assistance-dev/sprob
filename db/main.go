@@ -67,7 +67,7 @@ func (i *DB) Dump() {
 	cmd := exec.Command(app, i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
 	stdout, err := cmd.Output()
 	if err != nil {
-		fmt.Println(err.Error())
+		log.Fatalln(err.Error())
 		return
 	}
 	// Print the output

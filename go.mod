@@ -8,10 +8,11 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.12.0
+	github.com/lukasjarosch/go-docx v0.4.4
 	github.com/spf13/viper v1.11.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
 	github.com/uptrace/bun v1.1.6
-	github.com/uptrace/bun/dialect/sqlitedialect v1.1.5
+	github.com/uptrace/bun/dialect/sqlitedialect v1.1.6
 	github.com/uptrace/bun/driver/pgdriver v1.1.5
 	github.com/uptrace/bun/extra/bundebug v1.1.5
 )
@@ -30,7 +31,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
-	github.com/lukasjarosch/go-docx v0.4.4 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -51,7 +51,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88 // indirect
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
-	golang.org/x/sys v0.0.0-20220503163025-988cb79eb6c6 // indirect
+	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect

@@ -2,6 +2,7 @@ package helper
 
 import (
 	"flag"
+	"fmt"
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
 	"github.com/pro-assistance/pro-assister/db"
@@ -62,6 +63,7 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 		return
 	}
 	if Mode(*mode) == Dump {
+		fmt.Println("DUMP!")
 		i.DB.Dump()
 		return
 	}
