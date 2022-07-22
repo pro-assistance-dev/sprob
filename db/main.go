@@ -7,6 +7,7 @@ import (
 	"github.com/uptrace/bun/migrate"
 	"log"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/uptrace/bun/extra/bundebug"
 
@@ -63,7 +64,7 @@ func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *stri
 }
 
 func (i *DB) Dump() {
-	app := "./dump_pg.sh"
+	app, _ := filepath.Abs("./dump_pg.sh")
 	cmd := exec.Command(app, i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
 	stdout, err := cmd.Output()
 	if err != nil {

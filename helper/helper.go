@@ -57,14 +57,14 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
-	search.InitSearchGroupsTables(i.DB.DB)
-	i.DB.DoAction(migrations, name, action)
-	if Mode(*mode) == Migrate {
-		return
-	}
 	if Mode(*mode) == Dump {
 		fmt.Println("DUMP!")
 		i.DB.Dump()
+		return
+	}
+	search.InitSearchGroupsTables(i.DB.DB)
+	i.DB.DoAction(migrations, name, action)
+	if Mode(*mode) == Migrate {
 		return
 	}
 	defer i.DB.DB.Close()
