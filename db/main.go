@@ -71,11 +71,9 @@ func (i *DB) Dump() {
 	exPath := filepath.Dir(filename)
 
 	cmd := exec.Command("/bin/bash", filepath.Join(exPath, "dump_pg.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
-	stdout, err := cmd.Output()
+	err := cmd.Run()
 	if err != nil {
 		log.Fatalln(err.Error())
 		return
 	}
-	// Print the output
-	fmt.Println(string(stdout))
 }
