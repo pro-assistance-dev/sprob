@@ -61,6 +61,10 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 	if Mode(*mode) == Migrate {
 		return
 	}
+	if Mode(*mode) == Dump {
+		i.DB.Dump()
+		return
+	}
 	defer i.DB.DB.Close()
 	i.HTTP.ListenAndServe(handler)
 }

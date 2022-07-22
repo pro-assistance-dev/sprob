@@ -29,13 +29,15 @@ type Token struct {
 }
 
 type DB struct {
-	DB       string `mapstructure:"DB_DB"`
-	User     string `mapstructure:"DB_USER"`
-	Password string `mapstructure:"DB_PASSWORD"`
-	Host     string `mapstructure:"DB_HOST"`
-	Port     string `mapstructure:"DB_PORT"`
-	Name     string `mapstructure:"DB_NAME"`
-	LogPath  string `mapstructure:"DB_LOG_PATH"`
+	DB             string `mapstructure:"DB_DB"`
+	User           string `mapstructure:"DB_USER"`
+	Password       string `mapstructure:"DB_PASSWORD"`
+	Host           string `mapstructure:"DB_HOST"`
+	Port           string `mapstructure:"DB_PORT"`
+	Name           string `mapstructure:"DB_NAME"`
+	LogPath        string `mapstructure:"DB_LOG_PATH"`
+	RemoteUser     string `mapstructure:"DB_REMOTE_USER"`
+	RemotePassword string `mapstructure:"DB_REMOTE_PASSWORD"`
 }
 
 type Email struct {

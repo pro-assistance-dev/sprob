@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/uptrace/bun/migrate"
 	"log"
+	"os/exec"
 
 	"github.com/uptrace/bun/extra/bundebug"
 
@@ -59,4 +60,16 @@ func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *stri
 	default:
 		log.Fatal("cannot parse action")
 	}
+}
+
+func (i *DB) Dump() {
+	app := "./dump_pg.sh"
+	cmd := exec.Command(app, i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
+	stdout, err := cmd.Output()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	// Print the output
+	fmt.Println(string(stdout))
 }
