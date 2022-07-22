@@ -7,9 +7,9 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
@@ -64,11 +64,12 @@ func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *stri
 }
 
 func (i *DB) Dump() {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
+	_, filename, _, ok := runtime.Caller(0)
+	if !ok {
+		panic("err")
 	}
-	exPath := filepath.Dir(ex)
+	exPath := filepath.Dir(filename)
+
 	cmd := exec.Command(filepath.Join(exPath, "dump.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
 	stdout, err := cmd.Output()
 	if err != nil {
