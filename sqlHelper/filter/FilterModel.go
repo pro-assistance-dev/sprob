@@ -2,9 +2,10 @@ package filter
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/pro-assistance/pro-assister/utilHelper"
 	"github.com/uptrace/bun"
-	"time"
 )
 
 // FilterModel model
@@ -97,9 +98,9 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 		query = query.Join(join)
 		joinTable := fmt.Sprintf("%s.%s", f.JoinTable, f.JoinTableIDCol)
 		if f.Operator != In {
-			query = query.Where(fmt.Sprintf("%s = ?", joinTable), f.JoinTableID)
+			query = query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
 		} else {
-			query = query.Where(fmt.Sprintf("%s in (?) ", joinTable), bun.In(f.Set))
+			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 		}
 		return
 	}
