@@ -11,7 +11,7 @@ require (
 	github.com/lukasjarosch/go-docx v0.4.4
 	github.com/spf13/viper v1.11.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
-	github.com/uptrace/bun v1.1.6
+	github.com/uptrace/bun v1.1.7
 	github.com/uptrace/bun/dialect/sqlitedialect v1.1.6
 	github.com/uptrace/bun/driver/pgdriver v1.1.5
 	github.com/uptrace/bun/extra/bundebug v1.1.5
