@@ -12,7 +12,7 @@ require (
 	github.com/spf13/viper v1.11.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
 	github.com/uptrace/bun v1.1.7
-	github.com/uptrace/bun/dialect/sqlitedialect v1.1.6
+	github.com/uptrace/bun/dialect/sqlitedialect v1.1.7
 	github.com/uptrace/bun/driver/pgdriver v1.1.5
 	github.com/uptrace/bun/extra/bundebug v1.1.5
 )
@@ -51,7 +51,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220511200225-c6db032c6c88 // indirect
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b // indirect
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
-	golang.org/x/sys v0.0.0-20220708085239-5a0f0661e09d // indirect
+	golang.org/x/sys v0.0.0-20220728004956-3c1f35247d10 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
