@@ -12,7 +12,7 @@ import (
 
 // the amount of time to wait when pushing a message to
 // a slow client or a client that closed after `range clients` started.
-const patience time.Duration = time.Second * 1
+const patience time.Duration = time.Second * 60
 
 type notificationEvent struct {
 	EventName string
@@ -30,7 +30,7 @@ type Broker struct {
 
 func NewBroker() (broker *Broker) {
 	b := &Broker{
-		notifier:       make(notifierChan, 1),
+		notifier:       make(notifierChan, 50),
 		newClients:     make(chan notifierChan),
 		closingClients: make(chan notifierChan),
 		clients:        make(map[notifierChan]bool),
