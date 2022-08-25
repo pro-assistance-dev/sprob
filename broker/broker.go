@@ -56,6 +56,8 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 
 	defer func() {
 		broker.closingClients <- messageChan
+		close(messageChan)
+		messageChan = nil
 	}()
 
 	w := c.Writer
