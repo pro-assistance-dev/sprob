@@ -2,7 +2,6 @@ package helper
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 
 	"github.com/pro-assistance/pro-assister/broker"
@@ -59,17 +58,16 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
 	if Mode(*mode) == Dump {
-		fmt.Println("DUMP!")
 		i.DB.Dump()
 		return
 	}
-	if Mode(*mode) != Test {
+	if Mode(*mode) == Migrate {
 		search.InitSearchGroupsTables(i.DB.DB)
 		i.DB.DoAction(migrations, name, action)
-	}
-	if Mode(*mode) == Migrate {
 		return
 	}
 	defer i.DB.DB.Close()
+	search.InitSearchGroupsTables(i.DB.DB)
+	i.DB.DoAction(migrations, name, action)
 	i.HTTP.ListenAndServe(handler)
 }
