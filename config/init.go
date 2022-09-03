@@ -77,7 +77,7 @@ func LoadConfig() (config *Config, err error) {
 }
 
 func LoadTestConfig() (config *Config, err error) {
-	viper.AddConfigPath(getEnvLocation())
+	//viper.AddConfigPath(getEnvLocation())
 	viper.SetConfigName(".env.test")
 	viper.SetConfigType("env")
 	viper.AutomaticEnv()
