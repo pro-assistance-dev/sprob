@@ -3,6 +3,8 @@ package helper
 import (
 	"flag"
 	"fmt"
+	"net/http"
+
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
 	"github.com/pro-assistance/pro-assister/db"
@@ -18,7 +20,6 @@ import (
 	"github.com/pro-assistance/pro-assister/uploadHelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
 	"github.com/uptrace/bun/migrate"
-	"net/http"
 )
 
 type Helper struct {
@@ -62,8 +63,10 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 		i.DB.Dump()
 		return
 	}
-	search.InitSearchGroupsTables(i.DB.DB)
-	i.DB.DoAction(migrations, name, action)
+	if Mode(*mode) != Test {
+		search.InitSearchGroupsTables(i.DB.DB)
+		i.DB.DoAction(migrations, name, action)
+	}
 	if Mode(*mode) == Migrate {
 		return
 	}

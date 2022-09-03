@@ -6,4 +6,5 @@ const (
 	Migrate Mode = "migrate"
 	Run          = "run"
 	Dump         = "dump"
+	Test         = "test"
 )
