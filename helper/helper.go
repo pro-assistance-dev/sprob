@@ -18,6 +18,7 @@ import (
 	"github.com/pro-assistance/pro-assister/tokenHelper"
 	"github.com/pro-assistance/pro-assister/uploadHelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
+	"github.com/pro-assistance/pro-assister/validatorhelper"
 	"github.com/uptrace/bun/migrate"
 )
 
@@ -34,6 +35,7 @@ type Helper struct {
 	Templater *templater.Templater
 	Broker    *broker.Broker
 	DB        *db.DB
+	Validator *validatorhelper.Validator
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -49,7 +51,8 @@ func NewHelper(config config.Config) *Helper {
 	templ := templater.NewTemplater(config)
 	dbHelper := db.NewDBHelper(config.DB)
 	brok := broker.NewBroker()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper}
+	v := validatorhelper.NewValidator()
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v}
 }
 
 func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
