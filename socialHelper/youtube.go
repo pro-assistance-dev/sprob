@@ -40,6 +40,7 @@ func (i *youTubeStruct) getWebFeed(data *http.Response) Socials {
 	for index := range i.Items {
 		item := Social{
 			Type:        SocialTypeYouTube,
+			Title:       i.Items[index].Snippet.Title,
 			Description: i.Items[index].Snippet.Description,
 			Image:       i.Items[index].Snippet.YouTubeThumbnails.Medium.Url,
 			MediaType:   MediaTypeImage,

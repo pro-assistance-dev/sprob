@@ -12,6 +12,7 @@ import (
 
 type Social struct {
 	Type        SocialType `json:"type"`
+	Title       string     `json:"title"`
 	Description string     `json:"description"`
 	Link        string     `json:"link"`
 	Image       string     `json:"image"`
