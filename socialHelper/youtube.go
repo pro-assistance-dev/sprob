@@ -7,8 +7,8 @@ import (
 )
 
 type youTubeElement struct {
-	YouTubeID youTubeID      `json:"id"`
-	Snippet   youTubeSnippet `json:"snippet"`
+	ID      interface{}    `json:"id"`
+	Snippet youTubeSnippet `json:"snippet"`
 }
 type youTubeElements []*youTubeElement
 
@@ -41,9 +41,14 @@ func (i *youTubeStruct) getWebFeed(data *http.Response) Socials {
 		item := Social{
 			Type:        SocialTypeYouTube,
 			Description: i.Items[index].Snippet.Description,
-			Link:        "https://www.youtube.com/watch?v=" + i.Items[index].YouTubeID.VideoID,
 			Image:       i.Items[index].Snippet.YouTubeThumbnails.Medium.Url,
 			MediaType:   MediaTypeImage,
+		}
+		switch v := i.Items[index].ID.(type) {
+		case string:
+			item.Link = "https://www.youtube.com/watch?v=" + v
+		case map[string]interface{}:
+			item.Link = "https://www.youtube.com/watch?v=" + v["videoId"].(string)
 		}
 		socials = append(socials, &item)
 	}

@@ -3,9 +3,40 @@ package socialHelper
 import (
 	"context"
 	"fmt"
-	"github.com/pro-assistance/pro-assister/config"
 	"log"
 	"net/http"
+	"net/url"
+
+	"github.com/pro-assistance/pro-assister/config"
+)
+
+type Social struct {
+	Type        SocialType `json:"type"`
+	Description string     `json:"description"`
+	Link        string     `json:"link"`
+	Image       string     `json:"image"`
+	MediaType   MediaType  `json:"mediaType"`
+}
+
+type Socials []*Social
+
+type SocialData struct {
+	Socials Socials `json:"data"`
+}
+
+type SocialType string
+
+const (
+	SocialTypeInstagram SocialType = "Instagram"
+	SocialTypeYouTube   SocialType = "YouTube"
+)
+
+type MediaType string
+
+const (
+	MediaTypeImage         MediaType = "IMAGE"
+	MediaTypeVideo         MediaType = "VIDEO"
+	MediaTypeCarouselAlbum MediaType = "CAROUSEL_ALBUM"
 )
 
 type SocialHelper struct {
@@ -18,10 +49,28 @@ func (i *SocialHelper) buildInstagramURL() string {
 	return fmt.Sprintf("%s/%s/media?fields=%s&access_token=%s", instagramApi, i.InstagramID, fields, i.InstagramToken)
 }
 
-func (i *SocialHelper) buildYouTubeURL() string {
+const youTubeApiV3 = "https://www.googleapis.com/youtube/v3/"
+
+func (i *SocialHelper) buildYouTubeChannelURL() string {
 	const youTubeApi = "https://www.googleapis.com/youtube/v3/search"
 	options := "&part=snippet&maxResults=6&order=date&type=video"
+	fmt.Println(fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options))
 	return fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options)
+}
+
+func (i *SocialHelper) buildYouTubeVideosURL(idPool []string) string {
+	options := "videos?part=id%2C+snippet"
+	urlSource, err := url.Parse(youTubeApiV3 + options)
+	if err != nil {
+		return ""
+	}
+	q := urlSource.Query()
+	for _, id := range idPool {
+		q.Add("id", id)
+	}
+	urlSource.RawQuery = q.Encode()
+	fmt.Println(fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey))
+	return fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey)
 }
 
 func NewSocial(config config.Social) *SocialHelper {
@@ -47,6 +96,12 @@ func (i *SocialHelper) GetWebFeed() Socials {
 	//resp := i.sendRequest(i.buildInstagramURL())
 	//instagram.decode(resp)
 	youTube := youTubeStruct{}
-	socials := youTube.getWebFeed(i.sendRequest(i.buildYouTubeURL()))
+	socials := youTube.getWebFeed(i.sendRequest(i.buildYouTubeChannelURL()))
+	return socials
+}
+
+func (i *SocialHelper) GetYouTubeVideosInfo(idPool []string) Socials {
+	youTube := youTubeStruct{}
+	socials := youTube.getWebFeed(i.sendRequest(i.buildYouTubeVideosURL(idPool)))
 	return socials
 }
