@@ -3,18 +3,23 @@ package templater
 import (
 	"bytes"
 	"fmt"
-	"github.com/lukasjarosch/go-docx"
 	"log"
 	"path"
 	"path/filepath"
 	"strings"
 	"text/template"
 
+	"github.com/lukasjarosch/go-docx"
+
 	"github.com/pro-assistance/pro-assister/config"
 )
 
 type Templater struct {
 	templatesPath string
+}
+
+func lenplus(arr []int, n int) string {
+	return fmt.Sprintf("%d", len(arr)+n)
 }
 
 func NewTemplater(config config.Config) *Templater {
@@ -24,7 +29,8 @@ func NewTemplater(config config.Config) *Templater {
 func (i *Templater) Parse(templateName string, data interface{}) string {
 	var buf strings.Builder
 	templateName = fmt.Sprintf("%s.gohtml", filepath.Join(i.templatesPath, templateName))
-	tmpl, err := template.ParseFiles(templateName)
+	funcMap := template.FuncMap{"lenplus": lenplus}
+	tmpl, err := template.New("").Funcs(funcMap).ParseFiles(templateName)
 	if err != nil {
 		log.Fatal(err)
 	}

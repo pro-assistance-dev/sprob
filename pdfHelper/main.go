@@ -2,11 +2,12 @@ package pdfHelper
 
 import (
 	"bytes"
+	"log"
+
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/pro-assistance/pro-assister/config"
 	"github.com/pro-assistance/pro-assister/templater"
 	"github.com/unidoc/unidoc/pdf/creator"
-	"log"
 )
 
 type PDFHelper struct {
