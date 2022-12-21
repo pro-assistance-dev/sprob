@@ -30,7 +30,7 @@ type Broker struct {
 
 func NewBroker() (broker *Broker) {
 	b := &Broker{
-		notifier:       make(notifierChan, 50),
+		notifier:       make(notifierChan, 50000),
 		newClients:     make(chan notifierChan),
 		closingClients: make(chan notifierChan),
 		clients:        make(map[notifierChan]bool),
@@ -108,8 +108,8 @@ func (broker *Broker) Listen() {
 		select {
 		case s := <-broker.newClients:
 			broker.clients[s] = true
-		case s := <-broker.closingClients:
-			delete(broker.clients, s)
+		//case s := <-broker.closingClients:
+		//	delete(broker.clients, s)
 		case event := <-broker.notifier:
 			for clientMessageChan := range broker.clients {
 				select {
