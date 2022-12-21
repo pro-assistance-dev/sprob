@@ -12,7 +12,7 @@ import (
 
 // the amount of time to wait when pushing a message to
 // a slow client or a client that closed after `range clients` started.
-const patience time.Duration = time.Second * 60
+const patience time.Duration = time.Minute * 60
 
 type notificationEvent struct {
 	EventName string
