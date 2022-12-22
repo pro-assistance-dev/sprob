@@ -27,8 +27,8 @@ func (i *HTTPHelper) SetFileHeaders(c *gin.Context, fileName string) {
 
 func (i *HTTPHelper) ListenAndServe(handler http.Handler) {
 	srv := &http.Server{
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  1500 * time.Second,
+		WriteTimeout: 1500 * time.Second,
 		Handler:      handler,
 		Addr:         fmt.Sprintf(":%s", i.Port),
 	}
