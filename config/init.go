@@ -2,13 +2,12 @@ package config
 
 import (
 	"os"
+	"time"
 
 	"github.com/spf13/viper"
 )
 
 type Config struct {
-	ServerPort    string `mapstructure:"SERVER_PORT"`
-	ServerHost    string `mapstructure:"SERVER_HOST"`
 	BinPath       string `mapstructure:"BIN_PATH"`
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
@@ -21,6 +20,14 @@ type Config struct {
 	Social        Social        `mapstructure:",squash"`
 	ElasticSearch ElasticSearch `mapstructure:",squash"`
 	Token         Token         `mapstructure:",squash"`
+	Server        Server        `mapstructure:",squash"`
+}
+
+type Server struct {
+	Port         string        `mapstructure:"SERVER_PORT"`
+	Host         string        `mapstructure:"SERVER_HOST"`
+	ReadTimeout  time.Duration `mapstructure:"SERVER_READ_TIMEOUT"`
+	WriteTimeout time.Duration `mapstructure:"SERVER_WRITE_TIMEOUT"`
 }
 
 type Token struct {

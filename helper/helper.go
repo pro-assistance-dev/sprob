@@ -39,7 +39,7 @@ type Helper struct {
 }
 
 func NewHelper(config config.Config) *Helper {
-	http := httpHelper.NewHTTPHelper(config)
+	http := httpHelper.NewHTTPHelper(config.Server)
 	pdf := pdfHelper.NewPDFHelper(config)
 	sql := sqlHelper.NewSQLHelper()
 	uploader := uploadHelper.NewLocalUploader(&config.UploadPath)
