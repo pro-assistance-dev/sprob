@@ -19,7 +19,7 @@ type HTTPHelper struct {
 }
 
 func NewHTTPHelper(config config.Server) *HTTPHelper {
-	return &HTTPHelper{Host: config.Host, Port: config.Port, middleware: createMiddleware(), ReadTimeout: config.ReadTimeout, WriteTimeout: config.WriteTimeout}
+	return &HTTPHelper{Host: config.Host, Port: config.Port, middleware: createMiddleware(), ReadTimeout: time.Duration(config.ReadTimeout), WriteTimeout: time.Duration(config.WriteTimeout)}
 }
 
 func (i *HTTPHelper) SetFileHeaders(c *gin.Context, fileName string) {

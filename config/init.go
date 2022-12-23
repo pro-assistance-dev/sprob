@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"time"
 
 	"github.com/spf13/viper"
 )
@@ -24,10 +23,10 @@ type Config struct {
 }
 
 type Server struct {
-	Port         string        `mapstructure:"SERVER_PORT"`
-	Host         string        `mapstructure:"SERVER_HOST"`
-	ReadTimeout  time.Duration `mapstructure:"SERVER_READ_TIMEOUT"`
-	WriteTimeout time.Duration `mapstructure:"SERVER_WRITE_TIMEOUT"`
+	Port         string `mapstructure:"SERVER_PORT"`
+	Host         string `mapstructure:"SERVER_HOST"`
+	ReadTimeout  int    `mapstructure:"SERVER_READ_TIMEOUT"`
+	WriteTimeout int    `mapstructure:"SERVER_WRITE_TIMEOUT"`
 }
 
 type Token struct {
