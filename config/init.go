@@ -45,6 +45,7 @@ type DB struct {
 	LogPath        string `mapstructure:"DB_LOG_PATH"`
 	RemoteUser     string `mapstructure:"DB_REMOTE_USER"`
 	RemotePassword string `mapstructure:"DB_REMOTE_PASSWORD"`
+	Verbose        string `mapstructure:"DB_VERBOSE"`
 }
 
 type Email struct {

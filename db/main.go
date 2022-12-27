@@ -4,12 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/uptrace/bun/extra/bundebug"
-	"github.com/uptrace/bun/migrate"
 	"log"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strconv"
+
+	"github.com/uptrace/bun/extra/bundebug"
+	"github.com/uptrace/bun/migrate"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
@@ -19,12 +21,17 @@ import (
 )
 
 type DB struct {
-	config config.DB
-	DB     *bun.DB
+	config  config.DB
+	DB      *bun.DB
+	Verbose bool
 }
 
 func NewDBHelper(config config.DB) *DB {
-	h := &DB{config: config}
+	verbose, err := strconv.ParseBool(config.Verbose)
+	if err != nil {
+		verbose = false
+	}
+	h := &DB{config: config, Verbose: verbose}
 	h.initDB()
 	return h
 }
@@ -33,7 +40,7 @@ func (i *DB) initDB() {
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", i.config.DB, i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, sqlitedialect.New())
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(i.Verbose)))
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS tablefunc;`)
 	i.DB = db
