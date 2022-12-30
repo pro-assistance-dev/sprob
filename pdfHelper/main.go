@@ -32,10 +32,11 @@ func NewPDFHelper(config config.Config) *PDFHelper {
 
 func (i *PDFHelper) GeneratePDF(template string, data interface{}) ([]byte, error) {
 	dataString := i.templater.Parse(template, data)
-	_, err := i.createFile()
+	gen, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		return nil, err
 	}
+	i.generator = gen
 	i.writeNewPageFromString(dataString)
 	i.setPageOptions()
 	return i.createFile()
