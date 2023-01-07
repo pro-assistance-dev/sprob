@@ -6,6 +6,7 @@ import (
 
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance/pro-assister/cronHelper"
 	"github.com/pro-assistance/pro-assister/db"
 	"github.com/pro-assistance/pro-assister/elasticSearchHelper"
 	"github.com/pro-assistance/pro-assister/emailHelper"
@@ -36,6 +37,7 @@ type Helper struct {
 	Broker    *broker.Broker
 	DB        *db.DB
 	Validator *validatorhelper.Validator
+	Cron      *cronHelper.Cron
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -52,7 +54,8 @@ func NewHelper(config config.Config) *Helper {
 	dbHelper := db.NewDBHelper(config.DB)
 	brok := broker.NewBroker()
 	v := validatorhelper.NewValidator()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v}
+	cr := cronHelper.NewCronHelper()
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v, Cron: cr}
 }
 
 func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
