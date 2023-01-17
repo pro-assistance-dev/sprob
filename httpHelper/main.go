@@ -34,7 +34,7 @@ func (i *HTTPHelper) ListenAndServe(handler http.Handler) {
 		Handler:      handler,
 		Addr:         fmt.Sprintf(":%s", i.Port),
 	}
-	err := srv.ListenAndServe()
+	err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")
 	if err != nil {
 		log.Fatalln(err)
 	}
