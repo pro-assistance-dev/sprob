@@ -12,6 +12,7 @@ import (
 	"github.com/pro-assistance/pro-assister/emailHelper"
 	"github.com/pro-assistance/pro-assister/httpHelper"
 	"github.com/pro-assistance/pro-assister/pdfHelper"
+	"github.com/pro-assistance/pro-assister/projecthelper"
 	"github.com/pro-assistance/pro-assister/search"
 	"github.com/pro-assistance/pro-assister/socialHelper"
 	"github.com/pro-assistance/pro-assister/sqlHelper"
@@ -38,6 +39,7 @@ type Helper struct {
 	DB        *db.DB
 	Validator *validatorhelper.Validator
 	Cron      *cronHelper.Cron
+	Project   *projecthelper.ProjectHelper
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -55,7 +57,8 @@ func NewHelper(config config.Config) *Helper {
 	brok := broker.NewBroker()
 	v := validatorhelper.NewValidator()
 	cr := cronHelper.NewCronHelper()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v, Cron: cr}
+	ph := projecthelper.NewProjectHelper()
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v, Cron: cr, Project: ph}
 }
 
 func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
@@ -73,6 +76,7 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
 		return
 	}
 	defer i.DB.DB.Close()
+	i.Project.InitSchemas()
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
 	i.HTTP.ListenAndServe(handler)
