@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pro-assistance/pro-assister/projecthelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
 	"github.com/uptrace/bun"
 )
 
 // FilterModel model
 type FilterModel struct {
-	Table string `json:"table"`
-	Col   string `json:"col"`
+	Table   string `json:"table"`
+	Col     string `json:"col"`
+	Model   string `json:"model"`
+	Version string `json:"version"`
 
 	Type     DataType  `json:"type,omitempty"`
 	Operator Operator  `json:"operator,omitempty"`
@@ -172,6 +175,10 @@ func (f *FilterModel) likeToString() {
 }
 
 func (f *FilterModel) getTableAndCol() string {
+	if f.Version == "v2" {
+		schema := projecthelper.SchemasLib.GetSchema(f.Model)
+		return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(f.Col))
+	}
 	return fmt.Sprintf("%s.%s", f.Table, f.Col)
 }
 

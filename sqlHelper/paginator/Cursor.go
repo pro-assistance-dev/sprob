@@ -2,6 +2,8 @@ package paginator
 
 import (
 	"fmt"
+
+	"github.com/pro-assistance/pro-assister/projecthelper"
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/uptrace/bun"
 )
@@ -12,6 +14,8 @@ type Cursor struct {
 	Value     string          `json:"value"`
 	Initial   bool            `json:"initial"`
 	TableName string          `json:"tableName"`
+	Version   string          `json:"version"`
+	Model     string          `json:"model"`
 }
 
 func (c *Cursor) createPagination(query *bun.SelectQuery) {
@@ -20,9 +24,18 @@ func (c *Cursor) createPagination(query *bun.SelectQuery) {
 	}
 	q := ""
 	if len(c.TableName) > 0 {
-		q = fmt.Sprintf("%s.%s %s '%s'", c.TableName, c.Column, c.Operator, c.Value)
+		q = fmt.Sprintf("%s %s '%s'", c.getTableAndCol(), c.Operator, c.Value)
 	} else {
-		q = fmt.Sprintf("%s %s '%s'", c.Column, c.Operator, c.Value)
+		schema := projecthelper.SchemasLib.GetSchema(c.Model)
+		q = fmt.Sprintf("%s %s '%s'", schema.GetCol(c.Column), c.Operator, c.Value)
 	}
 	query = query.Where(q)
+}
+
+func (c *Cursor) getTableAndCol() string {
+	if c.Version == "v2" {
+		schema := projecthelper.SchemasLib.GetSchema(c.Model)
+		return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(c.Column))
+	}
+	return fmt.Sprintf("%s.%s", c.TableName, c.Column)
 }
