@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 )
 
 type vkItem struct {
@@ -22,7 +23,7 @@ func (i *vkItem) getPhotoURL() string {
 	attachment := i.Attachments[0]
 	url := ""
 	for _, size := range attachment.Photo.Sizes {
-		if size.Type == "p" {
+		if size.Type == "q" {
 			url = size.Url
 			break
 		}
@@ -60,9 +61,11 @@ func (i *vkStruct) getWebFeed(data *http.Response) Socials {
 	socials := make(Socials, 0)
 	for _, item := range i.Response.Items {
 		title := item.Text
-		if len(item.Text) > 200 {
-			title = item.Text[:200]
+		if len(item.Text) > 100 {
+			title = item.Text[:100]
 		}
+		var emojiRx = regexp.MustCompile(`[\x{1F600}-\x{1F6FF}|[\x{2600}-\x{26FF}]`)
+		title = emojiRx.ReplaceAllString(title, "")
 
 		item := Social{
 			Type:        SocialTypeVK,
