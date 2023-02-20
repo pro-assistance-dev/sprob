@@ -63,6 +63,9 @@ type Social struct {
 
 	YouTubeApiKey    string `mapstructure:"YOUTUBE_API_KEY"`
 	YouTubeChannelID string `mapstructure:"YOUTUBE_CHANNEL_ID"`
+
+	VkServiceApplicationKey string `mapstructure:"VK_SERVICE_APPLICATION_KEY"`
+	VkGroupID               string `mapstructure:"VK_GROUP_ID"`
 }
 
 type ElasticSearch struct {

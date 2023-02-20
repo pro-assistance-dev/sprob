@@ -30,6 +30,7 @@ type SocialType string
 const (
 	SocialTypeInstagram SocialType = "Instagram"
 	SocialTypeYouTube   SocialType = "YouTube"
+	SocialTypeVK        SocialType = "VK"
 )
 
 type MediaType string
@@ -51,11 +52,17 @@ func (i *SocialHelper) buildInstagramURL() string {
 }
 
 const youTubeApiV3 = "https://www.googleapis.com/youtube/v3/"
+const vkApi = "https://api.vk.com/method/wall.get"
+
+func (i *SocialHelper) buildVkURL() string {
+	const vkWallApi = "https://api.vk.com/method/wall.get"
+	queryParams := "?filter=owner&count=2&v=5.131&owner_id=%s&access_token=%s"
+	return fmt.Sprintf(vkWallApi+queryParams, i.VkGroupID, i.VkServiceApplicationKey)
+}
 
 func (i *SocialHelper) buildYouTubeChannelURL() string {
 	const youTubeApi = "https://www.googleapis.com/youtube/v3/search"
 	options := "&part=snippet&maxResults=6&order=date&type=video"
-	fmt.Println(fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options))
 	return fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options)
 }
 
@@ -70,12 +77,11 @@ func (i *SocialHelper) buildYouTubeVideosURL(idPool []string) string {
 		q.Add("id", id)
 	}
 	urlSource.RawQuery = q.Encode()
-	fmt.Println(fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey))
 	return fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey)
 }
 
-func NewSocial(config config.Social) *SocialHelper {
-	return &SocialHelper{config}
+func NewSocial() *SocialHelper {
+	return &SocialHelper{}
 }
 
 func (i *SocialHelper) sendRequest(url string) *http.Response {
@@ -93,11 +99,20 @@ func (i *SocialHelper) sendRequest(url string) *http.Response {
 }
 
 func (i *SocialHelper) GetWebFeed() Socials {
+	var socials Socials
+
 	//instagram := instagramStruct{}
 	//resp := i.sendRequest(i.buildInstagramURL())
 	//instagram.decode(resp)
+
 	youTube := youTubeStruct{}
-	socials := youTube.getWebFeed(i.sendRequest(i.buildYouTubeChannelURL()))
+	socialsYouTube := youTube.getWebFeed(i.sendRequest(i.buildYouTubeChannelURL()))
+	socials = append(socials, socialsYouTube...)
+
+	vk := vkStruct{}
+	socialsVk := vk.getWebFeed(i.sendRequest(i.buildVkURL()))
+	socials = append(socials, socialsVk...)
+
 	return socials
 }
 
