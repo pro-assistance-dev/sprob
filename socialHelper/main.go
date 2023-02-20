@@ -80,8 +80,8 @@ func (i *SocialHelper) buildYouTubeVideosURL(idPool []string) string {
 	return fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey)
 }
 
-func NewSocial() *SocialHelper {
-	return &SocialHelper{}
+func NewSocial(social config.Social) *SocialHelper {
+	return &SocialHelper{social}
 }
 
 func (i *SocialHelper) sendRequest(url string) *http.Response {
