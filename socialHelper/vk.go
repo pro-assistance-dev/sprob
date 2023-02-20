@@ -75,7 +75,9 @@ func (i *vkStruct) getWebFeed(data *http.Response) Socials {
 			Image:       item.getPhotoURL(),
 			MediaType:   MediaTypeImage,
 		}
-		socials = append(socials, &item)
+		if len(item.Title) > 0 && len(item.Image) > 0 {
+			socials = append(socials, &item)
+		}
 	}
 	return socials
 }

@@ -56,7 +56,7 @@ const vkApi = "https://api.vk.com/method/wall.get"
 
 func (i *SocialHelper) buildVkURL() string {
 	const vkWallApi = "https://api.vk.com/method/wall.get"
-	queryParams := "?filter=owner&count=5&v=5.131&owner_id=%s&access_token=%s"
+	queryParams := "?filter=owner&count=10&v=5.131&owner_id=%s&access_token=%s"
 	fmt.Println(fmt.Sprintf(vkWallApi+queryParams, i.VkGroupID, i.VkServiceApplicationKey))
 	return fmt.Sprintf(vkWallApi+queryParams, i.VkGroupID, i.VkServiceApplicationKey)
 }
