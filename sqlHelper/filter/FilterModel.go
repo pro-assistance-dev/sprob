@@ -110,7 +110,7 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	}
 	joinTable := f.JoinTable
 	if f.Version == "v2" {
-		joinModel := projecthelper.SchemasLib.GetSchema(f.Model)
+		joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
 		joinTable = joinModel.GetTableName()
 	}
 	join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
