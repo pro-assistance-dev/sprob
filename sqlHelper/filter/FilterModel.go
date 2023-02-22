@@ -27,6 +27,7 @@ type FilterModel struct {
 	Set     []string `json:"set"`
 
 	JoinTable      string `json:"joinTable"`
+	JoinTableModel string `json:"joinTableModel"`
 	JoinTableFK    string `json:"joinTableFK"`
 	JoinTablePK    string `json:"joinTablePK"`
 	JoinTableID    string `json:"joinTableId"`
@@ -107,7 +108,12 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 		}
 		return
 	}
-	join := fmt.Sprintf("JOIN %s ON %s", f.JoinTable, f.getJoinCondition())
+	joinTable := f.JoinTable
+	if f.Version == "v2" {
+		joinModel := projecthelper.SchemasLib.GetSchema(f.Model)
+		joinTable = joinModel.GetTableName()
+	}
+	join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
 	query = query.Join(join)
 }
 
@@ -183,6 +189,11 @@ func (f *FilterModel) getTableAndCol() string {
 }
 
 func (f *FilterModel) getJoinCondition() string {
+	if f.Version == "v2" {
+		model := projecthelper.SchemasLib.GetSchema(f.Model)
+		joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
+		return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetCol(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetCol(f.JoinTableFK))
+	}
 	return fmt.Sprintf("%s.%s = %s.%s", f.Table, f.JoinTablePK, f.JoinTable, f.JoinTableFK)
 }
 
