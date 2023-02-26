@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
 
@@ -25,6 +26,12 @@ type IService[TSingle, TPlural, TPluralWithCount any] interface {
 	Update(*TSingle) error
 }
 
+type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
+	IService[TSingle, TPlural, TPluralWithCount]
+	UpsertMany(*TPlural) error
+	DeleteMany([]uuid.UUID) error
+}
+
 type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
 	SetQueryFilter(*gin.Context) error
 	DB() *bun.DB
@@ -34,6 +41,13 @@ type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
 	Get(string) (*TSingle, error)
 	Delete(string) error
 	Update(*TSingle) error
+}
+
+type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
+	IRepository[TSingle, TPlural, TPluralWithCount]
+	Upsert(*TSingle) error
+	UpsertMany(*TPlural) error
+	DeleteMany([]uuid.UUID) error
 }
 
 type IFilesService interface {
