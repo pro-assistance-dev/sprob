@@ -1,6 +1,6 @@
 module github.com/pro-assistance/pro-assister
 
-go 1.17
+go 1.18
 
 require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
