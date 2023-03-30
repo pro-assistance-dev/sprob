@@ -11,6 +11,7 @@ import (
 )
 
 type HTTPHelper struct {
+	HTTPS        bool
 	Host         string
 	Port         string
 	middleware   *middleware
@@ -19,7 +20,7 @@ type HTTPHelper struct {
 }
 
 func NewHTTPHelper(config config.Server) *HTTPHelper {
-	return &HTTPHelper{Host: config.Host, Port: config.Port, middleware: createMiddleware(), ReadTimeout: time.Duration(config.ReadTimeout), WriteTimeout: time.Duration(config.WriteTimeout)}
+	return &HTTPHelper{Host: config.Host, Port: config.Port, middleware: createMiddleware(), ReadTimeout: time.Duration(config.ReadTimeout), WriteTimeout: time.Duration(config.WriteTimeout), HTTPS: config.HTTPS}
 }
 
 func (i *HTTPHelper) SetFileHeaders(c *gin.Context, fileName string) {
@@ -34,7 +35,12 @@ func (i *HTTPHelper) ListenAndServe(handler http.Handler) {
 		Handler:      handler,
 		Addr:         fmt.Sprintf(":%s", i.Port),
 	}
-	err := srv.ListenAndServeTLS("localhost.crt", "localhost.key")
+	var err error
+	if i.HTTPS {
+		err = srv.ListenAndServeTLS("localhost.crt", "localhost.key")
+	} else {
+		err = srv.ListenAndServe()
+	}
 	if err != nil {
 		log.Fatalln(err)
 	}

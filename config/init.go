@@ -25,6 +25,7 @@ type Config struct {
 type Server struct {
 	Port         string `mapstructure:"SERVER_PORT"`
 	Host         string `mapstructure:"SERVER_HOST"`
+	HTTPS        bool   `mapstructure:"SERVER_HTTPS"`
 	ReadTimeout  int    `mapstructure:"SERVER_READ_TIMEOUT"`
 	WriteTimeout int    `mapstructure:"SERVER_WRITE_TIMEOUT"`
 }
