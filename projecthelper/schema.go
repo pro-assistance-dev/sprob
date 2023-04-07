@@ -1,6 +1,7 @@
 package projecthelper
 
 import (
+	"fmt"
 	"go/ast"
 	"strconv"
 	"strings"
@@ -81,7 +82,7 @@ func parseTags(tagString string) *structtag.Tags {
 	}
 	tags, err := structtag.Parse(tag)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("%s: %s", err.Error(), tagString))
 	}
 	return tags
 }
