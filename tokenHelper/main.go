@@ -101,7 +101,7 @@ func (h *TokenHelper) RefreshToken(refreshToken string) (*TokenDetails, error) {
 	if !ok {
 		return nil, err
 	}
-	userDomainID, ok := claims["user_role_id"].(string)
+	userDomainID, ok := claims["user_domain_id"].(string)
 	if !ok {
 		return nil, err
 	}
