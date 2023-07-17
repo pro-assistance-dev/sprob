@@ -127,7 +127,7 @@ func (h *TokenHelper) extractTokenMetadata(r *http.Request) (*AccessDetails, err
 		return nil, err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok || token.Valid {
+	if !ok || !token.Valid {
 		return nil, err
 	}
 	accessUuid, ok := claims["access_uuid"].(string)
