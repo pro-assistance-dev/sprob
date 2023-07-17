@@ -2,14 +2,15 @@ package tokenHelper
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/pro-assistance/pro-assister/config"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 type TokenHelper struct {
@@ -23,10 +24,11 @@ func NewTokenHelper(conf config.Token) *TokenHelper {
 }
 
 type AccessDetails struct {
-	AccessUuid string
-	UserID     string
-	UserRole   string
-	UserRoleID string
+	AccessUuid   string
+	UserID       string
+	UserDomainID string
+	UserRole     string
+	UserRoleID   string
 }
 
 type TokenDetails struct {
@@ -38,7 +40,7 @@ type TokenDetails struct {
 	RtExpires    int64
 }
 
-func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID string) (*TokenDetails, error) {
+func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID string, userDomainID string) (*TokenDetails, error) {
 	td := &TokenDetails{}
 	td.AtExpires = time.Now().Add(time.Minute * time.Duration(h.TokenAccessMinutes)).Unix()
 	td.AccessUuid = uuid.NewString()
@@ -54,6 +56,7 @@ func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID str
 	atClaims["access_uuid"] = td.AccessUuid
 	atClaims["user_id"] = userID
 	atClaims["user_role"] = userRole
+	atClaims["user_domain_id"] = userDomainID
 	atClaims["user_role_id"] = userRoleID
 	atClaims["exp"] = td.AtExpires
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
@@ -68,6 +71,7 @@ func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID str
 	rtClaims["user_id"] = userID
 	rtClaims["user_role"] = userRole
 	rtClaims["user_role_id"] = userRoleID
+	rtClaims["user_domain_id"] = userDomainID
 	rtClaims["exp"] = td.RtExpires
 	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
 	td.RefreshToken, err = rt.SignedString([]byte(h.TokenSecret))
@@ -78,32 +82,30 @@ func (h *TokenHelper) CreateToken(userID string, userRole string, userRoleID str
 }
 func (h *TokenHelper) RefreshToken(refreshToken string) (*TokenDetails, error) {
 	token, err := h.VerifyToken(refreshToken)
-	if err != nil {
+	if err != nil || !token.Valid {
 		return nil, err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
-	var userID string
-	if ok && token.Valid {
-		userID, ok = claims["user_id"].(string)
-		if !ok {
-			return nil, err
-		}
+	if !ok {
+		return nil, err
 	}
-	var userRole string
-	if ok && token.Valid {
-		userRole, ok = claims["user_role"].(string)
-		if !ok {
-			return nil, err
-		}
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil, err
 	}
-	var userRoleID string
-	if ok && token.Valid {
-		userRoleID, ok = claims["user_role_id"].(string)
-		if !ok {
-			return nil, err
-		}
+	userRole, ok := claims["user_role"].(string)
+	if !ok {
+		return nil, err
 	}
-	return h.CreateToken(userID, userRole, userRoleID)
+	userRoleID, ok := claims["user_role_id"].(string)
+	if !ok {
+		return nil, err
+	}
+	userDomainID, ok := claims["user_role_id"].(string)
+	if !ok {
+		return nil, err
+	}
+	return h.CreateToken(userID, userRole, userRoleID, userDomainID)
 }
 
 func (h *TokenHelper) VerifyToken(tokenString string) (*jwt.Token, error) {
@@ -125,34 +127,37 @@ func (h *TokenHelper) extractTokenMetadata(r *http.Request) (*AccessDetails, err
 		return nil, err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if ok && token.Valid {
-		accessUuid, ok := claims["access_uuid"].(string)
-		if !ok {
-			return nil, err
-		}
-		userID, ok := claims["user_id"].(string)
-		if !ok {
-			return nil, err
-		}
-		userRole, ok := claims["user_role"].(string)
-		if !ok {
-			return nil, err
-		}
-		if !ok {
-			return nil, err
-		}
-		userRoleID, ok := claims["user_role_id"].(string)
-		if !ok {
-			return nil, err
-		}
-		return &AccessDetails{
-			AccessUuid: accessUuid,
-			UserID:     userID,
-			UserRole:   userRole,
-			UserRoleID: userRoleID,
-		}, nil
+	if ok || token.Valid {
+		return nil, err
 	}
-	return nil, err
+	accessUuid, ok := claims["access_uuid"].(string)
+	if !ok {
+		return nil, err
+	}
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil, err
+	}
+	userRole, ok := claims["user_role"].(string)
+	if !ok {
+		return nil, err
+	}
+	userRoleID, ok := claims["user_role_id"].(string)
+	if !ok {
+		return nil, err
+	}
+	userDomainID, ok := claims["user_domain_id"].(string)
+	if !ok {
+		return nil, err
+	}
+	return &AccessDetails{
+		AccessUuid:   accessUuid,
+		UserID:       userID,
+		UserRole:     userRole,
+		UserRoleID:   userRoleID,
+		UserDomainID: userDomainID,
+	}, nil
+
 }
 
 func (h *TokenHelper) extractToken(r *http.Request) string {
@@ -179,6 +184,14 @@ func (h *TokenHelper) GetUserRole(c *gin.Context) (string, error) {
 		return "", err
 	}
 	return accessDetails.UserRole, err
+}
+
+func (h *TokenHelper) GetUserDomainID(c *gin.Context) (string, error) {
+	accessDetails, err := h.extractTokenMetadata(c.Request)
+	if err != nil {
+		return "", err
+	}
+	return accessDetails.UserDomainID, err
 }
 
 func (h *TokenHelper) GetAccessDetail(c *gin.Context) (*AccessDetails, error) {
