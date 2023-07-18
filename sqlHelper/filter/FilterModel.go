@@ -97,7 +97,7 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 }
 
 func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
-	if f.JoinTableID != "" {
+	if f.JoinTableID != "" && f.Version != "v2" {
 		join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
 		query = query.Join(join)
 		joinTable := fmt.Sprintf("%s.%s", f.JoinTable, f.JoinTableIDCol)
@@ -115,6 +115,13 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	}
 	join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
 	query = query.Join(join)
+	if f.JoinTableID != "" {
+		if f.Operator != In {
+			query = query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
+		} else {
+			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
+		}
+	}
 }
 
 //
