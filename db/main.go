@@ -5,14 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 
-	"github.com/oiime/logrusbun"
-	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun/migrate"
 
 	"github.com/uptrace/bun"
@@ -43,14 +40,14 @@ func (i *DB) initDB() {
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, sqlitedialect.New())
 	//db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(i.Verbose)))
-	l := logrus.New()
-	file, err := os.OpenFile(i.config.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-	if err == nil {
-		l.Out = file
-	} else {
-		l.Info("Failed to log to file, using default stderr")
-	}
-	db.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: l}))
+	//l := logrus.New()
+	//file, err := os.OpenFile(i.config.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	//if err == nil {
+	//	l.Out = file
+	//} else {
+	//	l.Info("Failed to log to file, using default stderr")
+	//}
+	//db.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: l}))
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS tablefunc;`)
 	i.DB = db
