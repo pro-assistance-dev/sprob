@@ -13,7 +13,6 @@ import (
 
 	"github.com/oiime/logrusbun"
 	"github.com/sirupsen/logrus"
-	"github.com/uptrace/bun/extra/bundebug"
 	"github.com/uptrace/bun/migrate"
 
 	"github.com/uptrace/bun"
@@ -43,7 +42,7 @@ func (i *DB) initDB() {
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", i.config.DB, i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, sqlitedialect.New())
-	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(i.Verbose)))
+	//db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(i.Verbose)))
 	l := logrus.New()
 	file, err := os.OpenFile(i.config.LogPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err == nil {
