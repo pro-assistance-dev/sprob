@@ -9,7 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.12.0
-	github.com/lukasjarosch/go-docx v0.4.4
+	github.com/lukasjarosch/go-docx v0.4.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/viper v1.11.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
