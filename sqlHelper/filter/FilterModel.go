@@ -117,7 +117,7 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	query = query.Join(join)
 	if f.JoinTableID != "" {
 		if f.Operator != In {
-			query = query.Where("? = ?", f.JoinTableIDCol, f.JoinTableID)
+			query = query.Where("? = ?", bun.Ident(f.JoinTableIDCol), f.JoinTableID)
 		} else {
 			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 		}
