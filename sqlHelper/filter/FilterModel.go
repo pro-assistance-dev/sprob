@@ -109,15 +109,16 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 		return
 	}
 	joinTable := f.JoinTable
+	joinModel := projecthelper.Schema{}
 	if f.Version == "v2" {
-		joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
+		joinModel = projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
 		joinTable = joinModel.GetTableName()
 	}
 	join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
 	query = query.Join(join)
 	if f.JoinTableID != "" {
 		if f.Operator != In {
-			query = query.Where("? = ?", bun.Ident(f.JoinTableIDCol), f.JoinTableID)
+			query = query.Where("? = ?", bun.Ident(joinModel.GetCol(f.JoinTableIDCol)), f.JoinTableID)
 		} else {
 			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 		}
