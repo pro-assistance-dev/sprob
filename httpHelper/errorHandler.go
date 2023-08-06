@@ -8,6 +8,7 @@ import (
 
 func (i *HTTPHelper) HandleError(c *gin.Context, err error, code int) bool {
 	if err != nil && err.Error() != sql.ErrNoRows.Error() {
+		_ = c.Error(err)
 		c.JSON(code, err.Error())
 		return true
 	}
