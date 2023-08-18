@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/uptrace/bun"
 )
 
 type IHandler interface {
@@ -17,13 +16,11 @@ type IHandler interface {
 }
 
 type IService[TSingle, TPlural, TPluralWithCount any] interface {
-	SetQueryFilter(*gin.Context) error
-
-	Create(*TSingle) error
-	GetAll() (TPluralWithCount, error)
-	Get(string) (*TSingle, error)
-	Delete(string) error
-	Update(*TSingle) error
+	Create(*gin.Context, *TSingle) error
+	GetAll(*gin.Context) (TPluralWithCount, error)
+	Get(*gin.Context, string) (*TSingle, error)
+	Delete(*gin.Context, string) error
+	Update(*gin.Context, *TSingle) error
 }
 
 type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
@@ -33,21 +30,18 @@ type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 }
 
 type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
-	SetQueryFilter(*gin.Context) error
-	DB() *bun.DB
-
-	Create(*TSingle) error
-	GetAll() (TPluralWithCount, error)
-	Get(string) (*TSingle, error)
-	Delete(string) error
-	Update(*TSingle) error
+	Create(*gin.Context, *TSingle) error
+	Update(*gin.Context, *TSingle) error
+	GetAll(*gin.Context) (TPluralWithCount, error)
+	Get(*gin.Context, string) (*TSingle, error)
+	Delete(*gin.Context, string) error
 }
 
 type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 	IRepository[TSingle, TPlural, TPluralWithCount]
-	Upsert(*TSingle) error
-	UpsertMany(*TPlural) error
-	DeleteMany([]uuid.UUID) error
+	Upsert(*gin.Context, *TSingle) error
+	UpsertMany(*gin.Context, *TPlural) error
+	DeleteMany(*gin.Context, []uuid.UUID) error
 }
 
 type IFilesService interface {
