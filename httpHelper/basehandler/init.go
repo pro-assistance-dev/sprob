@@ -1,7 +1,6 @@
 package basehandler
 
 import (
-	"context"
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +17,7 @@ type IHandler interface {
 
 type IService[TSingle, TPlural, TPluralWithCount any] interface {
 	Create(*TSingle) error
-	GetAll(context.Context) (TPluralWithCount, error)
+	GetAll() (TPluralWithCount, error)
 	Get(string) (*TSingle, error)
 	Delete(string) error
 	Update(*TSingle) error
@@ -33,7 +32,7 @@ type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
 	Create(*TSingle) error
 	Update(*TSingle) error
-	GetAll(context.Context) (TPluralWithCount, error)
+	GetAll() (TPluralWithCount, error)
 	Get(string) (*TSingle, error)
 	Delete(string) error
 }
