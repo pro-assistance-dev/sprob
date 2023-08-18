@@ -45,7 +45,7 @@ func (i *SQLHelper) InjectQueryFilter(c context.Context, q *QueryFilter) {
 	c = context.WithValue(c, fqKey{}, q)
 }
 
-func ExtractQueryFilter(ctx context.Context) *QueryFilter {
+func (i *SQLHelper) ExtractQueryFilter(ctx context.Context) *QueryFilter {
 	if i, ok := ctx.Value(fqKey{}).(*QueryFilter); ok {
 		return i
 	}
