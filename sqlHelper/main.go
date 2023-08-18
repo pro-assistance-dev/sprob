@@ -42,6 +42,7 @@ func (i *SQLHelper) WhereLikeWithLowerTranslit(col string, search string) string
 }
 
 func (i *SQLHelper) InjectQueryFilter(c context.Context, q *QueryFilter) {
+
 	c = context.WithValue(c, fqKey{}, q)
 }
 
