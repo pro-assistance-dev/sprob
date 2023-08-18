@@ -13,6 +13,7 @@ func (i *HTTPHelper) GetForm(c *gin.Context, item interface{}) (map[string][]*mu
 		return nil, err
 	}
 	err = json.Unmarshal([]byte(form.Value["form"][0]), &item)
+
 	if err != nil {
 		return nil, err
 	}
