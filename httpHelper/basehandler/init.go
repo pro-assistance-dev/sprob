@@ -1,6 +1,7 @@
 package basehandler
 
 import (
+	"context"
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
@@ -16,11 +17,11 @@ type IHandler interface {
 }
 
 type IService[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(*gin.Context, *TSingle) error
-	GetAll(*gin.Context) (TPluralWithCount, error)
-	Get(*gin.Context, string) (*TSingle, error)
-	Delete(*gin.Context, string) error
-	Update(*gin.Context, *TSingle) error
+	Create(context.Context, *TSingle) error
+	GetAll(context.Context) (TPluralWithCount, error)
+	Get(context.Context, string) (*TSingle, error)
+	Delete(context.Context, string) error
+	Update(context.Context, *TSingle) error
 }
 
 type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
@@ -30,18 +31,18 @@ type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 }
 
 type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(*gin.Context, *TSingle) error
-	Update(*gin.Context, *TSingle) error
-	GetAll(*gin.Context) (TPluralWithCount, error)
-	Get(*gin.Context, string) (*TSingle, error)
-	Delete(*gin.Context, string) error
+	Create(context.Context, *TSingle) error
+	Update(context.Context, *TSingle) error
+	GetAll(context.Context) (TPluralWithCount, error)
+	Get(context.Context, string) (*TSingle, error)
+	Delete(context.Context, string) error
 }
 
 type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 	IRepository[TSingle, TPlural, TPluralWithCount]
-	Upsert(*gin.Context, *TSingle) error
-	UpsertMany(*gin.Context, *TPlural) error
-	DeleteMany(*gin.Context, []uuid.UUID) error
+	Upsert(context.Context, *TSingle) error
+	UpsertMany(context.Context, *TPlural) error
+	DeleteMany(context.Context, []uuid.UUID) error
 }
 
 type IFilesService interface {
