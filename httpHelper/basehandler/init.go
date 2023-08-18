@@ -21,6 +21,7 @@ type IService[TSingle, TPlural, TPluralWithCount any] interface {
 	Get(string) (*TSingle, error)
 	Delete(string) error
 	Update(*TSingle) error
+	SetQueryFilter(c *gin.Context) error
 }
 
 type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
@@ -35,6 +36,8 @@ type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
 	GetAll() (TPluralWithCount, error)
 	Get(string) (*TSingle, error)
 	Delete(string) error
+
+	SetQueryFilter(c *gin.Context) error
 }
 
 type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
