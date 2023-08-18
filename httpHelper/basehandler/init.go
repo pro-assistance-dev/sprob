@@ -17,11 +17,11 @@ type IHandler interface {
 }
 
 type IService[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(context.Context, *TSingle) error
+	Create(*TSingle) error
 	GetAll(context.Context) (TPluralWithCount, error)
-	Get(context.Context, string) (*TSingle, error)
-	Delete(context.Context, string) error
-	Update(context.Context, *TSingle) error
+	Get(string) (*TSingle, error)
+	Delete(string) error
+	Update(*TSingle) error
 }
 
 type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
@@ -31,18 +31,18 @@ type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 }
 
 type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(context.Context, *TSingle) error
-	Update(context.Context, *TSingle) error
+	Create(*TSingle) error
+	Update(*TSingle) error
 	GetAll(context.Context) (TPluralWithCount, error)
-	Get(context.Context, string) (*TSingle, error)
-	Delete(context.Context, string) error
+	Get(string) (*TSingle, error)
+	Delete(string) error
 }
 
 type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 	IRepository[TSingle, TPlural, TPluralWithCount]
-	Upsert(context.Context, *TSingle) error
-	UpsertMany(context.Context, *TPlural) error
-	DeleteMany(context.Context, []uuid.UUID) error
+	Upsert(*TSingle) error
+	UpsertMany(*TPlural) error
+	DeleteMany([]uuid.UUID) error
 }
 
 type IFilesService interface {
