@@ -52,6 +52,7 @@ func (item *TokenDetails) setRefreshTokenClaims(claims jwt.MapClaims, exp int) {
 }
 
 func (h *TokenHelper) CreateToken(claimsSetter JWTClaimsSetter) (td *TokenDetails, err error) {
+	td = &TokenDetails{}
 	atClaims := jwt.MapClaims{}
 	td.setAccessTokenClaims(atClaims, h.TokenAccessMinutes)
 	claimsSetter.SetJWTClaimsMap(atClaims)
