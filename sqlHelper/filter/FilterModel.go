@@ -218,7 +218,7 @@ func (f *FilterModel) getJoinCondition() string {
 
 func (f *FilterModel) getJoinExpression(model projecthelper.Schema, joinModel projecthelper.Schema) string {
 	modelTable := model.GetTableName()
-	joinTable := model.GetTableName()
+	joinTable := joinModel.GetTableName()
 	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
 	return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
 
