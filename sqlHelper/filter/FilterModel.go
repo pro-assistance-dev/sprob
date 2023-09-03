@@ -97,6 +97,10 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 }
 
 func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
+	if f.Version == "v3" {
+		f.constructJoinV3(query)
+		return
+	}
 	if f.JoinTableID != "" && f.Version != "v2" {
 		join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
 		query = query.Join(join)
@@ -123,6 +127,12 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 		}
 	}
+}
+
+func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
+	model := projecthelper.SchemasLib.GetSchema(f.Model)
+	joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
+	query = query.Join(f.getJoinExpression(model, joinModel))
 }
 
 //
@@ -202,7 +212,16 @@ func (f *FilterModel) getJoinCondition() string {
 		joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
 		return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetCol(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetCol(f.JoinTableFK))
 	}
+
 	return fmt.Sprintf("%s.%s = %s.%s", f.Table, f.JoinTablePK, f.JoinTable, f.JoinTableFK)
+}
+
+func (f *FilterModel) getJoinExpression(model projecthelper.Schema, joinModel projecthelper.Schema) string {
+	modelTable := model.GetTableName()
+	joinTable := model.GetTableName()
+	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
+	return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
+
 }
 
 func (f *FilterModel) isUnary() bool {
