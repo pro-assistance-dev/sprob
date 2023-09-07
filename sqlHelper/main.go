@@ -41,9 +41,14 @@ func (i *SQLHelper) WhereLikeWithLowerTranslit(col string, search string) string
 	return fmt.Sprintf("WHERE lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) LIKE lower(%s)", col, "'%"+search+"%'")
 }
 
-func (i *SQLHelper) InjectQueryFilter(c context.Context, q *QueryFilter) {
-
-	c = context.WithValue(c, fqKey{}, q)
+func (i *SQLHelper) InjectQueryFilter(c *gin.Context) (context.Context, error) {
+	q, err := i.CreateQueryFilter(c)
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.WithValue(c, fqKey{}, q)
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), fqKey{}, q))
+	return ctx, err
 }
 
 func (i *SQLHelper) ExtractQueryFilter(ctx context.Context) *QueryFilter {

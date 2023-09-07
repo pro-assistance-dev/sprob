@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/fatih/structtag v1.2.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/google/uuid v1.3.0
@@ -22,7 +23,6 @@ require (
 require (
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/fatih/structtag v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
