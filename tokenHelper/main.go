@@ -91,7 +91,7 @@ func (h *TokenHelper) verifyToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func (h *TokenHelper) ExtractTokenMetadata(r *http.Request, claim string) (string, error) {
+func (h *TokenHelper) ExtractTokenMetadata(r *http.Request, claim fmt.Stringer) (string, error) {
 	token, err := h.verifyToken(h.extractToken(r))
 	if err != nil {
 		return "", err
@@ -100,7 +100,7 @@ func (h *TokenHelper) ExtractTokenMetadata(r *http.Request, claim string) (strin
 	if !ok || !token.Valid {
 		return "", err
 	}
-	res, ok := claims[claim].(string)
+	res, ok := claims[claim.String()].(string)
 	if !ok {
 		return "", errors.New("claim not found")
 	}
