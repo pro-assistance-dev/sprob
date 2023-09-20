@@ -92,3 +92,49 @@ func isRussianChar(r rune) bool {
 	}
 	return false
 }
+
+
+func (h *UtilHelper) TranslitToEng(text string) string {
+	if text == "" {
+		return ""
+	}
+
+	var input = bytes.NewBufferString(text)
+	var output = bytes.NewBuffer(nil)
+
+	var rr string
+	// var ok bool
+
+	for {
+		r, _, err := input.ReadRune()
+		if err != nil {
+			break
+		}
+		if !isRussianChar(r) {
+			output.WriteRune(r)
+			continue
+		}
+
+		key, ok := mapkey(baseRuEn, string(r))
+		if ok {
+			output.WriteString(key)
+			continue
+		}
+		rr, ok = baseRuEn[string(r)]
+		if ok {
+			output.WriteString(rr)
+		}
+	}
+	return output.String()
+}
+
+func mapkey(m map[string]string, value string) (key string, ok bool) {
+	for k, v := range m {
+		if v == value {
+			key = k
+			ok = true
+			return
+		}
+	}
+	return
+}
