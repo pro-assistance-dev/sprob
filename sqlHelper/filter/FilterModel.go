@@ -180,9 +180,9 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 //
 
 func (f *FilterModel) datesToString() {
-	f.Value1 = f.Date1.Format("2006-01-02")
+	f.Value1 = f.Date1.Format("2006-01-02 15:04:05")
 	if f.isBetween() {
-		f.Value2 = f.Date2.Format("2006-01-02")
+		f.Value2 = f.Date2.Format("2006-01-02 15:04:05")
 	}
 	return
 }
