@@ -26,7 +26,7 @@ type IService[TSingle, TPlural, TPluralWithCount any] interface {
 
 type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 	IService[TSingle, TPlural, TPluralWithCount]
-	UpsertMany(*TPlural) error
+	UpsertMany(TPlural) error
 	DeleteMany([]uuid.UUID) error
 }
 
@@ -43,7 +43,7 @@ type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
 type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
 	IRepository[TSingle, TPlural, TPluralWithCount]
 	Upsert(*TSingle) error
-	UpsertMany(*TPlural) error
+	UpsertMany(TPlural) error
 	DeleteMany([]uuid.UUID) error
 }
 
