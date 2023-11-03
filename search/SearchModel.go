@@ -11,9 +11,6 @@ type SearchModel struct {
 	SearchGroupID   string         `json:"searchGroupId"`
 	SearchGroups    SearchGroups   `json:"searchGroups"`
 	SearchGroup     *SearchGroup   `json:"searchGroup"`
-
-	JoinTable string
-	JoinColumn string
 }
 
 func (item *SearchModel) findGroup(groupTable string) SearchGroup {

@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 )
@@ -19,6 +20,9 @@ type SearchGroup struct {
 	LabelColumn       string        `json:"labelColumn"`
 	ValueColumn       string        `json:"valueColumn"`
 	DescriptionColumn string        `json:"descriptionColumn"`
+
+	JoinTable  string
+	JoinColumn string
 
 	SearchElements         SearchElements         `bun:"-" json:"options"`
 	SearchGroupMetaColumns SearchGroupMetaColumns `bun:"rel:has-many" json:"searchGroupMetaColumns"`
