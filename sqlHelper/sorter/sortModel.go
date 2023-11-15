@@ -28,9 +28,6 @@ func parseJSONToSortModel(args string) (sortModel sortModel, err error) {
 }
 
 func (s *sortModel) getTableAndCol() string {
-	if s.Version == "v2" {
-		schema := projecthelper.SchemasLib.GetSchema(s.Model)
-		return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(s.Col))
-	}
-	return fmt.Sprintf("%s.%s", s.Table, s.Col)
+	schema := projecthelper.SchemasLib.GetSchema(s.Model)
+	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(s.Col))
 }
