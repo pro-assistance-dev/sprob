@@ -11,10 +11,9 @@ import (
 
 // FilterModel model
 type FilterModel struct {
-	Table   string `json:"table"`
-	Col     string `json:"col"`
-	Model   string `json:"model"`
-	Version string `json:"version"`
+	Table string `json:"table"`
+	Col   string `json:"col"`
+	Model string `json:"model"`
 
 	Type     DataType  `json:"type,omitempty"`
 	Operator Operator  `json:"operator,omitempty"`
@@ -97,36 +96,33 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 }
 
 func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
-	if f.Version == "v3" {
-		f.constructJoinV3(query)
-		return
-	}
-	if f.JoinTableID != "" && f.Version != "v2" {
-		join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
-		query = query.Join(join)
-		joinTable := fmt.Sprintf("%s.%s", f.JoinTable, f.JoinTableIDCol)
-		if f.Operator != In {
-			query = query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
-		} else {
-			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
-		}
-		return
-	}
-	joinTable := f.JoinTable
-	joinModel := projecthelper.Schema{}
-	if f.Version == "v2" {
-		joinModel = projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
-		joinTable = joinModel.GetTableName()
-	}
-	join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
-	query = query.Join(join)
-	if f.JoinTableID != "" {
-		if f.Operator != In {
-			query = query.Where("? = ?", bun.Ident(joinModel.GetCol(f.JoinTableIDCol)), f.JoinTableID)
-		} else {
-			query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
-		}
-	}
+	f.constructJoinV3(query)
+	// if f.JoinTableID != "" && f.Version != "v2" {
+	// 	join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
+	// 	query = query.Join(join)
+	// 	joinTable := fmt.Sprintf("%s.%s", f.JoinTable, f.JoinTableIDCol)
+	// 	if f.Operator != In {
+	// 		query = query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
+	// 	} else {
+	// 		query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
+	// 	}
+	// 	return
+	// }
+	// joinTable := f.JoinTable
+	// joinModel := projecthelper.Schema{}
+	// if f.Version == "v2" {
+	// 	joinModel = projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
+	// 	joinTable = joinModel.GetTableName()
+	// }
+	// join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
+	// query = query.Join(join)
+	// if f.JoinTableID != "" {
+	// 	if f.Operator != In {
+	// 		query = query.Where("? = ?", bun.Ident(joinModel.GetCol(f.JoinTableIDCol)), f.JoinTableID)
+	// 	} else {
+	// 		query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
+	// 	}
+	// }
 }
 
 func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
@@ -184,7 +180,6 @@ func (f *FilterModel) datesToString() {
 	if f.isBetween() {
 		f.Value2 = f.Date2.Format("2006-01-02 15:04:05")
 	}
-	return
 }
 
 func (f *FilterModel) likeToString() {
@@ -195,25 +190,17 @@ func (f *FilterModel) likeToString() {
 	//	"endsWith":    "%%%s",
 	//}
 	f.Value1 = fmt.Sprintf("%%%s%%", f.Value1)
-	return
 }
 
 func (f *FilterModel) getTableAndCol() string {
-	if f.Version == "v2" {
-		schema := projecthelper.SchemasLib.GetSchema(f.Model)
-		return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(f.Col))
-	}
-	return fmt.Sprintf("%s.%s", f.Table, f.Col)
+	schema := projecthelper.SchemasLib.GetSchema(f.Model)
+	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(f.Col))
 }
 
 func (f *FilterModel) getJoinCondition() string {
-	if f.Version == "v2" {
-		model := projecthelper.SchemasLib.GetSchema(f.Model)
-		joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
-		return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetCol(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetCol(f.JoinTableFK))
-	}
-
-	return fmt.Sprintf("%s.%s = %s.%s", f.Table, f.JoinTablePK, f.JoinTable, f.JoinTableFK)
+	model := projecthelper.SchemasLib.GetSchema(f.Model)
+	joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
+	return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetCol(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetCol(f.JoinTableFK))
 }
 
 func (f *FilterModel) getJoinExpression(model projecthelper.Schema, joinModel projecthelper.Schema) string {
