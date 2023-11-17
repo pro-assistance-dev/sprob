@@ -72,17 +72,12 @@ type RouterHandler interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
-func (i *Helper) Run(migrations *migrate.Migrations, handler RouterHandler, init func(http.Handler, *Helper)) Mode {
+func (i *Helper) Run(migrations *migrate.Migrations, init func(*gin.Engine, *Helper)) Mode {
 	mode := flag.String("mode", "run", "init/create")
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
-	if Mode(*mode) == Run {
-		handler.Use(loggerhelper.LoggingMiddleware(i.Logger), gin.Recovery())
-		i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
-		init(handler, i)
-		return Run
-	}
+
 	if Mode(*mode) == Dump {
 		i.DB.Dump()
 		return Dump
@@ -92,11 +87,19 @@ func (i *Helper) Run(migrations *migrate.Migrations, handler RouterHandler, init
 		i.DB.DoAction(migrations, name, action)
 		return Migrate
 	}
+
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(loggerhelper.LoggingMiddleware(i.Logger))
+	router.Use(loggerhelper.LoggingMiddleware(i.Logger), gin.Recovery())
+	i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
+	init(router, i)
+
 	defer i.DB.DB.Close()
 	i.Project.InitSchemas()
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
 
-	i.HTTP.ListenAndServe(handler)
+	i.HTTP.ListenAndServe(router)
 	return Listen
 }
