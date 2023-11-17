@@ -14,7 +14,6 @@ type Cursor struct {
 	Value     string          `json:"value"`
 	Initial   bool            `json:"initial"`
 	TableName string          `json:"tableName"`
-	Version   string          `json:"version"`
 	Model     string          `json:"model"`
 }
 
@@ -33,9 +32,6 @@ func (c *Cursor) createPagination(query *bun.SelectQuery) {
 }
 
 func (c *Cursor) getTableAndCol() string {
-	if c.Version == "v2" {
 		schema := projecthelper.SchemasLib.GetSchema(c.Model)
 		return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(c.Column))
-	}
-	return fmt.Sprintf("%s.%s", c.TableName, c.Column)
 }

@@ -4,6 +4,8 @@ import (
 	"flag"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
+	"github.com/oiime/logrusbun"
 	"github.com/pro-assistance/pro-assister/broker"
 	"github.com/pro-assistance/pro-assister/config"
 	"github.com/pro-assistance/pro-assister/cronHelper"
@@ -11,6 +13,7 @@ import (
 	"github.com/pro-assistance/pro-assister/elasticSearchHelper"
 	"github.com/pro-assistance/pro-assister/emailHelper"
 	"github.com/pro-assistance/pro-assister/httpHelper"
+	"github.com/pro-assistance/pro-assister/loggerhelper"
 	"github.com/pro-assistance/pro-assister/pdfHelper"
 	"github.com/pro-assistance/pro-assister/projecthelper"
 	"github.com/pro-assistance/pro-assister/search"
@@ -21,6 +24,7 @@ import (
 	"github.com/pro-assistance/pro-assister/uploadHelper"
 	"github.com/pro-assistance/pro-assister/utilHelper"
 	"github.com/pro-assistance/pro-assister/validatorhelper"
+	"github.com/sirupsen/logrus"
 	"github.com/uptrace/bun/migrate"
 )
 
@@ -40,6 +44,7 @@ type Helper struct {
 	Validator *validatorhelper.Validator
 	Cron      *cronHelper.Cron
 	Project   *projecthelper.ProjectHelper
+	Logger    *logrus.Logger
 }
 
 func NewHelper(config config.Config) *Helper {
@@ -58,26 +63,40 @@ func NewHelper(config config.Config) *Helper {
 	v := validatorhelper.NewValidator()
 	cr := cronHelper.NewCronHelper()
 	ph := projecthelper.NewProjectHelper()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v, Cron: cr, Project: ph}
+	l := loggerhelper.NewLogger()
+	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: dbHelper, Validator: v, Cron: cr, Project: ph, Logger: l}
 }
 
-func (i *Helper) Run(migrations *migrate.Migrations, handler http.Handler) {
+type RouterHandler interface {
+	Use(...gin.HandlerFunc) gin.IRoutes
+	ServeHTTP(http.ResponseWriter, *http.Request)
+}
+
+func (i *Helper) Run(migrations *migrate.Migrations, handler RouterHandler, init func(http.Handler, *Helper)) Mode {
 	mode := flag.String("mode", "run", "init/create")
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
+	if Mode(*mode) == Run {
+		handler.Use(loggerhelper.LoggingMiddleware(i.Logger), gin.Recovery())
+		i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
+		init(handler, i)
+		return Run
+	}
 	if Mode(*mode) == Dump {
 		i.DB.Dump()
-		return
+		return Dump
 	}
 	if Mode(*mode) == Migrate {
 		search.InitSearchGroupsTables(i.DB.DB)
 		i.DB.DoAction(migrations, name, action)
-		return
+		return Migrate
 	}
 	defer i.DB.DB.Close()
 	i.Project.InitSchemas()
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
+
 	i.HTTP.ListenAndServe(handler)
+	return Listen
 }

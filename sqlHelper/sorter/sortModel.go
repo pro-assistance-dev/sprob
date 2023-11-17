@@ -13,7 +13,6 @@ type sortModel struct {
 	Table   string `json:"table"`
 	Col     string `json:"col"`
 	Order   Orders `json:"order"`
-	Version string `json:"version"`
 }
 
 type SortModels []*sortModel
