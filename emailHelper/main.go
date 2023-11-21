@@ -12,6 +12,13 @@ import (
 	"github.com/pro-assistance/pro-assister/config"
 )
 
+type AuthMethod string
+
+const (
+	PlainAuthMethod AuthMethod = "PlainAuth"
+	LoginAuthMethod AuthMethod = "LoginAuth"
+)
+
 // Email struct
 // https://medium.com/@dhanushgopinath/sending-html-emails-using-templates-in-golang-9e953ca32f3d
 type EmailHelper struct {
@@ -46,7 +53,9 @@ func (e *EmailHelper) sendEmail() error {
 		e.config.Password,
 		e.config.Server,
 	)
-
+	if e.config.AuthMethod == string(LoginAuthMethod) {
+		auth = LoginAuth(e.config.From, e.config.Password)
+	}
 	header := map[string]string{}
 	header["To"] = strings.Join(e.request.To, ",")
 	header["From"] = e.config.From
@@ -105,7 +114,7 @@ func (e *EmailHelper) sendEmail() error {
 	if err != nil {
 		return err
 	}
-	
+
 	if e.config.WriteTestFile {
 		err = ioutil.WriteFile("./application-generate_send.html", []byte(message), 0644)
 		if err != nil {

@@ -55,6 +55,7 @@ type Email struct {
 	From          string `mapstructure:"EMAIL_FROM"`
 	Server        string `mapstructure:"EMAIL_SERVER"`
 	Port          string `mapstructure:"EMAIL_PORT"`
+	AuthMethod    string `mapstructure:"EMAIL_AUTH_METHOD"`
 	WriteTestFile bool   `mapstructure:"EMAIL_WRITE_TEST_FILE"`
 }
 
