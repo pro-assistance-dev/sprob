@@ -131,7 +131,7 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	query = query.Join(f.getJoinExpression(model, joinModel))
 	if f.Operator == In {
 		col := joinModel.GetCol(f.Col)
-		query = query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), col, bun.In(f.Set))
+		query = query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
 	}
 }
 
