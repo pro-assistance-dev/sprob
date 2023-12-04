@@ -11,19 +11,19 @@ import (
 
 // FilterModel model
 type FilterModel struct {
-	Table string `json:"table"`
-	Col   string `json:"col"`
-	Model string `json:"model"`
+	Table  string `json:"table"`
+	Col    string `json:"col"`
+	Model  string `json:"model"`
+	Value1 string `json:"value1,omitempty"`
 
 	Type     DataType  `json:"type,omitempty"`
 	Operator Operator  `json:"operator,omitempty"`
 	Date1    time.Time `json:"date1,omitempty"`
 	Date2    time.Time `json:"date2,omitempty"`
 
-	Value1  string   `json:"value1,omitempty"`
 	Value2  string   `json:"value2,omitempty"`
-	Boolean bool     `json:"boolean"`
 	Set     []string `json:"set"`
+	Boolean bool     `json:"boolean"`
 
 	JoinTable      string `json:"joinTable"`
 	JoinTableModel string `json:"joinTableModel"`
@@ -129,6 +129,10 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	model := projecthelper.SchemasLib.GetSchema(f.Model)
 	joinModel := projecthelper.SchemasLib.GetSchema(f.JoinTableModel)
 	query = query.Join(f.getJoinExpression(model, joinModel))
+	if f.Operator == In {
+		col := joinModel.GetCol(f.Col)
+		query = query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), col, bun.In(f.Set))
+	}
 }
 
 //
@@ -208,7 +212,6 @@ func (f *FilterModel) getJoinExpression(model projecthelper.Schema, joinModel pr
 	joinTable := joinModel.GetTableName()
 	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
 	return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
-
 }
 
 func (f *FilterModel) isUnary() bool {
