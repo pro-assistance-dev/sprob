@@ -38,12 +38,13 @@ type FTSPQuery struct {
 func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
 	ftsp := FTSPQuery{}
 	err := ftsp.FromForm(c)
-	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), fqKey{}, ftsp.FTSP))
+
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err
 }
 
-func (i *SQLHelper) ExtractFTSP(ctx context.Context) *QueryFilter {
-	if i, ok := ctx.Value(fqKey{}).(*QueryFilter); ok {
+func (i *SQLHelper) ExtractFTSP(ctx context.Context) *FTSP {
+	if i, ok := ctx.Value(ftspKey{}).(*FTSP); ok {
 		return i
 	}
 	return nil
