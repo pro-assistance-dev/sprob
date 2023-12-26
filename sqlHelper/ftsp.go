@@ -44,7 +44,10 @@ func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
 		fmt.Println(err)
 		return err
 	}
-	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
+	r := c.Request
+
+	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, ftsp.FTSP))
+	// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err
 }
 
