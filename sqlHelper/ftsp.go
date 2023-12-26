@@ -37,8 +37,11 @@ type FTSPQuery struct {
 	FTSP FTSP   `json:"ftsp"`
 }
 
-func (i *SQLHelper) InjectFTSP2(r *http.Request, f *FTSP) {
+func (i *SQLHelper) InjectFTSP2(r *http.Request, f FTSP) {
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
+	fmt.Println("fil")
+	fmt.Println(r)
+	fmt.Println(f)
 }
 
 func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
