@@ -1,19 +1,17 @@
 package sqlHelper
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/uptrace/bun"
+	"golang.org/x/net/context"
 )
 
-type SQLHelper struct {
-}
-
-type fqKey struct{}
+type SQLHelper struct{}
 
 func NewSQLHelper() *SQLHelper {
 	return &SQLHelper{}
@@ -41,18 +39,6 @@ func (i *SQLHelper) WhereLikeWithLowerTranslit(col string, search string) string
 	return fmt.Sprintf("WHERE lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) LIKE lower(%s)", col, "'%"+search+"%'")
 }
 
-func (i *SQLHelper) InjectQueryFilter(c *gin.Context) error {
-	q, err := i.CreateQueryFilter(c)
-	if err != nil {
-		return err
-	}
-	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), fqKey{}, q))
-	return err
-}
-
-func (i *SQLHelper) ExtractQueryFilter(ctx context.Context) *QueryFilter {
-	if i, ok := ctx.Value(fqKey{}).(*QueryFilter); ok {
-		return i
-	}
-	return nil
+func (i *SQLHelper) HandleFTSPQuery(ctx context.Context, query *bun.SelectQuery) {
+	i.ExtractFTSP(ctx).HandleQuery(query)
 }

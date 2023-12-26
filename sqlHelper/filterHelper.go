@@ -1,6 +1,9 @@
 package sqlHelper
 
 import (
+	"context"
+
+	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
@@ -24,19 +27,20 @@ func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
 	i.sorter.CreateOrder(query)
 }
 
-type FTSP struct {
-	Col   string               `json:"col"`
-	Value string               `json:"value"`
-	F     filter.FilterModels  `json:"f"`
-	S     sorter.SortModels    `json:"s"`
-	P     *paginator.Paginator `json:"p"`
+type fqKey struct{}
+
+func (i *SQLHelper) InjectQueryFilter(c *gin.Context) error {
+	q, err := i.CreateQueryFilter(c)
+	if err != nil {
+		return err
+	}
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), fqKey{}, q))
+	return err
 }
 
-func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
-	if i == nil {
-		return
+func (i *SQLHelper) ExtractQueryFilter(ctx context.Context) *QueryFilter {
+	if i, ok := ctx.Value(fqKey{}).(*QueryFilter); ok {
+		return i
 	}
-	i.P.CreatePagination(query)
-	i.F.CreateFilter(query)
-	i.S.CreateOrder(query)
+	return nil
 }

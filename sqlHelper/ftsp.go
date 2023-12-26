@@ -1,0 +1,62 @@
+package sqlHelper
+
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/gin-gonic/gin"
+	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
+	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/uptrace/bun"
+)
+
+type FTSP struct {
+	Col   string               `json:"col"`
+	Value string               `json:"value"`
+	F     filter.FilterModels  `json:"f"`
+	S     sorter.SortModels    `json:"s"`
+	P     *paginator.Paginator `json:"p"`
+}
+
+func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
+	if i == nil {
+		return
+	}
+	i.P.CreatePagination(query)
+	i.F.CreateFilter(query)
+	i.S.CreateOrder(query)
+}
+
+type ftspKey struct{}
+
+type FTSPQuery struct {
+	QID  string `json:"qid"`
+	FTSP FTSP   `json:"ftsp"`
+}
+
+func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
+	ftsp := FTSPQuery{}
+	err := ftsp.FromForm(c)
+	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), fqKey{}, ftsp.FTSP))
+	return err
+}
+
+func (i *SQLHelper) ExtractFTSP(ctx context.Context) *QueryFilter {
+	if i, ok := ctx.Value(fqKey{}).(*QueryFilter); ok {
+		return i
+	}
+	return nil
+}
+
+func (i *FTSPQuery) FromForm(c *gin.Context) error {
+	form, err := c.MultipartForm()
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(form.Value["form"][0]), i)
+	if err != nil {
+		return err
+	}
+	return nil
+}
