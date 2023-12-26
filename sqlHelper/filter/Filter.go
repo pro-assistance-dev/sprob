@@ -23,18 +23,50 @@ func (i *Filter) CreateFilter(query *bun.SelectQuery) {
 			filterModel.constructWhere(query)
 		case JoinType:
 			filterModel.constructJoin(query)
-		//case "number":
+		// case "number":
 		//	tbl = constructNumberWhere(tbl, field, filter)
-		//case "text":
+		// case "text":
 		//	if filterOperator == "" {
 		//		tbl = constructTextWhere(tbl, field, filterOperator, filter)
 		//	} else {
 		//		tbl = constructTextWhere(tbl, field, filterOperator, filter.Condition1.filter, filter.Condition2.filter)
 		//	}
 		default:
-			//log.Println("unknown number filterType: " + *filter.FilterType)
+			// log.Println("unknown number filterType: " + *filter.FilterType)
 			return
 		}
 	}
-	return
+}
+
+func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
+	if len(items) == 0 {
+		return
+	}
+	for _, filterModel := range items {
+		switch filterModel.Type {
+		case SetType:
+			if len(filterModel.Set) == 0 {
+				break
+			}
+			filterModel.constructWhereIn(query)
+		case DateType:
+			filterModel.datesToString()
+			filterModel.constructWhere(query)
+		case StringType, BooleanType, NumberType:
+			filterModel.constructWhere(query)
+		case JoinType:
+			filterModel.constructJoin(query)
+		// case "number":
+		//	tbl = constructNumberWhere(tbl, field, filter)
+		// case "text":
+		//	if filterOperator == "" {
+		//		tbl = constructTextWhere(tbl, field, filterOperator, filter)
+		//	} else {
+		//		tbl = constructTextWhere(tbl, field, filterOperator, filter.Condition1.filter, filter.Condition2.filter)
+		//	}
+		default:
+			// log.Println("unknown number filterType: " + *filter.FilterType)
+			return
+		}
+	}
 }
