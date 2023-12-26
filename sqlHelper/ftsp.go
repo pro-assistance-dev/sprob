@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
@@ -34,6 +35,10 @@ type ftspKey struct{}
 type FTSPQuery struct {
 	QID  string `json:"qid"`
 	FTSP FTSP   `json:"ftsp"`
+}
+
+func (i *SQLHelper) InjectFTSP2(r *http.Request, f *FTSP) {
+	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
 }
 
 func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
