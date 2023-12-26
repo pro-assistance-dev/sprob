@@ -3,6 +3,7 @@ package sqlHelper
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
@@ -36,9 +37,13 @@ type FTSPQuery struct {
 }
 
 func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
-	ftsp := FTSPQuery{}
+	ftsp := &FTSPQuery{}
 	err := ftsp.FromForm(c)
-
+	fmt.Println("ftsp", ftsp)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
 	c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err
 }
