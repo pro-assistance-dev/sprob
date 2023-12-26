@@ -38,7 +38,7 @@ type FTSPQuery struct {
 }
 
 func (i *SQLHelper) InjectFTSP2(r *http.Request, f FTSP) {
-	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
+	*r = *r.WithContext(context.WithValue(r.Context(), "ftsp", f))
 	fmt.Println("fil")
 	fmt.Println(r)
 	fmt.Println(f)
@@ -54,13 +54,13 @@ func (i *SQLHelper) InjectFTSP(c *gin.Context) error {
 	}
 	r := c.Request
 
-	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, ftsp.FTSP))
+	*r = *r.WithContext(context.WithValue(r.Context(), "ftsp", ftsp.FTSP))
 	// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err
 }
 
 func (i *SQLHelper) ExtractFTSP(ctx context.Context) *FTSP {
-	if i, ok := ctx.Value(ftspKey{}).(*FTSP); ok {
+	if i, ok := ctx.Value("ftsp").(*FTSP); ok {
 		return i
 	}
 	return nil
