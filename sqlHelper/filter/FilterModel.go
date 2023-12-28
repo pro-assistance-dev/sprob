@@ -11,6 +11,7 @@ import (
 
 // FilterModel model
 type FilterModel struct {
+	ID     string `json:"id"`
 	Table  string `json:"table"`
 	Col    string `json:"col"`
 	Model  string `json:"model"`
