@@ -14,6 +14,7 @@ import (
 )
 
 type FTSP struct {
+	ID    string               `json:"id"`
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
