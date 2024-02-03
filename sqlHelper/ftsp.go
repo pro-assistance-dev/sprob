@@ -18,7 +18,7 @@ type FTSP struct {
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
-	T     t.treeModel          `json:"t"`
+	T     *t.treeModel         `json:"t"`
 	S     sorter.SortModels    `json:"s"`
 	P     *paginator.Paginator `json:"p"`
 }
