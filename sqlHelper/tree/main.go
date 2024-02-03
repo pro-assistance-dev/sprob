@@ -1,4 +1,4 @@
-package t
+package tree
 
 import (
 	"fmt"
@@ -7,6 +7,6 @@ import (
 )
 
 // CreateTree method
-func (item treeModel) CreateTree(query *bun.SelectQuery, cols ...string) {
+func (item TreeModel) CreateTree(query *bun.SelectQuery, cols ...string) {
 	query = query.OrderExpr(fmt.Sprintf("%s", item.getTableAndCols()))
 }

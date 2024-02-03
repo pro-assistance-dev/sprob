@@ -1,4 +1,4 @@
-package t
+package tree
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 )
 
 // treeModel model
-type treeModel struct {
+type TreeModel struct {
 	Model string   `json:"model"`
 	Cols  []string `json:"col"`
 }
 
-type TreeModels []*treeModel
+// type TreeModels []*treeModel
 
-func (s *treeModel) getTableAndCols() string {
+func (s *TreeModel) getTableAndCols() string {
 	schema := projecthelper.SchemasLib.GetSchema(s.Model)
 	var result string
 	for _, value := range s.Cols {

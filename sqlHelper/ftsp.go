@@ -10,6 +10,7 @@ import (
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/tree"
 	"github.com/uptrace/bun"
 )
 
@@ -18,7 +19,7 @@ type FTSP struct {
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
-	T     *t.treeModel         `json:"t"`
+	T     tree.TreeModel       `json:"t"`
 	S     sorter.SortModels    `json:"s"`
 	P     *paginator.Paginator `json:"p"`
 }
