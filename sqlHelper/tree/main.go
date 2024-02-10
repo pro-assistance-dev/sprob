@@ -7,7 +7,7 @@ import (
 )
 
 // CreateTree method
-func (item TreeModel) CreateTree(query *bun.SelectQuery) {
+func (item TreeModels) CreateTree(query *bun.SelectQuery) {
 	query = query.ColumnExpr(item.getTableAndCols())
 	fmt.Println(query.String())
 }

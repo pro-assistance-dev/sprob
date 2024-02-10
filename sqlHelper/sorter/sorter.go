@@ -18,6 +18,7 @@ func (i *Sorter) CreateOrder(query *bun.SelectQuery, defaultSort ...string) {
 			if sort == nil {
 				sort.Order = Asc
 			}
+			fmt.Println(sort.getTableAndCol())
 			query = query.OrderExpr(fmt.Sprintf("%s %s", sort.getTableAndCol(), sort.Order))
 		}
 		return

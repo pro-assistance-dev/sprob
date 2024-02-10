@@ -17,6 +17,7 @@ func (items Schemas) GetSchema(schemaName string) Schema {
 }
 
 func (item Schema) GetCol(colNameInCamelCase string) string {
+	fmt.Println(item[colNameInCamelCase])
 	return item[colNameInCamelCase]
 }
 
