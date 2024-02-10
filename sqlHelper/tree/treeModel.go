@@ -20,5 +20,6 @@ func (s *TreeModel) getTableAndCols() string {
 	for _, value := range s.Cols {
 		result += fmt.Sprintf("%s ", value)
 	}
+	fmt.Println(schema.GetTableName(), result)
 	return fmt.Sprintf("%s.%s", schema.GetTableName(), result)
 }

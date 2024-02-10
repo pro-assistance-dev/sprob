@@ -8,6 +8,6 @@ import (
 
 // CreateTree method
 func (item TreeModel) CreateTree(query *bun.SelectQuery) {
-	query = query.NewSelect().Model(&item).ColumnExpr(item.getTableAndCols())
+	query = query.ColumnExpr(item.getTableAndCols())
 	fmt.Println(query.String())
 }
