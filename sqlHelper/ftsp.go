@@ -31,7 +31,7 @@ func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
 	i.P.CreatePagination(query)
 	i.F.CreateFilter(query)
 	i.S.CreateOrder(query)
-	// i.T.CreateTree(query)
+	i.T.CreateTree(query)
 }
 
 type ftspKey struct{}
