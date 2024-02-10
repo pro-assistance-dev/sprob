@@ -7,6 +7,7 @@ import (
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/tree"
 	"github.com/uptrace/bun"
 	"golang.org/x/net/context"
 )
@@ -32,7 +33,11 @@ func (i *SQLHelper) CreateQueryFilter(c *gin.Context) (*QueryFilter, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &QueryFilter{Col: col, Value: value, filter: filterItem, sorter: sorterItem, paginator: paginatorItem}, nil
+	treeItem, err := tree.NewTreeCreator(c)
+	if err != nil {
+		return nil, err
+	}
+	return &QueryFilter{Col: col, Value: value, filter: filterItem, sorter: sorterItem, paginator: paginatorItem, treeCreator: treeItem}, nil
 }
 
 func (i *SQLHelper) WhereLikeWithLowerTranslit(col string, search string) string {

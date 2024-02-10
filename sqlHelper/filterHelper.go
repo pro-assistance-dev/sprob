@@ -7,15 +7,17 @@ import (
 	"github.com/pro-assistance/pro-assister/sqlHelper/filter"
 	"github.com/pro-assistance/pro-assister/sqlHelper/paginator"
 	"github.com/pro-assistance/pro-assister/sqlHelper/sorter"
+	"github.com/pro-assistance/pro-assister/sqlHelper/tree"
 	"github.com/uptrace/bun"
 )
 
 type QueryFilter struct {
-	Col       string
-	Value     string
-	filter    *filter.Filter
-	sorter    *sorter.Sorter
-	paginator *paginator.Paginator
+	Col         string
+	Value       string
+	filter      *filter.Filter
+	sorter      *sorter.Sorter
+	paginator   *paginator.Paginator
+	treeCreator *tree.TreeCreator
 }
 
 func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
@@ -25,6 +27,7 @@ func (i *QueryFilter) HandleQuery(query *bun.SelectQuery) {
 	i.paginator.CreatePagination(query)
 	i.filter.CreateFilter(query)
 	i.sorter.CreateOrder(query)
+	i.treeCreator.CreateTree(query)
 }
 
 type fqKey struct{}
