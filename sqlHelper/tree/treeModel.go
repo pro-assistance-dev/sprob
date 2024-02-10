@@ -8,8 +8,8 @@ import (
 
 // treeModel model
 type TreeModel struct {
-	Model string   `json:"model"`
-	Cols  []string `json:"col"`
+	Model string `json:"model"`
+	Col   string `json:"col"`
 }
 
 // type TreeModels []*treeModel
@@ -21,5 +21,5 @@ func (s *TreeModel) getTableAndCols() string {
 	// 	result += fmt.Sprintf("%s ", value)
 	// }
 	// fmt.Println(schema.GetTableName(), result)
-	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(s.Cols[0]))
+	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(s.Col))
 }
