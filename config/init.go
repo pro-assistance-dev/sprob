@@ -63,7 +63,7 @@ type Social struct {
 	InstagramToken string `mapstructure:"INSTAGRAM_TOKEN"`
 	InstagramID    string `mapstructure:"INSTAGRAM_ID"`
 
-	YouTubeApiKey    string `mapstructure:"YOUTUBE_API_KEY"`
+	YouTubeAPIKey    string `mapstructure:"YOUTUBE_API_KEY"`
 	YouTubeChannelID string `mapstructure:"YOUTUBE_CHANNEL_ID"`
 
 	VkServiceApplicationKey string `mapstructure:"VK_SERVICE_APPLICATION_KEY"`

@@ -10,7 +10,7 @@ import (
 	"github.com/pro-assistance/pro-assister/config"
 )
 
-type Social struct {
+type SocialModel struct { //nolint:golint
 	Type        SocialType `json:"type"`
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
@@ -19,13 +19,13 @@ type Social struct {
 	MediaType   MediaType  `json:"mediaType"`
 }
 
-type Socials []*Social
+type Socials []*SocialModel //nolint:golint
 
-type SocialData struct {
+type SocialData struct { //nolint:golint
 	Socials Socials `json:"data"`
 }
 
-type SocialType string
+type SocialType string //nolint:golint
 
 const (
 	SocialTypeInstagram SocialType = "Instagram"
@@ -41,37 +41,36 @@ const (
 	MediaTypeCarouselAlbum MediaType = "CAROUSEL_ALBUM"
 )
 
-type SocialHelper struct {
+type Social struct {
 	config.Social
 }
 
-func (i *SocialHelper) buildInstagramURL() string {
-	instagramApi := "https://graph.instagram.com"
-	fields := "id,media_url,media_type,thumbnail_url,permalink,caption"
-	return fmt.Sprintf("%s/%s/media?fields=%s&access_token=%s", instagramApi, i.InstagramID, fields, i.InstagramToken)
-}
+// func (i *Social) buildInstagramURL() string {
+// 	instagramAPI := "https://graph.instagram.com"
+// 	fields := "id,media_url,media_type,thumbnail_url,permalink,caption"
+// 	return fmt.Sprintf("%s/%s/media?fields=%s&access_token=%s", instagramAPI, i.InstagramID, fields, i.InstagramToken)
+// }
 
 const (
-	youTubeApiV3 = "https://www.googleapis.com/youtube/v3/"
-	vkApi        = "https://api.vk.com/method/wall.get"
+	youTubeAPIV3 = "https://www.googleapis.com/youtube/v3/"
+	vkAPI        = "https://api.vk.com/method/wall.get"
 )
 
-func (i *SocialHelper) buildVkURL() string {
-	const vkWallApi = "https://api.vk.com/method/wall.get"
+func (i *Social) buildVkURL() string {
+	const vkWallAPI = "https://api.vk.com/method/wall.get"
 	queryParams := "?filter=owner&count=10&v=5.131&owner_id=%s&access_token=%s"
-	fmt.Println(fmt.Sprintf(vkWallApi+queryParams, i.VkGroupID, i.VkServiceApplicationKey))
-	return fmt.Sprintf(vkWallApi+queryParams, i.VkGroupID, i.VkServiceApplicationKey)
+	return fmt.Sprintf(vkWallAPI+queryParams, i.VkGroupID, i.VkServiceApplicationKey)
 }
 
-func (i *SocialHelper) buildYouTubeChannelURL() string {
-	const youTubeApi = "https://www.googleapis.com/youtube/v3/search"
+func (i *Social) buildYouTubeChannelURL() string {
+	const youTubeAPI = "https://www.googleapis.com/youtube/v3/search"
 	options := "&part=snippet&maxResults=6&order=date&type=video"
-	return fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeApi, i.YouTubeApiKey, i.YouTubeChannelID, options)
+	return fmt.Sprintf("%s?key=%s&channelId=%s%s", youTubeAPI, i.YouTubeAPIKey, i.YouTubeChannelID, options)
 }
 
-func (i *SocialHelper) buildYouTubeVideosURL(idPool []string) string {
+func (i *Social) buildYouTubeVideosURL(idPool []string) string {
 	options := "videos?part=id%2C+snippet"
-	urlSource, err := url.Parse(youTubeApiV3 + options)
+	urlSource, err := url.Parse(youTubeAPIV3 + options)
 	if err != nil {
 		return ""
 	}
@@ -80,14 +79,14 @@ func (i *SocialHelper) buildYouTubeVideosURL(idPool []string) string {
 		q.Add("id", id)
 	}
 	urlSource.RawQuery = q.Encode()
-	return fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeApiKey)
+	return fmt.Sprintf("%s&key=%s", urlSource.String(), i.YouTubeAPIKey)
 }
 
-func NewSocial(social config.Social) *SocialHelper {
-	return &SocialHelper{social}
+func NewSocial(social config.Social) *Social {
+	return &Social{social}
 }
 
-func (i *SocialHelper) sendRequest(url string) *http.Response {
+func (i *Social) sendRequest(url string) *http.Response {
 	ctx := context.Background()
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -101,7 +100,7 @@ func (i *SocialHelper) sendRequest(url string) *http.Response {
 	return resp
 }
 
-func (i *SocialHelper) GetWebFeed() Socials {
+func (i *Social) GetWebFeed() Socials {
 	var socials Socials
 
 	// instagram := instagramStruct{}
@@ -119,7 +118,7 @@ func (i *SocialHelper) GetWebFeed() Socials {
 	return socials
 }
 
-func (i *SocialHelper) GetYouTubeVideosInfo(idPool []string) Socials {
+func (i *Social) GetYouTubeVideosInfo(idPool []string) Socials {
 	youTube := youTubeStruct{}
 	socials := youTube.getWebFeed(i.sendRequest(i.buildYouTubeVideosURL(idPool)))
 	return socials

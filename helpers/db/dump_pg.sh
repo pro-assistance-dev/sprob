@@ -17,3 +17,4 @@ psql -Umdgkb -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_
 PGPASSWORD=$DB_PASSWORD dropdb -Umdgkb -hlocalhost $DB_NAME
 PGPASSWORD=$DB_PASSWORD createdb -Umdgkb $DB_NAME
 ssh root@45.67.57.208 "pg_dump -C -h 45.67.57.208 -d $DB_NAME -U $DB_REMOTE_USER -Fc --password" | PGPASSWORD=$DB_PASSWORD pg_restore -U$DB_USER -hlocalhost --format=c -d$DB_NAME
+

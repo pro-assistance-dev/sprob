@@ -1,4 +1,4 @@
-package search
+package models
 
 type SearchElementMeta struct {
 	Name                  string                 `json:"name"`

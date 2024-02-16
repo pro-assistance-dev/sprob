@@ -1,17 +1,16 @@
 package uploader
 
 import (
+	"crypto/rand"
 	"errors"
-	"io/ioutil"
+	"io"
 	"log"
-	"math/rand"
+	"math/big"
 	"mime/multipart"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -82,10 +81,8 @@ func (u *LocalUploader) ReadFiles(paths ...string) ([][]byte, error) {
 }
 
 func randomString() string {
-	rand.Seed(time.Now().UnixNano())
-	min := 0
-	max := 1000
-	return strconv.Itoa(rand.Intn(max-min+1) + min)
+	n, _ := rand.Int(rand.Reader, big.NewInt(1000))
+	return n.String()
 }
 
 func (u *LocalUploader) readFile(path string) ([]byte, error) {
@@ -98,5 +95,5 @@ func (u *LocalUploader) readFile(path string) ([]byte, error) {
 			log.Fatal(err)
 		}
 	}()
-	return ioutil.ReadAll(file)
+	return io.ReadAll(file)
 }

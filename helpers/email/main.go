@@ -3,10 +3,10 @@ package email
 import (
 	"crypto/tls"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/smtp"
+	"os"
 	"strings"
 
 	"github.com/pro-assistance/pro-assister/config"
@@ -71,7 +71,7 @@ func (e *Email) sendEmail() error {
 	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
 	host, _, _ := net.SplitHostPort(servername)
 
-	tlsconfig := &tls.Config{
+	tlsconfig := &tls.Config{ //nolint:gosec
 		InsecureSkipVerify: false, //nolint:gosec
 		ServerName:         host,
 	}
@@ -115,7 +115,7 @@ func (e *Email) sendEmail() error {
 	}
 
 	if e.config.WriteTestFile {
-		err = ioutil.WriteFile("./application-generate_send.html", []byte(message), 0644)
+		err = os.WriteFile("./application-generate_send.html", []byte(message), 0600)
 		if err != nil {
 			log.Fatal(err)
 		}

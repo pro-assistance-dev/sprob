@@ -8,7 +8,7 @@ import (
 	"github.com/uptrace/bun/migrate"
 )
 
-func createMigrationSql(migrator *migrate.Migrator, name *string) {
+func createMigrationSQL(migrator *migrate.Migrator, name *string) {
 	_, err := migrator.CreateSQLMigrations(context.TODO(), *name)
 	if err != nil {
 		log.Fatalln(err)
@@ -36,11 +36,29 @@ func initMigration(migrator *migrate.Migrator) {
 		fmt.Println(err)
 	}
 	_, err = migrator.DB().Exec("create sequence bun_migration_locks_id_seq;")
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = migrator.DB().Exec("create sequence bun_migrations_id_seq;")
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = migrator.DB().Exec("alter table bun_migration_locks alter column id set default nextval('public.bun_migration_locks_id_seq');")
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = migrator.DB().Exec("alter table bun_migrations alter column id set default nextval('public.bun_migrations_id_seq');")
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = migrator.DB().Exec("alter sequence bun_migration_locks_id_seq owned by bun_migration_locks.id;")
+	if err != nil {
+		fmt.Println(err)
+	}
 	_, err = migrator.DB().Exec("alter sequence bun_migrations_id_seq owned by bun_migrations.id;")
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	if err != nil {
 		fmt.Println(err)

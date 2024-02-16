@@ -22,13 +22,13 @@ func NewToken(conf config.Token) *Token {
 	return &Token{TokenSecret: conf.TokenSecret, TokenAccessMinutes: conf.TokenAccessMinutes, TokenRefreshHours: conf.TokenRefreshHours}
 }
 
-type TokenDetails struct {
+type Details struct {
 	AccessToken  string `json:"accessToken"`
 	RefreshToken string `json:"refreshToken"`
-	AccessUuid   string
-	RefreshUuid  string
-	AtExpires    int64
-	RtExpires    int64
+	// AccessUUID string `json:"accessUUID"`
+	// RefreshUUID string `json:"refreshUuid"`
+	AtExpires int64
+	RtExpires int64
 }
 
 type JWTClaimsSetter interface {
@@ -40,19 +40,19 @@ func (h *Token) getSigned(claims jwt.MapClaims) (string, error) {
 	return rt.SignedString([]byte(h.TokenSecret))
 }
 
-func (item *TokenDetails) setAccessTokenClaims(claims jwt.MapClaims, exp int) {
+func (item *Details) setAccessTokenClaims(claims jwt.MapClaims, exp int) {
 	claims["authorized"] = true
 	claims["access_uuid"] = uuid.NewString()
 	claims["exp"] = time.Now().Add(time.Minute * time.Duration(exp)).Unix()
 }
 
-func (item *TokenDetails) setRefreshTokenClaims(claims jwt.MapClaims, exp int) {
+func (item *Details) setRefreshTokenClaims(claims jwt.MapClaims, exp int) {
 	claims["refresh_uuid"] = uuid.NewString()
 	claims["exp"] = time.Now().Add(time.Hour * time.Duration(exp)).Unix()
 }
 
-func (h *Token) CreateToken(claimsSetter JWTClaimsSetter) (td *TokenDetails, err error) {
-	td = &TokenDetails{}
+func (h *Token) CreateToken(claimsSetter JWTClaimsSetter) (td *Details, err error) {
+	td = &Details{}
 	atClaims := jwt.MapClaims{}
 	td.setAccessTokenClaims(atClaims, h.TokenAccessMinutes)
 	claimsSetter.SetJWTClaimsMap(atClaims)
@@ -70,7 +70,7 @@ func (h *Token) CreateToken(claimsSetter JWTClaimsSetter) (td *TokenDetails, err
 	return td, nil
 }
 
-func (h *Token) RefreshToken(refreshToken string, claimsSetter JWTClaimsSetter) (*TokenDetails, error) {
+func (h *Token) RefreshToken(refreshToken string, claimsSetter JWTClaimsSetter) (*Details, error) {
 	token, err := h.verifyToken(refreshToken)
 	if err != nil || !token.Valid {
 		return nil, err

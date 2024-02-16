@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	size, margin                                string
-	scaleH, scaleW, landscape, verbose, version bool
-	JPEGQuality                                 int
+	margin      string
+	landscape   bool
+	JPEGQuality int
 )
 
 const (
@@ -22,9 +22,9 @@ const (
 )
 
 var (
-	pageMargin               [4]float64
-	pageSize                 creator.PageSize
-	sizeHasSet, marginHasSet = true, true
+	pageMargin   [4]float64
+	pageSize     creator.PageSize
+	marginHasSet = true
 )
 
 type ImgSource struct {
@@ -60,13 +60,13 @@ func setMargin(img *creator.Image, c *creator.Creator) {
 		for i, m := range strings.Split(margin, ",") {
 			floatVal, err := strconv.ParseFloat(m, 64)
 			if err != nil {
-				log.Fatalln("Error: -m|--margin MUST be 4 comma separated int/float numbers. %s found.", m)
+				log.Printf("Error: -m|--margin MUST be 4 comma separated int/float numbers. %s found.", m)
 			}
 
 			pageMargin[i] = floatVal * creator.PPI
 		}
 		if len(pageMargin) != 4 {
-			log.Fatalln("Error: -m|--margin MUST be 4 comma separated int/float numbers. %s provided.", margin)
+			log.Printf("Error: -m|--margin MUST be 4 comma separated int/float numbers. %s provided.", margin)
 		}
 
 		marginHasSet = true

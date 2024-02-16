@@ -62,11 +62,11 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 	}()
 
 	w := c.Writer
-	notify := w.(http.CloseNotifier).CloseNotify()
+	notify := c.Request.Context().Done()
 	f, ok := w.(http.Flusher)
 
 	if !ok {
-		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("streaming unsupported"))
+		_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("streaming unsupported"))
 		return
 	}
 
@@ -80,7 +80,7 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 			case event.EventName:
 				payload, err := json.Marshal(event.Payload)
 				if err != nil {
-					c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+					_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
 				}
 				fmt.Fprintf(w, "data: %s\n\n", payload)
 				f.Flush()

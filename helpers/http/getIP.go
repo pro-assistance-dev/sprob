@@ -51,16 +51,12 @@ func getClientIPByRequestRemoteAddr(req *http.Request) (ip string, err error) {
 	if err != nil {
 		log.Printf("debug: Getting req.RemoteAddr %v", err)
 		return "", err
-	} else {
-		log.Printf("debug: With req.RemoteAddr found IP:%v; Port: %v", ip, port)
 	}
+	log.Printf("debug: With req.RemoteAddr found IP:%v; Port: %v", ip, port)
 
 	userIP := net.ParseIP(ip)
 	if userIP == nil {
-		message := fmt.Sprintf("debug: Parsing IP from Request.RemoteAddr got nothing.")
-		log.Printf(message)
-		return "", fmt.Errorf(message)
-
+		return "", fmt.Errorf("debug: Parsing IP from Request.RemoteAddr got nothing")
 	}
 	log.Printf("debug: Found IP: %v", userIP)
 	return userIP.String(), nil
@@ -93,7 +89,6 @@ func (i *HTTP) GetMyIP() (net.IP, error) {
 	}
 	addresses := []net.IP{}
 	for _, iface := range ifaces {
-
 		if iface.Flags&net.FlagUp == 0 {
 			continue // interface down
 		}

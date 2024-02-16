@@ -24,7 +24,7 @@ func (i *vkItem) getPhotoURL() string {
 	url := ""
 	for _, size := range attachment.Photo.Sizes {
 		if size.Type == "q" {
-			url = size.Url
+			url = size.URL
 			break
 		}
 	}
@@ -43,7 +43,7 @@ type vkPhoto struct {
 
 type vkSize struct {
 	Type string `json:"type"`
-	Url  string `json:"url"`
+	URL  string `json:"url"`
 }
 
 type vkSizes []*vkSize
@@ -67,7 +67,7 @@ func (i *vkStruct) getWebFeed(data *http.Response) Socials {
 		emojiRx := regexp.MustCompile(`[\x{1F600}-\x{1F6FF}|[\x{2600}-\x{26FF}]`)
 		title = emojiRx.ReplaceAllString(title, "")
 
-		item := Social{
+		item := SocialModel{
 			Type:        SocialTypeVK,
 			Title:       title,
 			Link:        fmt.Sprintf("https://vk.com/morozdgkbdzm?w=wall%d_%d", item.FromID, item.ID),

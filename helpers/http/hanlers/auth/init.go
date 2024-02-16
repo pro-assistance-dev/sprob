@@ -27,15 +27,10 @@ func Init(h *helper.Helper) {
 }
 
 type Service struct {
-	repository IRepository
-	helper     *helper.Helper
-}
-
-type Repository struct {
 	helper *helper.Helper
 }
 
-type FilesService struct {
+type Repository struct {
 	helper *helper.Helper
 }
 

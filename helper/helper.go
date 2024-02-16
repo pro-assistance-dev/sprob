@@ -46,13 +46,13 @@ type Helper struct {
 }
 
 func NewHelper(config config.Config) *Helper {
-	http := httpHelper.NewHTTP(config.Server)
+	h := httpHelper.NewHTTP(config.Server)
 	pdf := pdf.NewPDF(config)
 	sql := sql.NewSQL()
 	uploader := uploader.NewLocalUploader(&config.UploadPath)
 	token := token.NewToken(config.Token)
 	email := email.NewEmail(config.Email)
-	social := social.NewSocial(config.Social)
+	soc := social.NewSocial(config.Social)
 	util := util.NewUtil(config.BinPath)
 	templ := templater.NewTemplater(config)
 	db := db.NewDB(config.DB)
@@ -61,7 +61,7 @@ func NewHelper(config config.Config) *Helper {
 	cr := cron.NewCron()
 	ph := project.NewProject()
 	l := logger.NewLogger()
-	return &Helper{HTTP: http, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: social, Search: search, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l}
+	return &Helper{HTTP: h, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: soc, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l}
 }
 
 type RouterHandler interface {

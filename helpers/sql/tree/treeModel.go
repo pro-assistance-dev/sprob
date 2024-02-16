@@ -8,12 +8,12 @@ import (
 )
 
 // treeModel model
-type treeModel struct {
+type treeModel struct { //nolint:golint
 	Model string   `json:"model"`
 	Cols  []string `json:"col"`
 }
 
-type TreeModels []*treeModel
+type TreeModels []*treeModel //nolint:golint
 
 func parseJSONToTreeModel(args string) (treeModel treeModel, err error) {
 	err = json.Unmarshal([]byte(args), &treeModel)

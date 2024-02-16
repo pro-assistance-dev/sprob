@@ -7,7 +7,7 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type TreeCreator struct {
+type TreeCreator struct { //nolint:golint
 	ID         *string
 	treeModels TreeModels
 }

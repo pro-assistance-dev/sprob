@@ -6,19 +6,18 @@ import (
 	"reflect"
 )
 
-func in_array(val interface{}, array interface{}) bool {
-	return at_array(val, array) != -1
+func inArray(val interface{}, array interface{}) bool {
+	return atArray(val, array) != -1
 }
 
-func at_array(val interface{}, array interface{}) (index int) {
+func atArray(val interface{}, array interface{}) (index int) {
 	index = -1
 
-	switch reflect.TypeOf(array).Kind() {
-	case reflect.Slice:
+	if reflect.TypeOf(array).Kind() == reflect.Slice {
 		s := reflect.ValueOf(array)
 
 		for i := 0; i < s.Len(); i++ {
-			if reflect.DeepEqual(val, s.Index(i).Interface()) == true {
+			if reflect.DeepEqual(val, s.Index(i).Interface()) {
 				index = i
 				return
 			}

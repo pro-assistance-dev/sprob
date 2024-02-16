@@ -1,4 +1,4 @@
-package search
+package models
 
 type SearchElement struct {
 	Description        string             `json:"description"`

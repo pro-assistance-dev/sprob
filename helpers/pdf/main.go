@@ -13,7 +13,6 @@ import (
 type PDF struct {
 	templater *templater.Templater
 	generator *wkhtmltopdf.PDFGenerator
-	reader    *wkhtmltopdf.PageReader
 	creator   *creator.Creator
 	ws        *mywriter
 }
@@ -72,8 +71,4 @@ func (i *PDF) createFile() ([]byte, error) {
 
 func (i *PDF) writeNewPageFromString(data string) {
 	i.generator.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader([]byte(data))))
-}
-
-func (i *PDF) writeNewPageFromBytes(data []byte) {
-	i.generator.AddPage(wkhtmltopdf.NewPageReader(bytes.NewReader(data)))
 }

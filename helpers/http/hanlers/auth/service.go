@@ -12,9 +12,11 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	item := &models.UserAccount{}
 	item.Email = email
 	item.Password = password
-	item.HashPassword()
-
-	err := R.Create(c, item)
+	err := item.HashPassword()
+	if err != nil {
+		return uuid.NullUUID{}, err
+	}
+	err = R.Create(c, item)
 	if err != nil {
 		return uuid.NullUUID{}, err
 	}

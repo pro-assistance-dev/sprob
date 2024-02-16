@@ -52,7 +52,7 @@ func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *stri
 	case "dropDatabase":
 		dropDatabase(migrator)
 	case "create":
-		createMigrationSql(migrator, name)
+		createMigrationSQL(migrator, name)
 	case "migrate":
 		runMigration(migrator)
 	case "status":
@@ -75,7 +75,7 @@ func (i *DB) Dump() {
 	}
 	exPath := filepath.Dir(filename)
 
-	cmd := exec.Command("/bin/bash", filepath.Join(exPath, "dump_pg.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword)
+	cmd := exec.Command("/bin/bash", filepath.Join(exPath, "dump_pg.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword) //nolint:gosec
 	err := cmd.Run()
 	if err != nil {
 		log.Fatalln(err.Error())

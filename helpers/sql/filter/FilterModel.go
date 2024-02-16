@@ -10,7 +10,7 @@ import (
 )
 
 // FilterModel model
-type FilterModel struct {
+type FilterModel struct { //nolint:golint
 	ID     string `json:"id"`
 	Table  string `json:"table"`
 	Col    string `json:"col"`
@@ -35,31 +35,31 @@ type FilterModel struct {
 }
 
 // FilterModels model
-type FilterModels []*FilterModel
+type FilterModels []*FilterModel //nolint:golint
 
 type Operator string
 
 const (
 	Eq      Operator = "="
-	Ne               = "!="
-	Gt               = ">"
-	Ge               = "<"
-	Btw              = "between"
-	Like             = "like"
-	In               = "in"
-	Null             = "is null"
-	NotNull          = "is not null"
+	Ne      Operator = "!="
+	Gt      Operator = ">"
+	Ge      Operator = "<"
+	Btw     Operator = "between"
+	Like    Operator = "like"
+	In      Operator = "in"
+	Null    Operator = "is null"
+	NotNull Operator = "is not null"
 )
 
 type DataType string
 
 const (
 	DateType    DataType = "date"
-	NumberType           = "number"
-	StringType           = "string"
-	BooleanType          = "boolean"
-	SetType              = "set"
-	JoinType             = "join"
+	NumberType  DataType = "number"
+	StringType  DataType = "string"
+	BooleanType DataType = "boolean"
+	SetType     DataType = "set"
+	JoinType    DataType = "join"
 )
 
 func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
@@ -84,28 +84,28 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	if f.isNull() {
 		q = fmt.Sprintf("%s %s", f.getTableAndCol(), f.Operator)
 	}
-	query = query.Where(q)
+	query.Where(q)
 }
 
 func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 	if f.JoinTable == "" {
-		query = query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
+		query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
 		return
 	}
 	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
-	query = query.Where(q, bun.In(f.Set))
+	query.Where(q, bun.In(f.Set))
 }
 
 func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	f.constructJoinV3(query)
 	// if f.JoinTableID != "" && f.Version != "v2" {
 	// 	join := fmt.Sprintf("JOIN %s ON %s ", f.JoinTable, f.getJoinCondition())
-	// 	query = query.Join(join)
+	// 	query.Join(join)
 	// 	joinTable := fmt.Sprintf("%s.%s", f.JoinTable, f.JoinTableIDCol)
 	// 	if f.Operator != In {
-	// 		query = query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
+	// 		query.Where("? = ?", bun.Ident(joinTable), f.JoinTableID)
 	// 	} else {
-	// 		query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
+	// 		query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 	// 	}
 	// 	return
 	// }
@@ -116,12 +116,12 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	// 	joinTable = joinModel.GetTableName()
 	// }
 	// join := fmt.Sprintf("JOIN %s ON %s", joinTable, f.getJoinCondition())
-	// query = query.Join(join)
+	// query.Join(join)
 	// if f.JoinTableID != "" {
 	// 	if f.Operator != In {
-	// 		query = query.Where("? = ?", bun.Ident(joinModel.GetCol(f.JoinTableIDCol)), f.JoinTableID)
+	// 		query.Where("? = ?", bun.Ident(joinModel.GetCol(f.JoinTableIDCol)), f.JoinTableID)
 	// 	} else {
-	// 		query = query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
+	// 		query.Where("? in (?)", bun.Ident(joinTable), bun.In(f.Set))
 	// 	}
 	// }
 }
@@ -129,10 +129,10 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	model := project.SchemasLib.GetSchema(f.Model)
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
-	query = query.Join(f.getJoinExpression(model, joinModel))
+	query.Join(f.getJoinExpression(model, joinModel))
 	if f.Operator == In {
 		col := joinModel.GetCol(f.Col)
-		query = query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
+		query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
 	}
 }
 
@@ -231,6 +231,6 @@ func (f *FilterModel) isNull() bool {
 	return f.Operator == Null || f.Operator == NotNull
 }
 
-func (f *FilterModel) isSet() bool {
-	return f.Operator == In
-}
+// func (f *FilterModel) isSet() bool {
+// 	return f.Operator == In
+// }

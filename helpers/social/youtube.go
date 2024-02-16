@@ -12,9 +12,9 @@ type youTubeElement struct {
 }
 type youTubeElements []*youTubeElement
 
-type youTubeID struct {
-	VideoID string `json:"videoId"`
-}
+// type youTubeID struct {
+// 	VideoID string `json:"videoId"`
+// }
 
 type youTubeSnippet struct {
 	YouTubeThumbnails youTubeThumbnails `json:"thumbnails"`
@@ -27,7 +27,7 @@ type youTubeThumbnails struct {
 }
 
 type youTubeMedium struct {
-	Url string `json:"url"`
+	URL string `json:"url"`
 }
 
 type youTubeStruct struct {
@@ -38,11 +38,11 @@ func (i *youTubeStruct) getWebFeed(data *http.Response) Socials {
 	i.decode(data)
 	socials := make(Socials, 0)
 	for index := range i.Items {
-		item := Social{
+		item := SocialModel{
 			Type:        SocialTypeYouTube,
 			Title:       i.Items[index].Snippet.Title,
 			Description: i.Items[index].Snippet.Description,
-			Image:       i.Items[index].Snippet.YouTubeThumbnails.Medium.Url,
+			Image:       i.Items[index].Snippet.YouTubeThumbnails.Medium.URL,
 			MediaType:   MediaTypeImage,
 		}
 		switch v := i.Items[index].ID.(type) {

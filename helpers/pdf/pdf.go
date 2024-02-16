@@ -10,7 +10,7 @@ import (
 	pdf "github.com/unidoc/unidoc/pdf/model"
 )
 
-type PDFSource struct {
+type PDFSource struct { //nolint:golint
 	source
 }
 

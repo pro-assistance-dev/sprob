@@ -4,8 +4,8 @@ type Mode string
 
 const (
 	Migrate Mode = "migrate"
-	Run          = "run"
-	Dump         = "dump"
-	Listen       = "listen"
-	Test         = "test"
+	Run     Mode = "run"
+	Dump    Mode = "dump"
+	Listen  Mode = "listen"
+	Test    Mode = "test"
 )
