@@ -34,3 +34,15 @@ func (s *Service) Login(c context.Context, email string, password string) (uuid.
 	}
 	return item.ID, err
 }
+
+func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
+	userAccount, err := R.GetByUUID(c, uid)
+	if userAccount == nil || err != nil {
+		return err
+	}
+	return R.UpdateUUID(c, id)
+}
+
+func (h *Service) UpdatePassword(c context.Context, id string, password string) error {
+	return R.UpdatePassword(c, id, password)
+}
