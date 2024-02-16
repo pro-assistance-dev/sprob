@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance/pro-assister/helper"
 	"github.com/pro-assistance/pro-assister/models"
-	"github.com/pro-assistance/pro-assister/sqlHelper"
 )
 
 type IService interface {
@@ -33,8 +32,7 @@ type Service struct {
 }
 
 type Repository struct {
-	helper      *helper.Helper
-	queryFilter *sqlHelper.QueryFilter
+	helper *helper.Helper
 }
 
 type FilesService struct {

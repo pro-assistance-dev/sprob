@@ -20,7 +20,7 @@ type Job struct {
 type Jobs []*Job
 
 // NewCronHelper func
-func NewCronHelper() (cr *Cron) {
+func NewCron() (cr *Cron) {
 	location := time.FixedZone("UTC+3", 3*60*60)
 	return &Cron{cron: cron.New(cron.WithLocation(location))}
 }

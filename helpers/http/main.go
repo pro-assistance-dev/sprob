@@ -19,7 +19,7 @@ type HTTP struct {
 }
 
 func NewHTTP(config config.Server) *HTTP {
-	return &HTTP{Host: config.Host, Port: config.Port, middleware: createMiddleware(), ReadTimeout: time.Duration(config.ReadTimeout), WriteTimeout: time.Duration(config.WriteTimeout), HTTPS: config.HTTPS}
+	return &HTTP{Host: config.Host, Port: config.Port, ReadTimeout: time.Duration(config.ReadTimeout), WriteTimeout: time.Duration(config.WriteTimeout), HTTPS: config.HTTPS}
 }
 
 func (i *HTTP) SetFileHeaders(c *gin.Context, fileName string) {

@@ -9,7 +9,7 @@ import (
 )
 
 func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, error) {
-	item := models.UserAccount{}
+	item := &models.UserAccount{}
 	item.Email = email
 	item.Password = password
 	item.HashPassword()

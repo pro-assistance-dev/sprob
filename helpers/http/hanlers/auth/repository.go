@@ -2,7 +2,8 @@ package auth
 
 import (
 	"context"
-	"mdgkb/tsr-tegister-server-v1/models"
+
+	"github.com/pro-assistance/pro-assister/models"
 )
 
 func (r *Repository) Create(c context.Context, item *models.UserAccount) error {
