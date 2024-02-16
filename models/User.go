@@ -3,17 +3,32 @@ package models
 import (
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	bun.BaseModel `bun:"users,select:users_view,alias:users_view"`
+type UserAccount struct {
+	bun.BaseModel `bun:"users_accounts,alias:users_accounts"`
+	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
+	UUID          uuid.UUID     `bun:"type:uuid,nullzero,notnull,default:uuid_generate_v4()"  json:"uuid"` // для восстановления пароля - обеспечивает уникальность страницы на фронте
+	Password      string        `json:"password"`
+	Email         string        `json:"email"`
 
-	ID       uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
-	Email    string        `json:"email"`
-	UUID     uuid.UUID     `bun:"type:uuid,nullzero,notnull,default:uuid_generate_v4()"  json:"uuid"` // для восстановления пароля - обеспечивает уникальность страницы на фронте
-	Phone    string        `json:"phone"`
-	Password string        `json:"password"`
-	IsActive bool          `json:"isActive"`
+	Phone string `json:"phone"`
 }
 
-type Users []*User
+func (item *UserAccount) CompareWithUUID(externalUUID string) bool {
+	return item.UUID.String() == externalUUID
+}
+
+func (item *UserAccount) HashPassword() error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(item.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	item.Password = string(hash)
+	return nil
+}
+
+func (item *UserAccount) CompareWithHashPassword(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(item.Password), []byte(password)) == nil
+}
