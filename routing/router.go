@@ -14,7 +14,7 @@ func Init(r *gin.Engine, h *helper.Helper) *gin.RouterGroup {
 	// m := middleware.CreateMiddleware(helper)
 	// r.Use(m.InjectFTSP())
 	// r.Use(m.CORSMiddleware())
-	r.Use(gin.Logger())
+	// r.Use(gin.Logger())
 	r.Static("/api/static", "./static/")
 
 	api := r.Group("/api")
