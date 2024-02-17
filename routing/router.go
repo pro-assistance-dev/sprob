@@ -5,6 +5,7 @@ import (
 	"github.com/pro-assistance/pro-assister/handlers/fileinfos"
 	"github.com/pro-assistance/pro-assister/handlers/search"
 	"github.com/pro-assistance/pro-assister/helper"
+	"github.com/pro-assistance/pro-assister/middleware"
 
 	fileinfosRouter "github.com/pro-assistance/pro-assister/routing/fileinfos"
 	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
@@ -13,10 +14,11 @@ import (
 )
 
 func Init(r *gin.Engine, h *helper.Helper) *gin.RouterGroup {
-	// m := middleware.CreateMiddleware(helper)
-	// r.Use(m.InjectFTSP())
-	// r.Use(m.CORSMiddleware())
-	// r.Use(gin.Logger())
+	m := middleware.CreateMiddleware(h)
+	r.Use(m.InjectFTSP())
+	r.Use(m.CORSMiddleware())
+	r.Use(gin.Logger())
+
 	r.Static("/api/static", "./static/")
 
 	api := r.Group("/api")
