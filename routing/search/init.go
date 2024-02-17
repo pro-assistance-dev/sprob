@@ -1,7 +1,7 @@
 package search
 
 import (
-	handler "pro-assister/handlers/search"
+	handler "github.com/pro-assistance/pro-assister/handlers/search"
 
 	"github.com/gin-gonic/gin"
 )

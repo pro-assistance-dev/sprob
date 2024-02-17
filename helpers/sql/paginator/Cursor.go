@@ -2,8 +2,9 @@ package paginator
 
 import (
 	"fmt"
-	"pro-assister/helpers/project"
-	"pro-assister/helpers/sql/filter"
+
+	"github.com/pro-assistance/pro-assister/helpers/project"
+	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
 
 	"github.com/uptrace/bun"
 )

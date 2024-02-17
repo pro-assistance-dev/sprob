@@ -3,7 +3,8 @@ package search
 import (
 	"context"
 	"log"
-	"pro-assister/models"
+
+	"github.com/pro-assistance/pro-assister/models"
 
 	"github.com/uptrace/bun"
 )

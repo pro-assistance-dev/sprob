@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"pro-assister/helpers/project"
+	"github.com/pro-assistance/pro-assister/helpers/project"
 )
 
 // treeModel model

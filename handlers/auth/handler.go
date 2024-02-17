@@ -2,7 +2,8 @@ package auth
 
 import (
 	"net/http"
-	"pro-assister/models"
+
+	"github.com/pro-assistance/pro-assister/models"
 
 	"github.com/gin-gonic/gin"
 )

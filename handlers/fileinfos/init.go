@@ -1,7 +1,7 @@
 package fileinfos
 
 import (
-	"pro-assister/helper"
+	"github.com/pro-assistance/pro-assister/helper"
 
 	"github.com/gin-gonic/gin"
 )

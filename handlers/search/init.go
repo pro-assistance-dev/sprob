@@ -1,8 +1,8 @@
 package search
 
 import (
-	"pro-assister/helper"
-	"pro-assister/models"
+	"github.com/pro-assistance/pro-assister/helper"
+	"github.com/pro-assistance/pro-assister/models"
 
 	"github.com/gin-gonic/gin"
 )

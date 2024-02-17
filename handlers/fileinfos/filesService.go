@@ -2,8 +2,9 @@ package fileinfos
 
 import (
 	"mime/multipart"
-	"pro-assister/helpers/uploader"
-	"pro-assister/models"
+
+	"github.com/pro-assistance/pro-assister/helpers/uploader"
+	"github.com/pro-assistance/pro-assister/models"
 
 	"github.com/gin-gonic/gin"
 )

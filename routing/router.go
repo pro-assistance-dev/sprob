@@ -1,13 +1,13 @@
 package routing
 
 import (
-	"pro-assister/handlers/auth"
-	"pro-assister/handlers/fileinfos"
-	"pro-assister/handlers/search"
-	"pro-assister/helper"
+	"github.com/pro-assistance/pro-assister/handlers/auth"
+	"github.com/pro-assistance/pro-assister/handlers/fileinfos"
+	"github.com/pro-assistance/pro-assister/handlers/search"
+	"github.com/pro-assistance/pro-assister/helper"
 
-	fileinfosRouter "pro-assister/routing/fileinfos"
-	searchRouter "pro-assister/routing/search"
+	fileinfosRouter "github.com/pro-assistance/pro-assister/routing/fileinfos"
+	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
 
 	"github.com/gin-gonic/gin"
 )

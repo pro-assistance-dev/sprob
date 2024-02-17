@@ -2,7 +2,7 @@ package fileinfos
 
 import (
 	"context"
-	"pro-assister/models"
+	"github.com/pro-assistance/pro-assister/models"
 
 	"github.com/google/uuid"
 )

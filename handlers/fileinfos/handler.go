@@ -1,8 +1,8 @@
 package fileinfos
 
 import (
+	"github.com/pro-assistance/pro-assister/models"
 	"net/http"
-	"pro-assister/models"
 
 	"github.com/gin-gonic/gin"
 )

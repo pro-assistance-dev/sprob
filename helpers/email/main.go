@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"pro-assister/config"
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 type AuthMethod string

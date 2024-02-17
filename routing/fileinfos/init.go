@@ -1,7 +1,7 @@
 package fileinfos
 
 import (
-	handler "pro-assister/handlers/fileinfos"
+	handler "github.com/pro-assistance/pro-assister/handlers/fileinfos"
 
 	"github.com/gin-gonic/gin"
 )

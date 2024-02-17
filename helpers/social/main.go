@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"pro-assister/config"
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 type SocialModel struct { //nolint:golint

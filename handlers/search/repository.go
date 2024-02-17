@@ -3,7 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
-	"pro-assister/models"
+	"github.com/pro-assistance/pro-assister/models"
 )
 
 func (r *Repository) GetGroupByKey(c context.Context, key string) (*models.SearchGroup, error) {

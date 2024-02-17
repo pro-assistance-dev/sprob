@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"pro-assister/helpers/project"
+	"github.com/pro-assistance/pro-assister/helpers/project"
 )
 
 func main() {

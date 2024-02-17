@@ -1,11 +1,10 @@
-module pro-assister
+module github.com/pro-assistance/pro-assister
 
 go 1.18
 
 require (
 	github.com/SebastiaanKlippert/go-wkhtmltopdf v1.7.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/elastic/go-elasticsearch/v8 v8.12.0
 	github.com/fatih/structtag v1.2.0
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/validator/v10 v10.11.0
@@ -14,7 +13,6 @@ require (
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lukasjarosch/go-docx v0.4.6
 	github.com/oiime/logrusbun v0.1.1
-	github.com/pro-assistance/pro-assister v0.1.3
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/sirupsen/logrus v1.8.1

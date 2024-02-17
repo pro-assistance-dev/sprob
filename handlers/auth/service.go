@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"pro-assister/models"
+	"github.com/pro-assistance/pro-assister/models"
 )
 
 func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, error) {

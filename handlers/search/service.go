@@ -2,7 +2,7 @@ package search
 
 import (
 	"context"
-	"pro-assister/models"
+	"github.com/pro-assistance/pro-assister/models"
 )
 
 func (s *Service) Search(c context.Context, searchModel *models.SearchModel) (err error) {
