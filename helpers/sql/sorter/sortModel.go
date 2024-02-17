@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	"pro-assister/helpers/project"
 )
 
 // sortModel model

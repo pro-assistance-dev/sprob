@@ -11,7 +11,7 @@ import (
 
 	"github.com/lukasjarosch/go-docx"
 
-	"github.com/pro-assistance/pro-assister/config"
+	"pro-assister/config"
 )
 
 type Templater struct {

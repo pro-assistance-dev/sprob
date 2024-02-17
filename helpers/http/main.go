@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/config"
+	"pro-assister/config"
 )
 
 type HTTP struct {

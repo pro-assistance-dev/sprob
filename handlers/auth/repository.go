@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/models"
+	"pro-assister/models"
 )
 
 func (r *Repository) Create(c context.Context, item *models.UserAccount) error {

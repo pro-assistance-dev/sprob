@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
-	"github.com/pro-assistance/pro-assister/helpers/sql/paginator"
-	"github.com/pro-assistance/pro-assister/helpers/sql/sorter"
-	"github.com/pro-assistance/pro-assister/helpers/sql/tree"
 	"github.com/uptrace/bun"
+	"pro-assister/helpers/sql/filter"
+	"pro-assister/helpers/sql/paginator"
+	"pro-assister/helpers/sql/sorter"
+	"pro-assister/helpers/sql/tree"
 )
 
 type FTSP struct {

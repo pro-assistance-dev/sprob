@@ -2,7 +2,7 @@ package auth
 
 import (
 	"github.com/gin-gonic/gin"
-	handler "github.com/pro-assistance/pro-assister/handlers/auth"
+	handler "pro-assister/handlers/auth"
 )
 
 // Init func

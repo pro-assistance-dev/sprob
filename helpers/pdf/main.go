@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
-	"github.com/pro-assistance/pro-assister/config"
-	"github.com/pro-assistance/pro-assister/helpers/templater"
 	"github.com/unidoc/unidoc/pdf/creator"
+	"pro-assister/config"
+	"pro-assister/helpers/templater"
 )
 
 type PDF struct {

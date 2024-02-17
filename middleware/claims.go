@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pro-assistance/pro-assister/helpers/token"
+	"pro-assister/helpers/token"
 )
 
 type (

@@ -2,10 +2,10 @@ package filter
 
 import (
 	"fmt"
+	"pro-assister/helpers/project"
+	"pro-assister/helpers/util"
 	"time"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
-	"github.com/pro-assistance/pro-assister/helpers/util"
 	"github.com/uptrace/bun"
 )
 
