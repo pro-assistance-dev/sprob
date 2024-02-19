@@ -30,7 +30,7 @@ func (s *Service) Login(c context.Context, email string, password string) (uuid.
 		return uuid.NullUUID{}, err
 	}
 	if !item.CompareWithHashPassword(password) {
-		return uuid.NullUUID{}, errors.New("wrong email or password")
+		return uuid.NullUUID{}, errors.New("неверный логин или пароль")
 	}
 	return item.ID, err
 }
