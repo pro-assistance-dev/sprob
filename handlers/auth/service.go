@@ -9,20 +9,41 @@ import (
 	"github.com/pro-assistance/pro-assister/models"
 )
 
-func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, error) {
+func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, bool, error) {
 	item := &models.UserAccount{}
 	item.Email = email
 	item.Password = password
+
+	existingUserAccount, _ := R.GetByEmail(c, item.Email)
+	if existingUserAccount != nil {
+		emailStruct := struct {
+			RestoreLink string
+			Host        string
+		}{
+			s.helper.HTTP.GetRestorePasswordURL(existingUserAccount.ID.UUID.String(), existingUserAccount.UUID.String()),
+			s.helper.HTTP.Host,
+		}
+		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/refreshToDouble.gohtml")
+		if err != nil {
+			return uuid.NullUUID{}, false, err
+		}
+		err = s.helper.Email.SendEmail([]string{item.Email}, "Восстановление пароля", mail)
+		if err != nil {
+			return uuid.NullUUID{}, false, err
+		}
+		return uuid.NullUUID{}, true, nil
+	}
+
 	err := item.HashPassword()
 	if err != nil {
-		return uuid.NullUUID{}, err
+		return uuid.NullUUID{}, false, err
 	}
 	err = R.Create(c, item)
 	if err != nil {
-		return uuid.NullUUID{}, err
+		return uuid.NullUUID{}, false, err
 	}
 
-	return item.ID, err
+	return item.ID, false, err
 }
 
 func (s *Service) Login(c context.Context, email string, password string) (uuid.NullUUID, error) {

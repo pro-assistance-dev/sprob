@@ -27,6 +27,7 @@ require (
 )
 
 require (
+	github.com/VividCortex/mysqlerr v1.0.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.4.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
