@@ -48,7 +48,7 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 
 func (s *Service) Login(c context.Context, email string, password string) (uuid.NullUUID, error) {
 	item, err := R.GetByEmail(c, email)
-	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || !item.CompareWithHashPassword(password) {
+	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || item.CompareWithHashPassword(password) {
 		return uuid.NullUUID{}, errors.New("неверный логин или пароль")
 	}
 	if err != nil {
