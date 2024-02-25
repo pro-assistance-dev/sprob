@@ -13,23 +13,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Init(r *gin.Engine, h *helper.Helper) *gin.RouterGroup {
+func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) {
 	m := middleware.CreateMiddleware(h)
-	r.Use(m.InjectRequestInfo())
 	r.Use(m.CORSMiddleware())
 	r.Use(gin.Logger())
 
 	r.Static("/api/static", "./static/")
 
-	api := r.Group("/api")
+	apiToken := r.Group("/api")
+	apiToken.Use(m.InjectRequestInfo())
+
+	apiNoToken := r.Group("/api")
 
 	auth.Init(h)
 	// authRouter.Init(api.Group("/auth"), auth.H)
 
 	search.Init(h)
-	searchRouter.Init(api.Group("/search"), search.H)
+	searchRouter.Init(apiToken.Group("/search"), search.H)
 
 	fileinfos.Init(h)
-	fileinfosRouter.Init(api.Group("/file-infos"), fileinfos.H)
-	return api
+	fileinfosRouter.Init(apiToken.Group("/file-infos"), fileinfos.H)
+	return apiToken, apiNoToken
 }
