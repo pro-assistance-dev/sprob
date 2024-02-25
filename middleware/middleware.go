@@ -17,7 +17,7 @@ func CreateMiddleware(helper *helper.Helper) *Middleware {
 	return &Middleware{helper: helper}
 }
 
-func (m *Middleware) InjectFTSP() gin.HandlerFunc {
+func (m *Middleware) injectFTSP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !strings.Contains(c.Request.URL.Path, "ftsp") {
 			return
@@ -48,34 +48,22 @@ func (m *Middleware) InjectFTSP() gin.HandlerFunc {
 func (m *Middleware) InjectRequestInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		m.injectClaims(c)
-		m.injectFTSP(c)
+		m.injectFTSP()
 		c.Next()
 	}
 }
 
 func (m *Middleware) injectClaims(c *gin.Context) {
-	// err := Claims{ClaimUserID, ClaimDomainIDS}.Inject(c.Request, m.helper.Token)
-	// if m.helper.HTTP.HandleError(c, err) {
-	// 	return
-	// }
-	// if err != nil {
-	// 	return
-	// }
-	// // err = m.helper.SQL.InjectQueryFilter(c)
-	// // if m.helper.HTTP.HandleError(c, err) {
-	// // 	return
-	// // }
-	//
-	// if err != nil {
-	// 	return
-	// }
-}
-
-func (m *Middleware) injectFTSP(c *gin.Context) {
-	_ = c.Query("qid")
-	// if qid != nil {
-	// 	Query.Inject(c.Request, m.helper.Token)
-	// }
+	err := Claims{ClaimUserID, ClaimDomainIDS}.Inject(c.Request, m.helper.Token)
+	if m.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	if err != nil {
+		return
+	}
+	if err != nil {
+		return
+	}
 }
 
 func (m *Middleware) methodIsAllowed(requestMethod string) bool {
