@@ -47,22 +47,22 @@ func (m *Middleware) injectFTSP() gin.HandlerFunc {
 
 func (m *Middleware) InjectRequestInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		m.injectClaims(c)
+		m.injectClaims()
 		m.injectFTSP()
 		c.Next()
 	}
 }
 
-func (m *Middleware) injectClaims(c *gin.Context) {
-	err := Claims{ClaimUserID, ClaimDomainIDS}.Inject(c.Request, m.helper.Token)
-	if m.helper.HTTP.HandleError(c, err) {
-		return
-	}
-	if err != nil {
-		return
-	}
-	if err != nil {
-		return
+func (m *Middleware) injectClaims() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := Claims{ClaimUserID, ClaimDomainIDS}.Inject(c.Request, m.helper.Token)
+		if m.helper.HTTP.HandleError(c, err) {
+			return
+		}
+		if err != nil {
+			return
+		}
+		c.Next()
 	}
 }
 
