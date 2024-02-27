@@ -17,7 +17,7 @@ func CreateMiddleware(helper *helper.Helper) *Middleware {
 	return &Middleware{helper: helper}
 }
 
-func (m *Middleware) injectFTSP() gin.HandlerFunc {
+func (m *Middleware) InjectFTSP() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !strings.Contains(c.Request.URL.Path, "ftsp") {
 			return
@@ -48,7 +48,7 @@ func (m *Middleware) injectFTSP() gin.HandlerFunc {
 func (m *Middleware) InjectRequestInfo() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		m.InjectClaims()
-		m.injectFTSP()
+		m.InjectFTSP()
 		c.Next()
 	}
 }
