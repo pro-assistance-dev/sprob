@@ -25,7 +25,7 @@ func (item Claim) Inject(r *http.Request, h *token.Token) error {
 	if err != nil {
 		return err
 	}
-	*r = *r.WithContext(context.WithValue(r.Context(), item, d))
+	*r = *r.WithContext(context.WithValue(r.Context(), item.String(), d))
 	// ctx = context.WithValue(ctx, claim, d)
 	return nil
 }
@@ -49,7 +49,7 @@ func (item Claim) Split() []string {
 }
 
 func (item Claim) FromContext(ctx context.Context) string {
-	return ctx.Value(item).(string)
+	return ctx.Value(item.String()).(string)
 }
 
 func (item Claim) FromContextSlice(ctx context.Context) []string {
