@@ -29,8 +29,8 @@ func (item Claim) Inject(r *http.Request, h *token.Token) error {
 }
 
 func (items Claims) Inject(r *http.Request, h *token.Token) (err error) {
-	for _, claim := range items {
-		err = claim.Inject(r, h)
+	for i := range items {
+		err = items[i].Inject(r, h)
 		if err != nil {
 			break
 		}
