@@ -29,6 +29,6 @@ func (item *UserAccount) HashPassword() error {
 	return nil
 }
 
-func (item *UserAccount) CompareWithHashPassword(password string) bool {
+func (item *UserAccount) PasswordEqWithHashed(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(item.Password), []byte(password)) == nil
 }
