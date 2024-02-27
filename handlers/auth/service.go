@@ -46,15 +46,15 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	return item.ID, false, err
 }
 
-func (s *Service) Login(c context.Context, email string, password string) (uuid.NullUUID, error) {
+func (s *Service) Login(c context.Context, email string, password string) (uuid.NullUUID, error, error) {
 	item, err := R.GetByEmail(c, email)
 	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || item.CompareWithHashPassword(password) {
-		return uuid.NullUUID{}, errors.New("неверный логин или пароль")
+		return uuid.NullUUID{}, errors.New("неверный логин или пароль"), err
 	}
 	if err != nil {
-		return uuid.NullUUID{}, err
+		return uuid.NullUUID{}, err, err
 	}
-	return item.ID, err
+	return item.ID, err, err
 }
 
 func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
