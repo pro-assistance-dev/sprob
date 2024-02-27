@@ -55,12 +55,7 @@ func (m *Middleware) InjectRequestInfo() gin.HandlerFunc {
 
 func (m *Middleware) InjectClaims() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// err := Claims{ClaimUserID, ClaimDomainIDS}.Inject(c.Request, m.helper.Token)
-		err := ClaimDomainIDS.Inject(c.Request, m.helper.Token)
-		if m.helper.HTTP.HandleError(c, err) {
-			return
-		}
-		err = ClaimUserID.Inject(c.Request, m.helper.Token)
+		err := ClaimsSlice.Inject(c.Request, m.helper.Token)
 		if m.helper.HTTP.HandleError(c, err) {
 			return
 		}

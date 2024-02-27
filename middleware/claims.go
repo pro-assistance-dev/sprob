@@ -18,6 +18,8 @@ const (
 	ClaimDomainIDS Claim = "domain_ids"
 )
 
+var ClaimsSlice = Claims{ClaimUserID, ClaimDomainIDS}
+
 func (item Claim) Inject(r *http.Request, h *token.Token) error {
 	d, err := h.ExtractTokenMetadata(r, item)
 	if err != nil {
