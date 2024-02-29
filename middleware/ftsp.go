@@ -20,16 +20,15 @@ func (item FTSPStore) SetFTSP(query *sql.FTSPQuery) {
 	query.FTSP.ID = id
 	query.QID = id
 
-	lock.RLock()
-	defer lock.RUnlock()
-
+	lock.Lock()
 	item.store[id] = query.FTSP
+	defer lock.Unlock()
 }
 
 func (item FTSPStore) GetFTSP(qid string) (sql.FTSP, bool) {
-	lock.RLock()
-	defer lock.RUnlock()
+	lock.Lock()
 	ftsp, ok := item.store[qid]
+	defer lock.Unlock()
 	return ftsp, ok
 }
 
