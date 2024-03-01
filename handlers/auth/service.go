@@ -40,7 +40,7 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 			s.helper.HTTP.Host,
 		}
 
-		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegisration.gohtml")
+		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegistration.gohtml")
 		if err != nil {
 			return uuid.NullUUID{}, false, err
 		}
