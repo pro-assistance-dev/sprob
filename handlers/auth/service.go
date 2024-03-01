@@ -23,6 +23,7 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 			s.helper.HTTP.GetRestorePasswordURL(existingUserAccount.ID.UUID.String(), existingUserAccount.UUID.String()),
 			s.helper.HTTP.Host,
 		}
+
 		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/refreshToDouble.gohtml")
 		if err != nil {
 			return uuid.NullUUID{}, false, err
@@ -32,6 +33,21 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 			return uuid.NullUUID{}, false, err
 		}
 		return uuid.NullUUID{}, true, nil
+	} else {
+		emailStruct := struct {
+			Host string
+		}{
+			s.helper.HTTP.Host,
+		}
+
+		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegisration.gohtml")
+		if err != nil {
+			return uuid.NullUUID{}, false, err
+		}
+		err = s.helper.Email.SendEmail([]string{item.Email}, "Успешная регистрация на сайте", mail)
+		if err != nil {
+			return uuid.NullUUID{}, false, err
+		}
 	}
 
 	err := item.HashPassword()
