@@ -10,9 +10,9 @@ minor=$((minor + 1))
 
 new_tag="${versions_part[0]}.${versions_part[1]}.${minor}"
 echo "$new_tag"
-#
+
 git add .
 git commit -m "$new_tag"
-# git push
-git tag -a $new_tag $new_tag
-# git push --tags
+git push
+git tag -a $new_tag -m "$new_tag"
+git push --tags
