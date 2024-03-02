@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pro-assistance/pro-assister/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
 func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, bool, error) {
@@ -82,5 +83,9 @@ func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
 }
 
 func (h *Service) UpdatePassword(c context.Context, id string, password string) error {
-	return R.UpdatePassword(c, id, password)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+	return R.UpdatePassword(c, id, string(hashedPassword))
 }
