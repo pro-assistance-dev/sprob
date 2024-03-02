@@ -30,7 +30,7 @@ func (r *Repository) GetByUUID(c context.Context, uid string) (*models.UserAccou
 func (r *Repository) UpdateUUID(c context.Context, userID string) (err error) {
 	_, err = r.helper.DB.IDB(c).NewUpdate().
 		Model((*models.UserAccount)(nil)).
-		Set("check_uuid = uuid_generate_v4()").
+		Set("uuid = uuid_generate_v4()").
 		Where("?TableAlias.id = ?", userID).
 		Exec(c)
 	return err
