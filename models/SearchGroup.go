@@ -21,8 +21,8 @@ type SearchGroup struct {
 	ValueColumn       string        `json:"valueColumn"`
 	DescriptionColumn string        `json:"descriptionColumn"`
 
-	JoinTable  string
-	JoinColumn string
+	JoinTable  string `bun:"-"`
+	JoinColumn string `bun:"-"`
 
 	SearchElements         SearchElements         `bun:"-" json:"options"`
 	SearchGroupMetaColumns SearchGroupMetaColumns `bun:"rel:has-many" json:"searchGroupMetaColumns"`
