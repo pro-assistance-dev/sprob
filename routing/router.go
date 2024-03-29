@@ -2,13 +2,19 @@ package routing
 
 import (
 	"github.com/pro-assistance/pro-assister/handlers/auth"
+	"github.com/pro-assistance/pro-assister/handlers/contacts"
+	"github.com/pro-assistance/pro-assister/handlers/emails"
 	"github.com/pro-assistance/pro-assister/handlers/fileinfos"
+	"github.com/pro-assistance/pro-assister/handlers/phones"
 	"github.com/pro-assistance/pro-assister/handlers/search"
 	"github.com/pro-assistance/pro-assister/handlers/valuetypes"
 	"github.com/pro-assistance/pro-assister/helper"
 	"github.com/pro-assistance/pro-assister/middleware"
 
+	contactsRouter "github.com/pro-assistance/pro-assister/routing/contacts"
+	emailsRouter "github.com/pro-assistance/pro-assister/routing/emails"
 	fileinfosRouter "github.com/pro-assistance/pro-assister/routing/fileinfos"
+	phonesRouter "github.com/pro-assistance/pro-assister/routing/phones"
 	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
 	valuetypesRouter "github.com/pro-assistance/pro-assister/routing/valuetypes"
 
@@ -29,6 +35,15 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	auth.Init(h)
 	// authRouter.Init(api.Group("/auth"), auth.H)
+
+	phones.Init(h)
+	phonesRouter.Init(apiToken.Group("/phones"), phones.H)
+
+	emails.Init(h)
+	emailsRouter.Init(apiToken.Group("/emails"), emails.H)
+
+	contacts.Init(h)
+	contactsRouter.Init(apiToken.Group("/contacts"), contacts.H)
 
 	search.Init(h)
 	searchRouter.Init(apiToken.Group("/search"), search.H)
