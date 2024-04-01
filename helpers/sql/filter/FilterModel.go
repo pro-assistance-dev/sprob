@@ -132,8 +132,8 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
 	query.Join(f.getJoinExpression(model, joinModel))
 	if f.Operator == In {
-		// col := joinModel.GetCol(f.Col)
-		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
+		col := joinModel.GetCol(f.Col)
+		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), f.getJoinCondition(), col)
 		query.Where(q, bun.In(f.Set))
 		// query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
 	}
