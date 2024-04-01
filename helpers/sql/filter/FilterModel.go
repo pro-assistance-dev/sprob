@@ -133,7 +133,10 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	query.Join(f.getJoinExpression(model, joinModel))
 	if f.Operator == In {
 		col := joinModel.GetCol(f.Col)
-		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), f.getJoinExpression(model, joinModel), col)
+		modelTable := model.GetTableName()
+		joinTable := joinModel.GetTableName()
+		joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
+		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), joinCondition, col)
 		query.Where(q, bun.In(f.Set))
 		// query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
 	}
