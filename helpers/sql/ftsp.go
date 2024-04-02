@@ -47,7 +47,7 @@ func (i *FTSP) distinctOn(query *bun.SelectQuery) {
 	if len(i.S) > 0 {
 		t := project.SchemasLib.GetSchema(i.S[0].Model)
 		sortCol := t.GetCol(i.S[0].Col)
-		query.DistinctOn(fmt.Sprintf("%s.%s, %s.id", t, sortCol, t))
+		query.DistinctOn(fmt.Sprintf("%s.%s, %s.id", t.GetTableName(), sortCol, t.GetTableName()))
 	}
 }
 func (i *SQL) InjectFTSP2(r *http.Request, f *FTSP) {
