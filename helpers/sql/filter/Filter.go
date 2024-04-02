@@ -37,12 +37,32 @@ func (i *Filter) CreateFilter(query *bun.SelectQuery) {
 		}
 	}
 }
-
+func (items FilterModels) mergeJoins() {
+	joinModels := make(map[string]int)
+	for i := range items {
+		if items[i].Type == JoinType && items[i].Operator == In {
+			index, ok := joinModels[items[i].Model]
+			if ok {
+				items[index].Set = append(items[index].Set, items[i].Set...)
+				items[i].ignore = true
+			} else {
+				joinModels[items[i].Model] = i
+			}
+		}
+	}
+}
 func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
 	if len(items) == 0 {
 		return
 	}
+
+	items.mergeJoins()
+
 	for _, filterModel := range items {
+		if filterModel.ignore {
+			continue
+		}
+
 		switch filterModel.Type {
 		case SetType:
 			if len(filterModel.Set) == 0 {

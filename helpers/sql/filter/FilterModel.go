@@ -33,6 +33,8 @@ type FilterModel struct { //nolint:golint
 	JoinTablePK    string `json:"joinTablePK"`
 	JoinTableID    string `json:"joinTableId"`
 	JoinTableIDCol string `json:"joinTableIdCol"`
+
+	ignore bool
 }
 
 // FilterModels model
