@@ -1,6 +1,7 @@
 #!/bin/bash
 
-last_tag=$(git tag | tail -n 1)
+last_tag=$(git tag | sort -V | tail -n 1)
+echo "$last_tag"
 
 readarray -td. versions_part <<<"$last_tag"
 
