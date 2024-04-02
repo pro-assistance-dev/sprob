@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
 	"github.com/pro-assistance/pro-assister/helpers/sql/paginator"
 	"github.com/pro-assistance/pro-assister/helpers/sql/sorter"
@@ -28,6 +29,7 @@ func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
 	if i == nil {
 		return
 	}
+	i.distinctOn(query)
 	i.P.CreatePagination(query)
 	i.F.CreateFilter(query)
 	i.S.CreateOrder(query)
@@ -41,6 +43,13 @@ type FTSPQuery struct {
 	FTSP FTSP   `json:"ftsp"`
 }
 
+func (i *FTSP) distinctOn(query *bun.SelectQuery) {
+	if len(i.S) > 0 {
+		t := project.SchemasLib.GetSchema(i.S[0].Model)
+		sortCol := t.GetCol(i.S[0].Col)
+		query.DistinctOn(fmt.Sprintf("%s.%s, %s.id", t, sortCol, t))
+	}
+}
 func (i *SQL) InjectFTSP2(r *http.Request, f *FTSP) {
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
 	fmt.Println(r)
