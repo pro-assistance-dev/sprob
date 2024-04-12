@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
 	"github.com/pro-assistance/pro-assister/helpers/sql/paginator"
@@ -16,13 +17,14 @@ import (
 )
 
 type FTSP struct {
-	ID    string               `json:"id"`
-	Col   string               `json:"col"`
-	Value string               `json:"value"`
-	F     filter.FilterModels  `json:"f"`
-	T     tree.TreeModels      `json:"t"` // добавил
-	S     sorter.SortModels    `json:"s"`
-	P     *paginator.Paginator `json:"p"`
+	bun.BaseModel `bun:"ftsp,alias:ftsp"`
+	ID            uuid.NullUUID        `json:"id"`
+	Col           string               `json:"col"`
+	Value         string               `json:"value"`
+	F             filter.FilterModels  `json:"f"`
+	T             tree.TreeModels      `json:"t"` // добавил
+	S             sorter.SortModels    `json:"s"`
+	P             *paginator.Paginator `json:"p"`
 }
 
 func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
