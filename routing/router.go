@@ -7,6 +7,7 @@ import (
 	"github.com/pro-assistance/pro-assister/handlers/fileinfos"
 	"github.com/pro-assistance/pro-assister/handlers/phones"
 	"github.com/pro-assistance/pro-assister/handlers/search"
+	"github.com/pro-assistance/pro-assister/handlers/usersaccounts"
 	"github.com/pro-assistance/pro-assister/handlers/valuetypes"
 	"github.com/pro-assistance/pro-assister/helper"
 	"github.com/pro-assistance/pro-assister/middleware"
@@ -16,6 +17,7 @@ import (
 	fileinfosRouter "github.com/pro-assistance/pro-assister/routing/fileinfos"
 	phonesRouter "github.com/pro-assistance/pro-assister/routing/phones"
 	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
+	useraccountsRouter "github.com/pro-assistance/pro-assister/routing/usersaccounts"
 	valuetypesRouter "github.com/pro-assistance/pro-assister/routing/valuetypes"
 
 	"github.com/gin-gonic/gin"
@@ -53,5 +55,7 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	valuetypes.Init(h)
 	valuetypesRouter.Init(apiToken.Group("/value-types"), valuetypes.H)
+	usersaccounts.Init(h)
+	useraccountsRouter.Init(apiToken.Group("/users-accounts"), usersaccounts.H)
 	return apiToken, apiNoToken
 }

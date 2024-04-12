@@ -16,6 +16,13 @@ type UserAccount struct {
 	Phone string `json:"phone"`
 }
 
+type UsersAccounts []*UserAccount
+
+type UsersAccountsWithCount struct {
+	UsersAccounts UsersAccounts `json:"items"`
+	Count         int           `json:"count"`
+}
+
 func (item *UserAccount) CompareWithUUID(externalUUID string) bool {
 	return item.UUID.String() == externalUUID
 }
