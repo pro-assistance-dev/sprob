@@ -1,15 +1,13 @@
-package emails
+package ftsp
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/emails"
+	handler "github.com/pro-assistance/pro-assister/handlers/ftsp"
 
 	"github.com/gin-gonic/gin"
 )
 
 // Init func
 func Init(r *gin.RouterGroup, h *handler.Handler) {
-	r.GET("", h.GetAll)
-	r.POST("/ftsp", h.FTSP)
 	r.GET("/:id", h.Get)
 	r.POST("", h.Create)
 	r.DELETE("/:id", h.Delete)

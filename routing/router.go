@@ -5,6 +5,7 @@ import (
 	"github.com/pro-assistance/pro-assister/handlers/contacts"
 	"github.com/pro-assistance/pro-assister/handlers/emails"
 	"github.com/pro-assistance/pro-assister/handlers/fileinfos"
+	"github.com/pro-assistance/pro-assister/handlers/ftsp"
 	"github.com/pro-assistance/pro-assister/handlers/phones"
 	"github.com/pro-assistance/pro-assister/handlers/search"
 	"github.com/pro-assistance/pro-assister/handlers/usersaccounts"
@@ -15,6 +16,7 @@ import (
 	contactsRouter "github.com/pro-assistance/pro-assister/routing/contacts"
 	emailsRouter "github.com/pro-assistance/pro-assister/routing/emails"
 	fileinfosRouter "github.com/pro-assistance/pro-assister/routing/fileinfos"
+	ftspRouter "github.com/pro-assistance/pro-assister/routing/ftsp"
 	phonesRouter "github.com/pro-assistance/pro-assister/routing/phones"
 	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
 	useraccountsRouter "github.com/pro-assistance/pro-assister/routing/usersaccounts"
@@ -40,6 +42,9 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	phones.Init(h)
 	phonesRouter.Init(apiToken.Group("/phones"), phones.H)
+
+	ftsp.Init(h)
+	ftspRouter.Init(apiToken.Group("/ftsp"), ftsp.H)
 
 	emails.Init(h)
 	emailsRouter.Init(apiToken.Group("/emails"), emails.H)
