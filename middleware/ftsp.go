@@ -17,7 +17,7 @@ var ftspStore = FTSPStore{store: make(map[string]sql.FTSP)}
 
 func (item FTSPStore) SetFTSP(query *sql.FTSPQuery) {
 	id := uuid.NewString()
-	query.FTSP.ID = id
+	// query.FTSP.ID = id
 	query.QID = id
 
 	lock.Lock()
