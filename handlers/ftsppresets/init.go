@@ -1,4 +1,4 @@
-package ftsp
+package ftsppresets
 
 import (
 	"github.com/pro-assistance/pro-assister/helper"

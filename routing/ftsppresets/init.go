@@ -1,7 +1,7 @@
-package ftsp
+package ftsppresets
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/ftsp"
+	handler "github.com/pro-assistance/pro-assister/handlers/ftsppresets"
 
 	"github.com/gin-gonic/gin"
 )

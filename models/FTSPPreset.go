@@ -5,9 +5,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
-type FTSP struct {
-	bun.BaseModel `bun:"ftsp,alias:ftsp"`
+type FTSPPreset struct {
+	bun.BaseModel `bun:"ftsp_presets,alias:ftsp_presets"`
 	ID            uuid.NullUUID `json:"id"`
 	FTSP          string        `json:"ftsp"`
 	Name          string        `json:"name"`
 }
+type FTSPPresets []*FTSPPreset
