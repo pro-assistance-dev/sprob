@@ -27,7 +27,7 @@ func (h *Handler) FTSP(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	c.JSON(http.StatusOK, models.FTSPAnswer{Data: data, FTSP: *h.helper.SQL.ExtractFTSP(ctx)})
+	c.JSON(http.StatusOK, models.FTSPAnswer{Data: data})
 }
 
 func (h *Handler) GetAll(c *gin.Context) {
