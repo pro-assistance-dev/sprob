@@ -35,7 +35,7 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	r.Static("/api/static", "./static/")
 
 	apiToken := r.Group("/api")
-	// apiToken.Use(m.InjectRequestInfo())
+	apiToken.Use(m.InjectRequestInfo())
 
 	apiNoToken := r.Group("/api")
 
@@ -68,6 +68,5 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	usersaccounts.Init(h)
 	useraccountsRouter.Init(apiToken.Group("/users-accounts"), usersaccounts.H)
-
 	return apiToken, apiNoToken
 }
