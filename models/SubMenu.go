@@ -18,7 +18,7 @@ type SubMenu struct {
 	Hide          bool          `json:"hide"`
 	MenuID        uuid.UUID     `bun:"type:uuid" json:"menuId"`
 	Order         uint          `bun:"sub_menu_order" json:"order"`
-	PageID        uuid.NullUUID `bun:"type:uuid" json:"PageID"`
+	PageID        uuid.NullUUID `bun:"type:uuid" json:"pageID"`
 	Icon          *FileInfo     `bun:"rel:belongs-to" json:"icon"`
 	IconID        uuid.NullUUID `bun:"type:uuid"  json:"iconId"`
 	IconName      string        `json:"iconName"`

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pro-assistance/pro-assister/models"
+	"github.com/uptrace/bun"
 	// _ "github.com/go-pg/pg/v10/orm"
 )
 
@@ -14,7 +15,14 @@ func (r *Repository) Create(c context.Context, item *models.Menu) (err error) {
 
 func (r *Repository) GetAll(c context.Context) (item models.MenusWithCount, err error) {
 	item.Menus = make(models.Menus, 0)
-	query := r.helper.DB.IDB(c).NewSelect().Model(&item.Menus)
+	query := r.helper.DB.IDB(c).NewSelect().Model(&item.Menus).
+		Relation("Icon").
+		Relation("SubMenus", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("sub_menus.hide != true").Order("sub_menus.sub_menu_order")
+		}).
+		Relation("SubMenus.Icon").
+		Order("menus.menu_order").
+		Where("?TableAlias.hide != true")
 	item.Count, err = query.ScanAndCount(c)
 	return item, err
 }
