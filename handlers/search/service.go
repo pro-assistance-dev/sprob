@@ -2,6 +2,7 @@ package search
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pro-assistance/pro-assister/models"
 )
@@ -24,6 +25,7 @@ func (s *Service) SearchMain(c context.Context, searchModel *models.SearchModel)
 	if err != nil {
 		return err
 	}
+	fmt.Println("searchModel:", searchModel.SearchGroups)
 	for i := range searchModel.SearchGroups {
 		err = R.Search(c, searchModel)
 		if err != nil {
