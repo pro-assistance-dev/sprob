@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"fmt"
+
 	"github.com/pro-assistance/pro-assister/models"
 )
 
@@ -13,6 +14,19 @@ func (r *Repository) GetGroupByKey(c context.Context, key string) (*models.Searc
 
 	err := query.Scan(c)
 	return &item, err
+}
+
+func (r *Repository) GetGroups(c context.Context, groupID string) (models.SearchGroups, error) {
+	items := make(models.SearchGroups, 0)
+	query := r.helper.DB.IDB(c).NewSelect().Model(&items).
+		Relation("SearchGroupMetaColumns").
+		Order("search_group_order")
+
+	if groupID != "" {
+		query = query.Where("id = ?", groupID)
+	}
+	err := query.Scan(c)
+	return items, err
 }
 
 func (r *Repository) Search(c context.Context, searchModel *models.SearchModel) error {

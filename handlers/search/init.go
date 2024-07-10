@@ -2,23 +2,7 @@ package search
 
 import (
 	"github.com/pro-assistance/pro-assister/helper"
-	"github.com/pro-assistance/pro-assister/models"
-
-	"github.com/gin-gonic/gin"
 )
-
-type IHandler interface {
-	Search(c *gin.Context)
-}
-
-type IService interface {
-	Search(*models.SearchModel) error
-}
-
-type IRepository interface {
-	GetGroupByKey(string) (*models.SearchGroup, error)
-	Search(*models.SearchModel) error
-}
 
 type Handler struct {
 	helper *helper.Helper
