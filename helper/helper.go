@@ -47,21 +47,21 @@ type Helper struct {
 	Logger    *logrus.Logger
 }
 
-func NewHelper(config config.Config) *Helper {
-	h := httpHelper.NewHTTP(config.Server)
-	pdf := pdf.NewPDF(config)
+func NewHelper(c config.Config) *Helper {
+	h := httpHelper.NewHTTP(c.Server)
+	pdf := pdf.NewPDF(c)
 	sql := sql.NewSQL()
-	uploader := uploader.NewLocalUploader(&config.UploadPath)
-	token := token.NewToken(config.Token)
-	email := email.NewEmail(config.Email)
-	soc := social.NewSocial(config.Social)
-	util := util.NewUtil(config.BinPath)
-	templ := templater.NewTemplater(config)
-	db := db.NewDB(config.DB)
+	uploader := uploader.NewLocalUploader(&c.UploadPath)
+	token := token.NewToken(c.Token)
+	email := email.NewEmail(c.Email)
+	soc := social.NewSocial(c.Social)
+	util := util.NewUtil(c.BinPath)
+	templ := templater.NewTemplater(c)
+	db := db.NewDB(c.DB)
 	brok := broker.NewBroker()
 	v := validator.NewValidator()
 	cr := cron.NewCron()
-	ph := project.NewProject()
+	ph := project.NewProject(&c)
 	l := logger.NewLogger()
 	return &Helper{HTTP: h, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: soc, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l}
 }

@@ -5,22 +5,29 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
+
+	"github.com/pro-assistance/pro-assister/config"
 )
 
 const defaultModelDir = "models"
 
 type Project struct {
 	Schemas
+	ModelsPath string
 }
 
-func NewProject() *Project {
-	return &Project{}
+func NewProject(config *config.Config) *Project {
+	modelsPath := config.ModelsPath
+	if modelsPath == "" {
+		modelsPath = defaultModelDir
+	}
+	return &Project{ModelsPath: modelsPath}
 }
 
 var SchemasLib = Schemas{}
 
 func (i *Project) InitSchemas() {
-	modelsPackage, err := parser.ParseDir(token.NewFileSet(), defaultModelDir, nil, parser.AllErrors)
+	modelsPackage, err := parser.ParseDir(token.NewFileSet(), i.ModelsPath, nil, parser.AllErrors)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -32,7 +39,7 @@ func (i *Project) InitSchemas() {
 	SchemasLib = i.Schemas
 }
 
-func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field {
+func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field { //nolint:all
 	structs := map[*ast.TypeSpec][]*ast.Field{}
 	for _, file := range modelsPackage["models"].Files {
 		for _, node := range file.Decls {

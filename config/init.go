@@ -10,6 +10,7 @@ type Config struct {
 	BinPath       string `mapstructure:"BIN_PATH"`
 	UploadPath    string `mapstructure:"UPLOAD_PATH"`
 	TemplatesPath string `mapstructure:"TEMPLATES_PATH"`
+	ModelsPath    string `mapstructure:"MODELS_PATH"`
 
 	RedisHost string `mapstructure:"REDIS_HOST"`
 	RedisPort string `mapstructure:"REDIS_PORT"`

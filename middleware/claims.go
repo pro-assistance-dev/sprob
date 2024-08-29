@@ -25,7 +25,7 @@ func (item Claim) Inject(r *http.Request, h *token.Token) error {
 	if err != nil {
 		return err
 	}
-	*r = *r.WithContext(context.WithValue(r.Context(), item.String(), d))
+	*r = *r.WithContext(context.WithValue(r.Context(), item.String(), d)) //nolint:all
 	// ctx = context.WithValue(ctx, claim, d)
 	return nil
 }

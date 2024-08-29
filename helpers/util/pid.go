@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 )
@@ -11,7 +10,7 @@ import (
 // Write a pid file, but first make sure it doesn't exist with a running pid.
 func (h *Util) WritePidFile(pidFile string) error {
 	// Read in the pid file as a slice of bytes.
-	if piddata, err := ioutil.ReadFile(pidFile); err == nil {
+	if piddata, err := os.ReadFile(pidFile); err == nil {
 		// Convert the file contents to an integer.
 		if pid, err := strconv.Atoi(string(piddata)); err == nil {
 			// Look for the pid in the process list.
@@ -26,5 +25,5 @@ func (h *Util) WritePidFile(pidFile string) error {
 	}
 	// If we get here, then the pidfile didn't exist,
 	// or the pid in it doesn't belong to the user running this app.
-	return ioutil.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0600)
+	return os.WriteFile(pidFile, []byte(fmt.Sprintf("%d", os.Getpid())), 0600)
 }

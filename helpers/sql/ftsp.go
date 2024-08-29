@@ -19,7 +19,7 @@ type FTSP struct {
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
-	T     tree.TreeModels      `json:"t"` // добавил
+	T     tree.TreeModel       `json:"t"`
 	S     sorter.SortModels    `json:"s"`
 	P     *paginator.Paginator `json:"p"`
 }
@@ -49,21 +49,18 @@ func (i *FTSP) distinctOn(query *bun.SelectQuery) {
 		query.DistinctOn(fmt.Sprintf("%s.%s, %s.id", t.GetTableName(), sortCol, t.GetTableName()))
 	}
 }
+
 func (i *SQL) InjectFTSP2(r *http.Request, f *FTSP) {
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
-	fmt.Println(r)
 }
 
 func (i *SQL) InjectFTSP(c *gin.Context) error {
 	ftsp := &FTSPQuery{}
 	err := ftsp.FromForm(c)
-	fmt.Println("ftsp", ftsp)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	r := c.Request
-
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, ftsp.FTSP))
 	// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err

@@ -20,7 +20,7 @@ func (r *Repository) GetGroups(c context.Context, groupID string) (models.Search
 	items := make(models.SearchGroups, 0)
 	query := r.helper.DB.IDB(c).NewSelect().Model(&items).
 		Relation("SearchGroupMetaColumns").
-		Order("search_group_order")
+		Order("search_group_order").Where("route is not null")
 
 	if groupID != "" {
 		query = query.Where("id = ?", groupID)
