@@ -35,7 +35,9 @@ import (
 
 func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	expr := i.getTableAndCols()
-	query.ColumnExpr(expr)
+	if len(expr) > 0 {
+		query.ColumnExpr(expr)
+	}
 }
 
 // CreateOrder method
