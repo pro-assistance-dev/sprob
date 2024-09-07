@@ -13,7 +13,7 @@ type Contact struct {
 	Latitude      string        `json:"latitude"`
 	Longitude     string        `json:"longitude"`
 	Emails        Emails        `bun:"rel:has-many" json:"emails"`
-	PostAddresses PostAddresses `bun:"rel:has-many" json:"postAddresses"`
+	PostAddresses PostAddresses `bun:"rel:has-many" json:"postAddresses" model:"postAddress"`
 	Phones        Phones        `bun:"rel:has-many" json:"phones"`
 	Websites      Websites      `bun:"rel:has-many" json:"websites"`
 	Address       *Address      `bun:"rel:has-one,join:id=cii" json:"address"`

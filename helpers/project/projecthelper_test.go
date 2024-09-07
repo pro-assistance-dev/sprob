@@ -1,6 +1,7 @@
 package project
 
 import (
+	"fmt"
 	"log"
 	"testing"
 
@@ -15,5 +16,6 @@ func TestInitSchemas(t *testing.T) {
 	p := NewProject(conf)
 	t.Run("run", func(t *testing.T) {
 		p.InitSchemas()
+		fmt.Printf("%+v\n", p.GetSchema("postAddress"))
 	})
 }

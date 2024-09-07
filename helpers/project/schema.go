@@ -3,6 +3,7 @@ package project
 import (
 	"fmt"
 	"go/ast"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -14,13 +15,32 @@ type (
 	Schemas map[string]Schema
 )
 
+const (
+	TagJSON   = "json"
+	TagModel  = "model"
+	TagBun    = "bun"
+	TagPlural = "plural"
+)
+
 func (items Schemas) GetSchema(schemaName string) Schema {
 	return items[schemaName]
 }
 
 func (item Schema) GetCol(colNameInCamelCase string) string {
-	fmt.Println(item[colNameInCamelCase])
 	return item[colNameInCamelCase]
+}
+
+var modelFields = []string{"sortColumn", "label", "value", "structName", "tableName", "plural"}
+
+func (item Schema) GetFields() []string {
+	fields := make([]string, 0)
+	for v := range item {
+		if slices.Contains(fields, v) {
+			continue
+		}
+		fields = append(fields, v)
+	}
+	return fields
 }
 
 func (item Schema) GetTableName() string {
@@ -32,6 +52,9 @@ func getSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m["sortColumn"] = "name"
 	m["label"] = "name"
 	m["value"] = "id"
+	m["key"] = ToLowerCamel(structure.Name.Name)
+	m["structName"] = structure.Name.Name
+
 	for index, field := range fields {
 		if field.Tag == nil {
 			continue
@@ -39,28 +62,28 @@ func getSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		tags := parseTags(field.Tag.Value)
 		if index == 0 {
 			m["tableName"] = getBunSelectTableName(tags)
+			m["plural"] = ToCapCamel(m["tableName"])
 			continue
 		}
-		m[getJSONName(tags)] = getColName(tags)
+		m[getTagName(tags, TagJSON)] = getColName(tags)
 	}
-	m["key"] = ToLowerCamel(structure.Name.Name)
 	return m
 }
 
-func getJSONName(tags *structtag.Tags) string {
-	jsonName, err := tags.Get("json")
+func getTagName(tags *structtag.Tags, tag string) string {
+	value, err := tags.Get(tag)
 	if err != nil {
 		return ""
 	}
-	return jsonName.Name
+	return value.Name
 }
 
 func getColName(tags *structtag.Tags) string {
-	bunTag, err := tags.Get("bun")
-	if err == nil && bunTag.Name != "-" && bunTag.Name != "" && !strings.Contains(bunTag.Name, ":") {
-		return bunTag.Name
+	bunTag := getTagName(tags, TagBun)
+	if bunTag != "-" && bunTag != "" && !strings.Contains(bunTag, ":") {
+		return bunTag
 	}
-	return toSnake(getJSONName(tags))
+	return toSnake(getTagName(tags, TagJSON))
 }
 
 func getBunSelectTableName(tags *structtag.Tags) string {
