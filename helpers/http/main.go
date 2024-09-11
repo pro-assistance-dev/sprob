@@ -1,9 +1,13 @@
 package http
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,13 +38,28 @@ func (i *HTTP) ListenAndServe(handler http.Handler) {
 		Handler:      handler,
 		Addr:         fmt.Sprintf(":%s", i.Port),
 	}
-	var err error
-	if i.HTTPS {
-		err = srv.ListenAndServeTLS("localhost.crt", "localhost.key")
-	} else {
-		err = srv.ListenAndServe()
-	}
-	if err != nil {
+
+	go func() {
+		var err error
+		if i.HTTPS {
+			err = srv.ListenAndServeTLS("localhost.crt", "localhost.key")
+		} else {
+			err = srv.ListenAndServe()
+		}
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	<-sigChan
+	log.Println("Shutting down server...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatalln(err)
 	}
 }

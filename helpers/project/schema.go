@@ -26,6 +26,15 @@ func (items Schemas) GetSchema(schemaName string) Schema {
 	return items[schemaName]
 }
 
+func (items Schemas) GetSchemaByPluralName(schemaName string) Schema {
+	for _, schema := range items {
+		if schema["plural"] == schemaName {
+			return schema
+		}
+	}
+	return nil
+}
+
 func (item Schema) GetCol(colNameInCamelCase string) string {
 	return item[colNameInCamelCase]
 }
@@ -45,6 +54,14 @@ func (item Schema) GetFields() []string {
 
 func (item Schema) GetTableName() string {
 	return item["tableName"]
+}
+
+func (item Schema) GetScructName() string {
+	return item["structName"]
+}
+
+func (item Schema) GetPluralName() string {
+	return item["plural"]
 }
 
 func getSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
