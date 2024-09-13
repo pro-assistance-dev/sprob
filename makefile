@@ -3,3 +3,6 @@ lint:
 
 update_assister:
 	./cmd/scripts/update_assister.sh
+
+test:
+	go test ./...

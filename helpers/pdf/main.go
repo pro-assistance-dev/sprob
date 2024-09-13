@@ -17,7 +17,7 @@ type PDF struct {
 	ws        *mywriter
 }
 
-func NewPDF(config config.Config) *PDF {
+func NewPDF(config config.Project) *PDF {
 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
 	if err != nil {
 		log.Fatal(err)

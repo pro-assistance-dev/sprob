@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	project "github.com/pro-assistance/pro-assister/helpers/projectV2"
+	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/pro-assistance/pro-assister/helpers/util"
 
 	"github.com/uptrace/bun"

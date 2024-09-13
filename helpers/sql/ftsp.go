@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	project "github.com/pro-assistance/pro-assister/helpers/projectV2"
+	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
 	"github.com/pro-assistance/pro-assister/helpers/sql/paginator"
 	"github.com/pro-assistance/pro-assister/helpers/sql/sorter"

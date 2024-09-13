@@ -3,17 +3,34 @@ package project
 import (
 	"fmt"
 	"go/ast"
-	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/structtag"
 )
 
+type Schema struct {
+	Name       string
+	SortColumn string
+	Label      string
+	Value      string
+	Key        string
+	TableName  string
+	PluralName string
+	Fields     map[string]*Field
+}
+
 type (
-	Schema  map[string]string
-	Schemas map[string]Schema
+	Schemas map[string]*Schema
 )
+
+func (items Schemas) InitFieldsLinksToSchemas() {
+	for _, item := range items {
+		for i := range item.Fields {
+			item.Fields[i].Schema = items[item.Fields[i].Type]
+		}
+	}
+}
 
 const (
 	TagJSON   = "json"
@@ -22,55 +39,31 @@ const (
 	TagPlural = "plural"
 )
 
-func (items Schemas) GetSchema(schemaName string) Schema {
+func (items Schemas) GetSchema(schemaName string) *Schema {
 	return items[schemaName]
 }
 
-func (items Schemas) GetSchemaByPluralName(schemaName string) Schema {
-	for _, schema := range items {
-		if schema["plural"] == schemaName {
-			return schema
-		}
-	}
-	return nil
-}
-
-func (item Schema) GetCol(colNameInCamelCase string) string {
-	return item[colNameInCamelCase]
-}
-
-var modelFields = []string{"sortColumn", "label", "value", "structName", "tableName", "plural"}
-
-func (item Schema) GetFields() []string {
-	fields := make([]string, 0)
-	for v := range item {
-		if slices.Contains(fields, v) {
-			continue
-		}
-		fields = append(fields, v)
-	}
-	return fields
-}
-
 func (item Schema) GetTableName() string {
-	return item["tableName"]
+	return item.TableName
 }
 
-func (item Schema) GetScructName() string {
-	return item["structName"]
+func (item Schema) GetField(fieldCamelCaseName string) *Field {
+	field := item.Fields[fieldCamelCaseName]
+	return field
 }
 
-func (item Schema) GetPluralName() string {
-	return item["plural"]
+func (item Schema) GetColName(colNameInCamelCase string) string {
+	return item.GetField(colNameInCamelCase).ColName
 }
 
-func getSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
+func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m := Schema{}
-	m["sortColumn"] = "name"
-	m["label"] = "name"
-	m["value"] = "id"
-	m["key"] = ToLowerCamel(structure.Name.Name)
-	m["structName"] = structure.Name.Name
+	m.SortColumn = "name"
+	m.Label = "name"
+	m.Value = "id"
+	m.Key = ToLowerCamel(structure.Name.Name)
+	m.Name = structure.Name.Name
+	m.Fields = make(map[string]*Field)
 
 	for index, field := range fields {
 		if field.Tag == nil {
@@ -78,11 +71,11 @@ func getSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		}
 		tags := parseTags(field.Tag.Value)
 		if index == 0 {
-			m["tableName"] = getBunSelectTableName(tags)
-			m["plural"] = ToCapCamel(m["tableName"])
+			m.TableName = getBunSelectTableName(tags)
+			m.PluralName = ToCapCamel(m.TableName)
 			continue
 		}
-		m[getTagName(tags, TagJSON)] = getColName(tags)
+		m.Fields[field.Names[0].Name] = NewField(field.Names[0].Name, getColName(tags))
 	}
 	return m
 }

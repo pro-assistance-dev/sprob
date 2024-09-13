@@ -18,7 +18,7 @@ type Templater struct {
 	templatesPath string
 }
 
-func NewTemplater(config config.Config) *Templater {
+func NewTemplater(config config.Project) *Templater {
 	return &Templater{templatesPath: config.TemplatesPath}
 }
 

@@ -12,21 +12,27 @@ import (
 const defaultModelDir = "models"
 
 type Project struct {
-	Schemas
+	Schemas    Schemas `json:"schemas"`
 	ModelsPath string
 }
 
-func NewProject(config *config.Config) *Project {
+func NewProject(config *config.Project) *Project {
 	modelsPath := config.ModelsPath
 	if modelsPath == "" {
 		modelsPath = defaultModelDir
 	}
-	return &Project{ModelsPath: modelsPath}
+	p := &Project{ModelsPath: modelsPath}
+	p.InitSchemas()
+	return p
 }
 
 var SchemasLib = Schemas{}
 
 func (i *Project) InitSchemas() {
+	if len(i.Schemas) > 0 {
+		return
+	}
+
 	modelsPackage, err := parser.ParseDir(token.NewFileSet(), i.ModelsPath, nil, parser.AllErrors)
 	if err != nil {
 		log.Fatal(err)
@@ -34,13 +40,16 @@ func (i *Project) InitSchemas() {
 	structs := i.getStructsOfProject(modelsPackage)
 	i.Schemas = make(Schemas, 0)
 	for s := range structs {
-		i.Schemas[ToLowerCamel(s.Name.String())] = getSchema(s, structs[s])
+		schema := newSchema(s, structs[s])
+		i.Schemas[ToLowerCamel(s.Name.String())] = &schema
 	}
+	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas
 }
 
 func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field { //nolint:all
 	structs := map[*ast.TypeSpec][]*ast.Field{}
+
 	for _, file := range modelsPackage["models"].Files {
 		for _, node := range file.Decls {
 			switch node.(type) {
@@ -60,5 +69,6 @@ func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map
 			}
 		}
 	}
+
 	return structs
 }

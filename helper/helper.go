@@ -49,19 +49,19 @@ type Helper struct {
 
 func NewHelper(c config.Config) *Helper {
 	h := httpHelper.NewHTTP(c.Server)
-	pdf := pdf.NewPDF(c)
+	pdf := pdf.NewPDF(c.Project)
 	sql := sql.NewSQL()
-	uploader := uploader.NewLocalUploader(&c.UploadPath)
+	uploader := uploader.NewLocalUploader(&c.Project.UploadPath)
 	token := token.NewToken(c.Token)
 	email := email.NewEmail(c.Email)
 	soc := social.NewSocial(c.Social)
-	util := util.NewUtil(c.BinPath)
-	templ := templater.NewTemplater(c)
+	util := util.NewUtil(c.Project.BinPath)
+	templ := templater.NewTemplater(c.Project)
 	db := db.NewDB(c.DB)
 	brok := broker.NewBroker()
 	v := validator.NewValidator()
 	cr := cron.NewCron()
-	ph := project.NewProject(&c)
+	ph := project.NewProject(&c.Project)
 	l := logger.NewLogger()
 	return &Helper{HTTP: h, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: soc, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l}
 }

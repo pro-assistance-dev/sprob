@@ -3,7 +3,6 @@ package tree
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/uptrace/bun"
@@ -30,7 +29,7 @@ func (t *TreeModel) getTableAndCols() []string {
 	tableName := schema.GetTableName()
 	cols := make([]string, 0)
 	for i := range t.Cols {
-		colName := schema.GetCol(t.Cols[i])
+		colName := schema.GetColName(t.Cols[i])
 		if colName == "" {
 			continue
 		}
@@ -40,62 +39,61 @@ func (t *TreeModel) getTableAndCols() []string {
 }
 
 func (i *TreeModel) CreateTree(query *bun.SelectQuery, relNames []string) {
-	if i.Full {
-		schema := project.SchemasLib.GetSchema(i.Model)
-		fields := schema.GetFields()
-		cols := make([]string, 0)
-		relations := make([]project.Schema, 0)
-		plural := false
-		for _, field := range fields {
-			var findedSchema project.Schema
-			rel := project.SchemasLib.GetSchema(field)
-			pluralRel := project.SchemasLib.GetSchemaByPluralName(field)
-			if rel != nil {
-				findedSchema = rel
-			}
-			if pluralRel != nil {
-				plural = true
-				findedSchema = pluralRel
-			}
-			if rel == nil {
-				cols = append(cols, field)
-			} else {
-				relations = append(relations, findedSchema)
-			}
-		}
+	// schema := project.SchemasLib.GetSchema(i.Model)
+	// fields := schema.GetFields()
+	// cols := make([]string, 0)
+	// relations := make([]project.Schema, 0)
+	// plural := false
+	// for _, field := range fields {
+	// 	var findedSchema project.Schema
+	// 	rel := project.SchemasLib.GetSchema(field)
+	// 	pluralRel := project.SchemasLib.GetSchemaByPluralName(field)
+	// 	if rel != nil {
+	// 		findedSchema = rel
+	// 	}
+	// 	if pluralRel != nil {
+	// 		plural = true
+	// 		findedSchema = pluralRel
+	// 	}
+	// 	if rel == nil {
+	// 		cols = append(cols, field)
+	// 	} else {
+	// 		relations = append(relations, findedSchema)
+	// 	}
+	// }
+	//
+	// colsForQuery := make([]string, 0)
+	// tableName := schema.GetTableName()
+	//
+	// for _, col := range cols {
+	// 	colName := schema.GetCol(col)
+	// 	if colName == "" {
+	// 		continue
+	// 	}
+	// 	colsForQuery = append(colsForQuery, fmt.Sprintf("%s.%s", tableName, colName))
+	// }
+	//
+	// for _, relation := range relations {
+	// 	relName := relation.GetScructName()
+	// 	if plural {
+	// 		relName = relation.GetPluralName()
+	// 	}
+	// 	relPath := append(relNames, relName)
+	// 	query.Relation(strings.Join(relPath, "."))
+	// }
+	// query.Column(colsForQuery...)
 
-		colsForQuery := make([]string, 0)
-		tableName := schema.GetTableName()
-		for _, col := range cols {
-			colName := schema.GetCol(col)
-			if colName == "" {
-				continue
-			}
-			colsForQuery = append(colsForQuery, fmt.Sprintf("%s.%s", tableName, colName))
-		}
-		for _, relation := range relations {
-			relName := relation.GetScructName()
-			if plural {
-				relName = relation.GetPluralName()
-			}
-			relPath := append(relNames, relName)
-			query.Relation(strings.Join(relPath, "."))
-		}
-		query.Column(colsForQuery...)
-
-		return
-	}
 	// if len(i.Cols) == 0 && len(i.Models) == 0 {
 	// 	return
 	// }
-	cols := i.getTableAndCols()
-	if len(cols) > 0 {
-		query.Column(cols...)
-	}
-
-	for _, node := range i.Models {
-		node.CreateTree(query, nil)
-	}
+	// cols := i.getTableAndCols()
+	// if len(cols) > 0 {
+	// 	query.Column(cols...)
+	// }
+	//
+	// for _, node := range i.Models {
+	// 	node.CreateTree(query, nil)
+	// }
 }
 
 //

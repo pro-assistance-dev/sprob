@@ -13,7 +13,7 @@ func prepare() *TreeModel {
 	if err != nil {
 		log.Fatal(err)
 	}
-	p := project.NewProject(conf)
+	p := project.NewProject(&conf.Project)
 	p.InitSchemas()
 	return &TreeModel{}
 }
