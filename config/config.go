@@ -11,61 +11,61 @@ type Config struct {
 }
 
 type Project struct {
-	BinPath       string `mapstructure:"BIN_PATH" yaml:"bin_path"`
-	UploadPath    string `mapstructure:"UPLOAD_PATH" yaml:"upload_path"`
-	TemplatesPath string `mapstructure:"TEMPLATES_PATH" yaml:"templates_path"`
-	ModelsPath    string `mapstructure:"MODELS_PATH" yaml:"models_path"`
+	BinPath       string `yaml:"bin_path"`
+	UploadPath    string `yaml:"upload_path"`
+	TemplatesPath string `yaml:"templates_path"`
+	ModelsPath    string `yaml:"models_path"`
 }
 
 type Server struct {
-	Port         string `mapstructure:"SERVER_PORT" yaml:"port"`
-	Host         string `mapstructure:"SERVER_HOST" yaml:"host"`
-	HTTPS        bool   `mapstructure:"SERVER_HTTPS" yaml:"https"`
-	ReadTimeout  int    `mapstructure:"SERVER_READ_TIMEOUT" yaml:"read_timeout"`
-	WriteTimeout int    `mapstructure:"SERVER_WRITE_TIMEOUT" yaml:"write_timeout"`
+	Port         string `yaml:"port"`
+	Host         string `yaml:"host"`
+	HTTPS        bool   `yaml:"https"`
+	ReadTimeout  int    `yaml:"read_timeout"`
+	WriteTimeout int    `yaml:"write_timeout"`
 }
 
 type Token struct {
-	TokenSecret        string `mapstructure:"TOKEN_SECRET" yaml:"token_secret"`
-	TokenAccessMinutes int    `mapstructure:"TOKEN_ACCESS_MINUTES" yaml:"token_access_minutes"`
-	TokenRefreshHours  int    `mapstructure:"TOKEN_REFRESH_HOURS" yaml:"token_refresh_hours"`
+	TokenSecret        string `yaml:"token_secret"`
+	TokenAccessMinutes int    `yaml:"token_access_minutes"`
+	TokenRefreshHours  int    `yaml:"token_refresh_hours"`
 }
 
 type DB struct {
-	DB             string `mapstructure:"DB_DB" yaml:"db"`
-	User           string `mapstructure:"DB_USER" yaml:"user"`
-	Password       string `mapstructure:"DB_PASSWORD" yaml:"password"`
-	Host           string `mapstructure:"DB_HOST" yaml:"host"`
-	Port           string `mapstructure:"DB_PORT" yaml:"port"`
-	Name           string `mapstructure:"DB_NAME" yaml:"name"`
-	LogPath        string `mapstructure:"DB_LOG_PATH" yaml:"log_path"`
-	RemoteUser     string `mapstructure:"DB_REMOTE_USER" yaml:"remote_user"`
-	RemotePassword string `mapstructure:"DB_REMOTE_PASSWORD" yaml:"remote_password"`
-	Verbose        string `mapstructure:"DB_VERBOSE" yaml:"verbose"`
+	DB             string `yaml:"db"`
+	User           string `yaml:"user"`
+	Password       string `yaml:"password"`
+	Host           string `yaml:"host"`
+	Port           string `yaml:"port"`
+	Name           string `yaml:"name"`
+	LogPath        string `yaml:"log_path"`
+	RemoteUser     string `yaml:"remote_user"`
+	RemotePassword string `yaml:"remote_password"`
+	Verbose        string `yaml:"verbose"`
 }
 
 type Email struct {
-	User          string `mapstructure:"EMAIL_USER" yaml:"user"`
-	Password      string `mapstructure:"EMAIL_PASSWORD" yaml:"password"`
-	From          string `mapstructure:"EMAIL_FROM" yaml:"from"`
-	Server        string `mapstructure:"EMAIL_SERVER" yaml:"server"`
-	Port          string `mapstructure:"EMAIL_PORT" yaml:"port"`
-	AuthMethod    string `mapstructure:"EMAIL_AUTH_METHOD" yaml:"auth_method"`
-	WriteTestFile bool   `mapstructure:"EMAIL_WRITE_TEST_FILE" yaml:"write_test_file"`
+	User          string `yaml:"user"`
+	Password      string `yaml:"password"`
+	From          string `yaml:"from"`
+	Server        string `yaml:"server"`
+	Port          string `yaml:"port"`
+	AuthMethod    string `yaml:"auth_method"`
+	WriteTestFile bool   `yaml:"write_test_file"`
 }
 
 type Social struct {
-	InstagramToken string `mapstructure:"INSTAGRAM_TOKEN" yaml:"instagram_token"`
-	InstagramID    string `mapstructure:"INSTAGRAM_ID" yaml:"instagram_id"`
+	InstagramToken string `yaml:"instagram_token"`
+	InstagramID    string `yaml:"instagram_id"`
 
-	YouTubeAPIKey    string `mapstructure:"YOUTUBE_API_KEY" yaml:"youtube_api_key"`
-	YouTubeChannelID string `mapstructure:"YOUTUBE_CHANNEL_ID" yaml:"youtube_channel_id"`
+	YouTubeAPIKey    string `yaml:"youtube_api_key"`
+	YouTubeChannelID string `yaml:"youtube_channel_id"`
 
-	VkServiceApplicationKey string `mapstructure:"VK_SERVICE_APPLICATION_KEY" yaml:"vk_service_application_key"`
-	VkGroupID               string `mapstructure:"VK_GROUP_ID" yaml:"vk_group_id"`
+	VkServiceApplicationKey string `yaml:"vk_service_application_key"`
+	VkGroupID               string `yaml:"vk_group_id"`
 }
 
 type ElasticSearch struct {
-	ElasticSearchURL string `mapstructure:"ELASTIC_SEARCH_URL" yaml:"elastic_search_url"`
-	ElasticSearchOn  bool   `mapstructure:"ELASTIC_SEARCH_ON" yaml:"elastic_search_on"`
+	ElasticSearchURL string `yaml:"elastic_search_url"`
+	ElasticSearchOn  bool   `yaml:"elastic_search_on"`
 }
