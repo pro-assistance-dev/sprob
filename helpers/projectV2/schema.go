@@ -17,7 +17,7 @@ type Schema struct {
 	Key        string
 	TableName  string
 	PluralName string
-	Fields     []Field
+	Fields     map[string]*Field
 }
 
 type (
@@ -26,8 +26,8 @@ type (
 
 func (items Schemas) InitFieldsLinksToSchemas() {
 	for _, item := range items {
-		for _, field := range item.Fields {
-			field.Schema = items[field.Type]
+		for i := range item.Fields {
+			item.Fields[i].Schema = items[item.Fields[i].Type]
 		}
 	}
 }
@@ -39,24 +39,19 @@ const (
 	TagPlural = "plural"
 )
 
-func (items Schemas) GetSchema(schemaName string) Schema {
-	return *items[schemaName]
+func (items Schemas) GetSchema(schemaName string) *Schema {
+	return items[schemaName]
 }
 
-// func (item Schema) GetCol(colNameInCamelCase string) string {
-// 	return item[colNameInCamelCase]
-// }
+func (item Schema) GetTableName() string {
+	return item.TableName
+}
 
-// func (item Schema) GetFields() []string {
-// 	fields := make([]string, 0)
-// 	for v := range item {
-// 		if slices.Contains(fields, v) {
-// 			continue
-// 		}
-// 		fields = append(fields, v)
-// 	}
-// 	return fields
-// }
+func (item Schema) GetColName(colNameInCamelCase string) string {
+	field := item.Fields[colNameInCamelCase]
+	name := field.ColName
+	return name
+}
 
 func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m := Schema{}
@@ -76,7 +71,7 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 			m.PluralName = ToCapCamel(m.TableName)
 			continue
 		}
-		m.Fields = append(m.Fields, NewField(field.Names[0].Name, getColName(tags)))
+		m.Fields[field.Names[0].Name] = NewField(field.Names[0].Name, getColName(tags))
 	}
 	return m
 }

@@ -1,7 +1,6 @@
 package project
 
 import (
-	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
@@ -13,7 +12,7 @@ import (
 const defaultModelDir = "models"
 
 type Project struct {
-	Schemas
+	Schemas    Schemas `json:"schemas"`
 	ModelsPath string
 }
 
@@ -35,10 +34,10 @@ func (i *Project) InitSchemas() {
 	structs := i.getStructsOfProject(modelsPackage)
 	i.Schemas = make(Schemas, 0)
 	for s := range structs {
-		fmt.Printf("%+v\n", s.Type)
-		// schema := newSchema(s, structs[s])
-		// i.Schemas[ToLowerCamel(s.Name.String())] = schema
+		schema := newSchema(s, structs[s])
+		i.Schemas[ToLowerCamel(s.Name.String())] = &schema
 	}
+	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas
 }
 

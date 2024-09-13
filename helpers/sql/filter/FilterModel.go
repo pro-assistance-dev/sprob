@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	project "github.com/pro-assistance/pro-assister/helpers/projectV2"
 	"github.com/pro-assistance/pro-assister/helpers/util"
 
 	"github.com/uptrace/bun"
@@ -134,10 +134,10 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
 	query.Join(f.getJoinExpression(model, joinModel))
 	if f.Operator == In {
-		col := joinModel.GetCol(f.Col)
+		col := joinModel.GetColName(f.Col)
 		modelTable := model.GetTableName()
 		joinTable := joinModel.GetTableName()
-		joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
+		joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
 		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), joinCondition, col)
 		query.Where(q, bun.In(f.Set))
 		// query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
@@ -207,19 +207,19 @@ func (f *FilterModel) likeToString() {
 
 func (f *FilterModel) getTableAndCol() string {
 	schema := project.SchemasLib.GetSchema(f.Model)
-	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(f.Col))
+	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetColName(f.Col))
 }
 
 func (f *FilterModel) getJoinCondition() string {
 	model := project.SchemasLib.GetSchema(f.Model)
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
-	return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetCol(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetCol(f.JoinTableFK))
+	return fmt.Sprintf("%s.%s = %s.%s", model.GetTableName(), model.GetColName(f.JoinTablePK), joinModel.GetTableName(), joinModel.GetColName(f.JoinTableFK))
 }
 
-func (f *FilterModel) getJoinExpression(model project.Schema, joinModel project.Schema) string {
+func (f *FilterModel) getJoinExpression(model *project.Schema, joinModel *project.Schema) string {
 	modelTable := model.GetTableName()
 	joinTable := joinModel.GetTableName()
-	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetCol(f.Model+"Id"))
+	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
 	return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
 }
 

@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	project "github.com/pro-assistance/pro-assister/helpers/projectV2"
 	"github.com/pro-assistance/pro-assister/helpers/sql/filter"
 	"github.com/pro-assistance/pro-assister/helpers/sql/paginator"
 	"github.com/pro-assistance/pro-assister/helpers/sql/sorter"
@@ -45,22 +45,26 @@ type FTSPQuery struct {
 func (i *FTSP) distinctOn(query *bun.SelectQuery) {
 	if len(i.S) > 0 {
 		t := project.SchemasLib.GetSchema(i.S[0].Model)
-		sortCol := t.GetCol(i.S[0].Col)
+		sortCol := t.GetColName(i.S[0].Col)
 		query.DistinctOn(fmt.Sprintf("%s.%s, %s.id", t.GetTableName(), sortCol, t.GetTableName()))
 	}
 }
 
 func (i *SQL) InjectFTSP2(r *http.Request, f *FTSP) {
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
+	fmt.Println(r)
 }
 
 func (i *SQL) InjectFTSP(c *gin.Context) error {
 	ftsp := &FTSPQuery{}
 	err := ftsp.FromForm(c)
+	fmt.Println("ftsp", ftsp)
 	if err != nil {
+		fmt.Println(err)
 		return err
 	}
 	r := c.Request
+
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, ftsp.FTSP))
 	// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
 	return err

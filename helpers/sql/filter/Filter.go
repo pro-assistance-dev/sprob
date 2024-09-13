@@ -37,6 +37,7 @@ func (i *Filter) CreateFilter(query *bun.SelectQuery) {
 		}
 	}
 }
+
 func (items FilterModels) mergeJoins() {
 	joinModels := make(map[string]int)
 	for i := range items {
@@ -51,6 +52,7 @@ func (items FilterModels) mergeJoins() {
 		}
 	}
 }
+
 func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
 	if len(items) == 0 {
 		return

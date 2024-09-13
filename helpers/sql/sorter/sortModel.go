@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	project "github.com/pro-assistance/pro-assister/helpers/projectV2"
 )
 
 // sortModel model
@@ -28,5 +28,5 @@ func parseJSONToSortModel(args string) (sortModel sortModel, err error) {
 
 func (s *sortModel) getTableAndCol() string {
 	schema := project.SchemasLib.GetSchema(s.Model)
-	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetCol(s.Col))
+	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetColName(s.Col))
 }
