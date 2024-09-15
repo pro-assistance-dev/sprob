@@ -7,16 +7,18 @@ import (
 	"strings"
 
 	"github.com/fatih/structtag"
+	"github.com/iancoleman/strcase"
 )
 
 type Schema struct {
-	Name       string
+	NameTable  string
+	NamePascal string
+	NameCamel  string
+	NamePlural string
+
 	SortColumn string
 	Label      string
 	Value      string
-	Key        string
-	TableName  string
-	PluralName string
 	Fields     map[string]*Field
 }
 
@@ -39,12 +41,46 @@ const (
 	TagPlural = "plural"
 )
 
+func (item Schema) GetFieldsWithSchema() Fields {
+	fields := make(Fields, 0)
+	for _, field := range item.Fields {
+		if field.Schema != nil {
+			continue
+		}
+		fields = append(fields, field)
+	}
+	return fields
+}
+
+func (item Schema) GetFieldsCols() Fields {
+	fields := make(Fields, 0)
+	for _, field := range item.Fields {
+		if field.Schema == nil {
+			continue
+		}
+		fields = append(fields, field)
+	}
+	return fields
+}
+
+func (item *Schema) ConcatTableCols() []string {
+	cols := make([]string, 0)
+	for _, field := range item.GetFieldsCols() {
+		cols = append(cols, item.ConcatTableCol(field.NameCamel))
+	}
+	return cols
+}
+
+func (item Schema) ConcatTableCol(colNameInCamelCase string) string {
+	return fmt.Sprintf("%s.%s", item.NameTable, item.GetColName(colNameInCamelCase))
+}
+
 func (items Schemas) GetSchema(schemaName string) *Schema {
 	return items[schemaName]
 }
 
 func (item Schema) GetTableName() string {
-	return item.TableName
+	return item.NameTable
 }
 
 func (item Schema) GetField(fieldCamelCaseName string) *Field {
@@ -53,7 +89,7 @@ func (item Schema) GetField(fieldCamelCaseName string) *Field {
 }
 
 func (item Schema) GetColName(colNameInCamelCase string) string {
-	return item.GetField(colNameInCamelCase).ColName
+	return item.GetField(colNameInCamelCase).NameCol
 }
 
 func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
@@ -61,8 +97,8 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m.SortColumn = "name"
 	m.Label = "name"
 	m.Value = "id"
-	m.Key = ToLowerCamel(structure.Name.Name)
-	m.Name = structure.Name.Name
+	// m.Key = strcase.ToLowerCamel(structure.Name.Name)
+	m.NamePascal = structure.Name.Name
 	m.Fields = make(map[string]*Field)
 
 	for index, field := range fields {
@@ -71,11 +107,11 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		}
 		tags := parseTags(field.Tag.Value)
 		if index == 0 {
-			m.TableName = getBunSelectTableName(tags)
-			m.PluralName = ToCapCamel(m.TableName)
+			m.NameTable = getBunSelectTableName(tags)
+			// m.PluralName = ToCapCamel(m.TableName)
 			continue
 		}
-		m.Fields[field.Names[0].Name] = NewField(field.Names[0].Name, getColName(tags))
+		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewField(field.Names[0].Name, getColName(tags))
 	}
 	return m
 }
@@ -93,7 +129,7 @@ func getColName(tags *structtag.Tags) string {
 	if bunTag != "-" && bunTag != "" && !strings.Contains(bunTag, ":") {
 		return bunTag
 	}
-	return toSnake(getTagName(tags, TagJSON))
+	return strcase.ToSnake(getTagName(tags, TagJSON))
 }
 
 func getBunSelectTableName(tags *structtag.Tags) string {

@@ -1,2 +1,2 @@
 project:
-  models_path: "./mocks"
+  modelsPath: "./mocks"

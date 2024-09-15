@@ -67,5 +67,5 @@ type Social struct {
 
 type ElasticSearch struct {
 	ElasticSearchURL string `yaml:"elastic_search_url"`
-	ElasticSearchOn  bool   `yaml:"elastic_search_on"`
+	ElasticSearchOn  bool   `  yaml:"elastic_search_on"`
 }

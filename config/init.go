@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path"
 
@@ -15,7 +14,6 @@ func LoadConfig(name string) (config *Config, err error) {
 	}
 
 	configFile := path.Join(dir, name+".yaml")
-	fmt.Println(configFile)
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		panic("config file not exist: " + dir)
 	}
@@ -52,7 +50,7 @@ func loadConfig(path string, name string) (config *Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType("yaml")
-	fmt.Println(path, name)
+	// fmt.Println(path, name)
 
 	// viper.AutomaticEnv()
 	err = viper.ReadInConfig()

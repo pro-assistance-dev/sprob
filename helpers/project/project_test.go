@@ -1,6 +1,7 @@
 package project
 
 import (
+	"fmt"
 	"log"
 	"testing"
 
@@ -12,6 +13,7 @@ var p *Project
 
 func ProjectTestSetup() {
 	conf, err := config.LoadTestConfig()
+	fmt.Println(conf.Project.ModelsPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -35,13 +37,30 @@ func TestProject(t *testing.T) {
 
 	t.Run("SchemaTest", func(t *testing.T) {
 		t.Run("AllNamesCorrects", func(t *testing.T) {
-			assert.Equal(t, "Contact", schema.Name, "Name")
+			assert.Equal(t, "Contact", schema.NamePascal, "NamePascal")
 			assert.Equal(t, "name", schema.SortColumn, "SortColumn")
-			assert.Equal(t, "contacts", schema.TableName, "TableName")
+			assert.Equal(t, "contacts", schema.NameTable, "NameTable")
 		})
 
-		t.Run("Have correct Fields len", func(t *testing.T) {
+		t.Run("HaveCorrectFieldsLen", func(t *testing.T) {
 			assert.Equal(t, 3, len(schema.Fields), "When 3 fields defined, len fields should be 3")
+		})
+
+		fields := []string{"id", "name", "emails"}
+		t.Run("HaveCorrectFields", func(t *testing.T) {
+			for _, f := range fields {
+				t.Run(f, func(t *testing.T) {
+					assert.Equal(t, schema.GetField(f).NameCamel, f, "Field "+f)
+				})
+			}
+		})
+
+		t.Run("ConcatTableColCorrectly", func(t *testing.T) {
+			for _, f := range fields {
+				t.Run(f, func(t *testing.T) {
+					assert.Equal(t, schema.ConcatTableCol(f), "contacts"+"."+f, "Conctat field "+f)
+				})
+			}
 		})
 	})
 }

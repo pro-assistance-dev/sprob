@@ -6,6 +6,7 @@ import (
 	"go/token"
 	"log"
 
+	"github.com/iancoleman/strcase"
 	"github.com/pro-assistance/pro-assister/config"
 )
 
@@ -41,7 +42,7 @@ func (i *Project) InitSchemas() {
 	i.Schemas = make(Schemas, 0)
 	for s := range structs {
 		schema := newSchema(s, structs[s])
-		i.Schemas[ToLowerCamel(s.Name.String())] = &schema
+		i.Schemas[strcase.ToLowerCamel(s.Name.String())] = &schema
 	}
 	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas

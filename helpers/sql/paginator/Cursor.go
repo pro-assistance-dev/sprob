@@ -33,6 +33,5 @@ func (c *Cursor) createPagination(query *bun.SelectQuery) {
 }
 
 func (c *Cursor) getTableAndCol() string {
-	schema := project.SchemasLib.GetSchema(c.Model)
-	return fmt.Sprintf("%s.%s", schema.GetTableName(), schema.GetColName(c.Column))
+	return project.SchemasLib.GetSchema(c.Model).ConcatTableCol(c.Column)
 }
