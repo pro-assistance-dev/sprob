@@ -5,37 +5,29 @@ import (
 	"testing"
 
 	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance/pro-assister/helpers/db"
 	"github.com/pro-assistance/pro-assister/helpers/project"
 )
 
-func prepare() *TreeModel {
+func prepare() *db.DB {
 	conf, err := config.LoadTestConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 	p := project.NewProject(&conf.Project)
 	p.InitSchemas()
-	return &TreeModel{}
+
+	db := db.NewDB(conf.DB)
+
+	return db
 }
 
+var tree = TreeModel{Model: "contact", Cols: []string{"id", "name"}}
+
 func TestGetTableAndCols(t *testing.T) {
-	tr := prepare()
-	tr.Model = "address"
-	tests := []struct {
-		name  string
-		input []string
-		want  string
-	}{
-		{"TwoCols", []string{"id", "city"}, "address.id, address.city"},
-		{"SkipNotExistsCol", []string{"id", "unknown"}, "address.id"},
-	}
-	for _, tt := range tests {
-		tr.Cols = tt.input
-		t.Run(tt.name, func(t *testing.T) {
-			// s := tr.getTableAndCols()
-			// if tt.want != s {
-			// 	t.Errorf("\n got: \n %s, \n want: \n %s", s, tt.want)
-			// }
-		})
-	}
+	db := prepare()
+	t.Run("CreateTree", func(t *testing.T) {
+		selectQuery := db.DB.NewSelect()
+		tree.CreateTree(selectQuery)
+	})
 }

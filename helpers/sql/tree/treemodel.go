@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/gertd/go-pluralize"
+	"github.com/iancoleman/strcase"
 	"github.com/pro-assistance/pro-assister/helpers/project"
 	"github.com/uptrace/bun"
 )
@@ -28,17 +30,21 @@ func parseJSONToTreeModel(args string) (treeModel TreeModel, err error) {
 
 func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	schema := project.SchemasLib.GetSchema(i.Model)
-
 	fieldsCols := schema.ConcatTableCols()
 	query.Column(fieldsCols...)
 
 	fieldsSchemas := schema.GetFieldsWithSchema()
 
 	for _, relation := range fieldsSchemas {
-		newRelation := strings.Join([]string{i.relationPath, relation.NamePascal}, ".")
+		newRelation := relation.NamePascal
+		if i.relationPath != "" {
+			newRelation = strings.Join([]string{i.relationPath, relation.NamePascal}, ".")
+		}
 		query.Relation(newRelation)
 
-		treeModel := TreeModel{Model: relation.NamePascal, relationPath: newRelation}
+		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(relation.NameCamel))
+
+		treeModel := TreeModel{Model: typeString, relationPath: newRelation}
 		treeModel.CreateTree(query)
 	}
 }

@@ -42,7 +42,10 @@ func (i *Project) InitSchemas() {
 	i.Schemas = make(Schemas, 0)
 	for s := range structs {
 		schema := newSchema(s, structs[s])
-		i.Schemas[strcase.ToLowerCamel(s.Name.String())] = &schema
+		key := strcase.ToLowerCamel(s.Name.String())
+		// fmt.Println(key)
+		i.Schemas[key] = &schema
+
 	}
 	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas

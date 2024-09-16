@@ -1,0 +1,14 @@
+project:
+  modelsPath: "./mocks"
+
+db:
+  host: 127.0.0.1
+  port: 5432
+  name: ankets
+  db: postgres
+  user: mdgkb
+  password: 123
+  remoteUser: mdgkb
+  remotePassword: 123
+  verbose: true
+  logPath: logrus.log
