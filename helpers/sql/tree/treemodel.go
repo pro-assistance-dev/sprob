@@ -30,6 +30,9 @@ func parseJSONToTreeModel(args string) (treeModel TreeModel, err error) {
 
 func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	schema := project.SchemasLib.GetSchema(i.Model)
+	if schema == nil {
+		return
+	}
 	fieldsCols := schema.ConcatTableCols()
 	query.Column(fieldsCols...)
 
