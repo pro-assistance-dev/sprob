@@ -1,6 +1,10 @@
 package project
 
-import "github.com/iancoleman/strcase"
+import (
+	"fmt"
+
+	"github.com/iancoleman/strcase"
+)
 
 type Field struct {
 	Schema *Schema
@@ -13,10 +17,12 @@ type Field struct {
 
 type Fields []*Field
 
-func NewField(name string, colName string) *Field {
+func NewField(name string, colName string, t string) *Field {
+	fmt.Println(name, colName, t)
 	return &Field{
 		NamePascal: name,
 		NameCol:    colName,
 		NameCamel:  strcase.ToLowerCamel(name),
+		Type:       t,
 	}
 }

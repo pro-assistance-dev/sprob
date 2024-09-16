@@ -10,6 +10,7 @@ type Contact struct {
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 	Name          string        `json:"name"`
 	Emails        Emails        `bun:"rel:has-many" json:"emails"`
+	// Email Email `bun:"rel:has-many" json:"email"`
 }
 
 type Contacts []*Contact

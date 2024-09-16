@@ -3,10 +3,12 @@ package project
 import (
 	"fmt"
 	"go/ast"
+	"go/types"
 	"strconv"
 	"strings"
 
 	"github.com/fatih/structtag"
+	pluralize "github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
 )
 
@@ -29,7 +31,8 @@ type (
 func (items Schemas) InitFieldsLinksToSchemas() {
 	for _, item := range items {
 		for i := range item.Fields {
-			item.Fields[i].Schema = items[item.Fields[i].Type]
+			schema := items[item.Fields[i].Type]
+			item.Fields[i].Schema = schema
 		}
 	}
 }
@@ -44,7 +47,7 @@ const (
 func (item Schema) GetFieldsWithSchema() Fields {
 	fields := make(Fields, 0)
 	for _, field := range item.Fields {
-		if field.Schema != nil {
+		if field.Schema == nil {
 			continue
 		}
 		fields = append(fields, field)
@@ -55,7 +58,7 @@ func (item Schema) GetFieldsWithSchema() Fields {
 func (item Schema) GetFieldsCols() Fields {
 	fields := make(Fields, 0)
 	for _, field := range item.Fields {
-		if field.Schema == nil {
+		if field.Schema != nil {
 			continue
 		}
 		fields = append(fields, field)
@@ -111,7 +114,9 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 			// m.PluralName = ToCapCamel(m.TableName)
 			continue
 		}
-		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewField(field.Names[0].Name, getColName(tags))
+
+		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(types.ExprString(field.Type)))
+		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewField(field.Names[0].Name, getColName(tags), typeString)
 	}
 	return m
 }

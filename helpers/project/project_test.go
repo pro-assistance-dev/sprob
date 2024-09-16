@@ -24,7 +24,7 @@ func TestProject(t *testing.T) {
 	ProjectTestSetup()
 
 	t.Run("SchemasLen", func(t *testing.T) {
-		assert.Equal(t, 2, len(SchemasLib), "When 2 struct are defined, len schemas should be 2")
+		assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
 	})
 
 	t.Run("GetSchemas", func(t *testing.T) {
@@ -61,6 +61,11 @@ func TestProject(t *testing.T) {
 					assert.Equal(t, schema.ConcatTableCol(f), "contacts"+"."+f, "Conctat field "+f)
 				})
 			}
+		})
+
+		t.Run("ConcatTableCols", func(t *testing.T) {
+			cols := schema.ConcatTableCols()
+			assert.Equal(t, len(cols), 2, "Len eq 2")
 		})
 	})
 }
