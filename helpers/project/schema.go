@@ -68,6 +68,9 @@ func (item Schema) GetFieldsCols() Fields {
 
 func (item *Schema) ConcatTableCols() []string {
 	cols := make([]string, 0)
+	if item == nil {
+		return cols
+	}
 	for _, field := range item.GetFieldsCols() {
 		cols = append(cols, item.ConcatTableCol(field.NameCamel))
 	}
