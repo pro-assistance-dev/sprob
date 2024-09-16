@@ -5,6 +5,8 @@ import (
 	"go/parser"
 	"go/token"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pro-assistance/pro-assister/config"
@@ -29,24 +31,48 @@ func NewProject(config *config.Project) *Project {
 
 var SchemasLib = Schemas{}
 
+func findAllModelsPackages() []string {
+	paths := make([]string, 0)
+	err := filepath.Walk(".",
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() {
+				return nil
+			}
+			paths = append(paths, path)
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+	return paths
+}
+
 func (i *Project) InitSchemas() {
 	if len(i.Schemas) > 0 {
 		return
 	}
+	paths := findAllModelsPackages()
 
-	modelsPackage, err := parser.ParseDir(token.NewFileSet(), i.ModelsPath, nil, parser.AllErrors)
-	if err != nil {
-		log.Fatal(err)
-	}
-	structs := i.getStructsOfProject(modelsPackage)
-	i.Schemas = make(Schemas, 0)
-	for s := range structs {
-		schema := newSchema(s, structs[s])
-		key := strcase.ToLowerCamel(s.Name.String())
-		// fmt.Println(key)
-		i.Schemas[key] = &schema
+	for _, path := range paths {
+		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		structs := i.getStructsOfProject(modelsPackage)
+		i.Schemas = make(Schemas, 0)
+
+		for s := range structs {
+			schema := newSchema(s, structs[s])
+			key := strcase.ToLowerCamel(s.Name.String())
+			// fmt.Println(key)
+			i.Schemas[key] = &schema
+		}
 	}
+
 	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas
 }
@@ -54,7 +80,15 @@ func (i *Project) InitSchemas() {
 func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field { //nolint:all
 	structs := map[*ast.TypeSpec][]*ast.Field{}
 
-	for _, file := range modelsPackage["models"].Files {
+	pack := modelsPackage["models"]
+	if pack == nil {
+		pack = modelsPackage["mocks"]
+	}
+	if pack == nil {
+		return nil
+	}
+
+	for _, file := range pack.Files {
 		for _, node := range file.Decls {
 			switch node.(type) {
 			case *ast.GenDecl:
