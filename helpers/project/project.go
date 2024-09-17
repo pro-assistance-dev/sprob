@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pro-assistance/pro-assister/config"
@@ -38,7 +39,7 @@ func findAllModelsPackages() []string {
 			if err != nil {
 				return err
 			}
-			if !info.IsDir() {
+			if !info.IsDir() || strings.Contains(path, "static") {
 				return nil
 			}
 			paths = append(paths, path)
@@ -56,6 +57,7 @@ func (i *Project) InitSchemas() {
 	}
 	paths := findAllModelsPackages()
 
+	i.Schemas = make(Schemas, 0)
 	for _, path := range paths {
 		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
 		if err != nil {
@@ -63,7 +65,6 @@ func (i *Project) InitSchemas() {
 		}
 
 		structs := i.getStructsOfProject(modelsPackage)
-		i.Schemas = make(Schemas, 0)
 
 		for s := range structs {
 			schema := newSchema(s, structs[s])
