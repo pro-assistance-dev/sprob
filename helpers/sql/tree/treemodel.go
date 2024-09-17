@@ -34,8 +34,8 @@ func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	if schema == nil {
 		return
 	}
-	fieldsCols := schema.ConcatTableCols()
-	query.Column(fieldsCols...)
+	// fieldsCols := schema.ConcatTableCols()
+	// query.Column(fieldsCols...)
 
 	fieldsSchemas := schema.GetFieldsWithSchema()
 
