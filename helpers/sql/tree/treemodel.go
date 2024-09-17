@@ -2,6 +2,7 @@ package tree
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/gertd/go-pluralize"
@@ -40,9 +41,14 @@ func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 
 	for _, relation := range fieldsSchemas {
 		newRelation := relation.NamePascal
+		if newRelation == "Children" {
+			continue
+		}
 		if i.relationPath != "" {
 			newRelation = strings.Join([]string{i.relationPath, relation.NamePascal}, ".")
 		}
+
+		fmt.Println(newRelation)
 		query.Relation(newRelation)
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(relation.NameCamel))
