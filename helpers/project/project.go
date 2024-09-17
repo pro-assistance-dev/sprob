@@ -69,7 +69,6 @@ func (i *Project) InitSchemas() {
 		for s := range structs {
 			schema := newSchema(s, structs[s])
 			key := strcase.ToLowerCamel(s.Name.String())
-			// fmt.Println(key)
 			i.Schemas[key] = &schema
 		}
 	}

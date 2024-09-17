@@ -9,10 +9,15 @@ import (
 
 	"github.com/fatih/structtag"
 	pluralize "github.com/gertd/go-pluralize"
+	"github.com/google/uuid"
 	"github.com/iancoleman/strcase"
+	"github.com/uptrace/bun"
 )
 
 type Schema struct {
+	bun.BaseModel `bun:"schemas,alias:schemas"`
+	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
+
 	NameTable  string
 	NamePascal string
 	NameCamel  string
@@ -21,7 +26,8 @@ type Schema struct {
 	SortColumn string
 	Label      string
 	Value      string
-	Fields     map[string]*Field
+
+	Fields map[string]*SchemaField
 }
 
 type (
@@ -44,19 +50,21 @@ const (
 	TagPlural = "plural"
 )
 
-func (item Schema) GetFieldsWithSchema() Fields {
-	fields := make(Fields, 0)
+func (item Schema) GetFieldsWithSchema() SchemaFields {
+	fields := make(SchemaFields, 0)
+
 	for _, field := range item.Fields {
 		if field.Schema == nil {
 			continue
 		}
 		fields = append(fields, field)
 	}
+
 	return fields
 }
 
-func (item Schema) GetFieldsCols() Fields {
-	fields := make(Fields, 0)
+func (item Schema) GetFieldsCols() SchemaFields {
+	fields := make(SchemaFields, 0)
 	for _, field := range item.Fields {
 		if field.Schema != nil {
 			continue
@@ -89,7 +97,7 @@ func (item Schema) GetTableName() string {
 	return item.NameTable
 }
 
-func (item Schema) GetField(fieldCamelCaseName string) *Field {
+func (item Schema) GetField(fieldCamelCaseName string) *SchemaField {
 	field := item.Fields[fieldCamelCaseName]
 	return field
 }
@@ -105,7 +113,7 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m.Value = "id"
 	// m.Key = strcase.ToLowerCamel(structure.Name.Name)
 	m.NamePascal = structure.Name.Name
-	m.Fields = make(map[string]*Field)
+	m.Fields = make(map[string]*SchemaField)
 
 	for index, field := range fields {
 		if field.Tag == nil {
@@ -119,7 +127,7 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		}
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(types.ExprString(field.Type)))
-		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewField(field.Names[0].Name, getColName(tags), typeString)
+		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewSchemaField(field.Names[0].Name, getColName(tags), typeString)
 	}
 	return m
 }

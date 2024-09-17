@@ -1,10 +1,15 @@
 package project
 
 import (
+	"github.com/google/uuid"
 	"github.com/iancoleman/strcase"
+	"github.com/uptrace/bun"
 )
 
-type Field struct {
+type SchemaField struct {
+	bun.BaseModel `bun:"schema_fields,alias:schema_fields"`
+	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
+
 	Schema *Schema
 	Type   string
 
@@ -13,10 +18,10 @@ type Field struct {
 	NameCol    string
 }
 
-type Fields []*Field
+type SchemaFields []*SchemaField
 
-func NewField(name string, colName string, t string) *Field {
-	return &Field{
+func NewSchemaField(name string, colName string, t string) *SchemaField {
+	return &SchemaField{
 		NamePascal: name,
 		NameCol:    colName,
 		NameCamel:  strcase.ToLowerCamel(name),
