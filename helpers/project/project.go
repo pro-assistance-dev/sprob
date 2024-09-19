@@ -62,7 +62,9 @@ func findAllModelsPackages() []string {
 				if err != nil {
 					return err
 				}
-				paths = append(paths, p...)
+				if p != nil {
+					paths = append(paths, p...)
+				}
 				return nil
 			})
 		if err != nil {
