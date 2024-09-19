@@ -38,7 +38,7 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 	if err != nil {
 		return nil, err
 	}
-	if !info.IsDir() || strings.Contains(path, "static") {
+	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") {
 		return nil, nil
 	}
 	paths = append(paths, path)
