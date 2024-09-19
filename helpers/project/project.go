@@ -1,6 +1,7 @@
 package project
 
 import (
+	"fmt"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -56,6 +57,7 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
+				fmt.Println(path)
 				p, err := addToPaths(paths, path, info, err)
 				if err != nil {
 					return err
