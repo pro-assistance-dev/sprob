@@ -21,11 +21,6 @@ func ProjectTestSetup() {
 }
 
 func TestProject(t *testing.T) {
-	t.Run("findAllModelsPackages", func(t *testing.T) {
-		paths := findAllModelsPackages()
-		fmt.Println(paths)
-	})
-
 	ProjectTestSetup()
 
 	// t.Run("SchemasLen", func(t *testing.T) {
@@ -46,7 +41,7 @@ func TestProject(t *testing.T) {
 			assert.Equal(t, "name", schema.SortColumn, "SortColumn")
 			assert.Equal(t, "contacts", schema.NameTable, "NameTable")
 		})
-
+		fmt.Println(p.Schemas)
 		// t.Run("HaveCorrectFieldsLen", func(t *testing.T) {
 		// 	assert.Equal(t, 3, len(schema.Fields), "When 3 fields defined, len fields should be 3")
 		// })

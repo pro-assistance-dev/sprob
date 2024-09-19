@@ -38,7 +38,7 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 	if err != nil {
 		return nil, err
 	}
-	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") {
+	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
 		return nil, nil
 	}
 	paths = append(paths, path)
@@ -57,7 +57,8 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				paths, err = addToPaths(paths, path, info, err)
+				p, err := addToPaths(paths, path, info, err)
+				paths = append(paths, p...)
 				if err != nil {
 					return err
 				}
@@ -84,7 +85,7 @@ func (i *Project) InitSchemas() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
+		fmt.Println("modelsPackage", modelsPackage)
 		structs := i.getStructsOfProject(modelsPackage)
 
 		for s := range structs {
@@ -95,8 +96,8 @@ func (i *Project) InitSchemas() {
 	}
 
 	i.Schemas.InitFieldsLinksToSchemas()
-	SchemasLib = i.Schemas
 	fmt.Println(SchemasLib)
+	SchemasLib = i.Schemas
 }
 
 func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field { //nolint:all
