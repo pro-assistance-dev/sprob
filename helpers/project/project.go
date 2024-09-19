@@ -2,6 +2,7 @@ package project
 
 import (
 	"go/ast"
+	"go/build"
 	"go/parser"
 	"go/token"
 	"log"
@@ -44,14 +45,12 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 }
 
 func findAllModelsPackages() []string {
-	ex, err := os.Executable()
+	ctx := build.Default
+	pkg, err := ctx.Import("github.com/pro-assistance/pro-assister/models", ".", build.FindOnly)
 	if err != nil {
 		panic(err)
 	}
-	exPath := filepath.Dir(ex)
-	modelsPath := filepath.Clean(filepath.Join(exPath, "..", "..", "models"))
-
-	pathsToParse := []string{".", modelsPath}
+	pathsToParse := []string{".", pkg.Dir}
 	paths := make([]string, 0)
 
 	for _, p := range pathsToParse {
@@ -79,6 +78,7 @@ func (i *Project) InitSchemas() {
 	paths := findAllModelsPackages()
 
 	i.Schemas = make(Schemas, 0)
+
 	for _, path := range paths {
 		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
 		if err != nil {

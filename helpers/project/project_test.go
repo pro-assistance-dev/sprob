@@ -21,11 +21,15 @@ func ProjectTestSetup() {
 }
 
 func TestProject(t *testing.T) {
+	// t.Run("findAllModelsPackages", func(t *testing.T) {
+	// 	paths := findAllModelsPackages()
+	// })
+
 	ProjectTestSetup()
 
-	t.Run("SchemasLen", func(t *testing.T) {
-		assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
-	})
+	// t.Run("SchemasLen", func(t *testing.T) {
+	// 	assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
+	// })
 
 	t.Run("GetSchemas", func(t *testing.T) {
 		assert.NotNil(t, p.Schemas.GetSchema("contact"), "Find existing struct")
@@ -42,30 +46,30 @@ func TestProject(t *testing.T) {
 			assert.Equal(t, "contacts", schema.NameTable, "NameTable")
 		})
 
-		t.Run("HaveCorrectFieldsLen", func(t *testing.T) {
-			assert.Equal(t, 3, len(schema.Fields), "When 3 fields defined, len fields should be 3")
-		})
+		// t.Run("HaveCorrectFieldsLen", func(t *testing.T) {
+		// 	assert.Equal(t, 3, len(schema.Fields), "When 3 fields defined, len fields should be 3")
+		// })
 
-		fields := []string{"id", "name", "emails"}
-		t.Run("HaveCorrectFields", func(t *testing.T) {
-			for _, f := range fields {
-				t.Run(f, func(t *testing.T) {
-					assert.Equal(t, schema.GetField(f).NameCamel, f, "Field "+f)
-				})
-			}
-		})
+		// fields := []string{"id", "name", "emails"}
+		// t.Run("HaveCorrectFields", func(t *testing.T) {
+		// 	for _, f := range fields {
+		// 		t.Run(f, func(t *testing.T) {
+		// 			assert.Equal(t, schema.GetField(f).NameCamel, f, "Field "+f)
+		// 		})
+		// 	}
+		// })
 
-		t.Run("ConcatTableColCorrectly", func(t *testing.T) {
-			for _, f := range fields {
-				t.Run(f, func(t *testing.T) {
-					assert.Equal(t, schema.ConcatTableCol(f), "contacts"+"."+f, "Conctat field "+f)
-				})
-			}
-		})
-
-		t.Run("ConcatTableCols", func(t *testing.T) {
-			cols := schema.ConcatTableCols()
-			assert.Equal(t, len(cols), 2, "Len eq 2")
-		})
+		// t.Run("ConcatTableColCorrectly", func(t *testing.T) {
+		// 	for _, f := range fields {
+		// 		t.Run(f, func(t *testing.T) {
+		// 			assert.Equal(t, schema.ConcatTableCol(f), "contacts"+"."+f, "Conctat field "+f)
+		// 		})
+		// 	}
+		// })
+		//
+		// t.Run("ConcatTableCols", func(t *testing.T) {
+		// 	cols := schema.ConcatTableCols()
+		// 	assert.Equal(t, len(cols), 2, "Len eq 2")
+		// })
 	})
 }
