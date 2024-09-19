@@ -32,22 +32,43 @@ func NewProject(config *config.Project) *Project {
 
 var SchemasLib = Schemas{}
 
-func findAllModelsPackages() []string {
-	paths := make([]string, 0)
-	err := filepath.Walk(".",
-		func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() || strings.Contains(path, "static") {
-				return nil
-			}
-			paths = append(paths, path)
-			return nil
-		})
+func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]string, error) {
 	if err != nil {
-		log.Println(err)
+		return nil, err
 	}
+	if !info.IsDir() || strings.Contains(path, "static") {
+		return nil, nil
+	}
+	paths = append(paths, path)
+	return paths, nil
+}
+
+func findAllModelsPackages() []string {
+	ex, err := os.Executable()
+	if err != nil {
+		panic(err)
+	}
+	exPath := filepath.Dir(ex)
+	modelsPath := filepath.Clean(filepath.Join(exPath, "..", "..", "models"))
+
+	pathsToParse := []string{".", modelsPath}
+	paths := make([]string, 0)
+
+	for _, p := range pathsToParse {
+		err := filepath.Walk(p,
+			func(path string, info os.FileInfo, err error) error {
+				p, err := addToPaths(paths, path, info, err)
+				if err != nil {
+					return err
+				}
+				paths = append(paths, p...)
+				return nil
+			})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
 	return paths
 }
 
