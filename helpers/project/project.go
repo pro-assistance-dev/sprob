@@ -39,7 +39,7 @@ func addToPaths(path string, info os.FileInfo, err error) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") || strings.Contains(path, ".go") {
+	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") || strings.Contains(path, ".go") {
 		return false, nil
 	}
 	return true, nil
