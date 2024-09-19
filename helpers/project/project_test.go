@@ -21,9 +21,10 @@ func ProjectTestSetup() {
 }
 
 func TestProject(t *testing.T) {
-	// t.Run("findAllModelsPackages", func(t *testing.T) {
-	// 	paths := findAllModelsPackages()
-	// })
+	t.Run("findAllModelsPackages", func(t *testing.T) {
+		paths := findAllModelsPackages()
+		fmt.Println(paths)
+	})
 
 	ProjectTestSetup()
 
