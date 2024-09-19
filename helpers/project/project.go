@@ -58,13 +58,16 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				fmt.Println("paths", paths, p)
+				// fmt.Println("paths", paths, p)
+				if slices.Contains(paths, path) {
+					return nil
+				}
 				pathsToAdd, err := addToPaths(paths, path, info, err)
 				if err != nil {
 					return err
 				}
 
-				if pathsToAdd != nil && !slices.Contains(paths, path) {
+				if pathsToAdd != nil {
 					paths = append(paths, pathsToAdd...)
 				}
 				return nil
