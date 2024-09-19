@@ -38,7 +38,7 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 	if err != nil {
 		return nil, err
 	}
-	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
+	if !info.IsDir() || !strings.Contains(path, "models") || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
 		return nil, nil
 	}
 	paths = append(paths, path)
@@ -58,9 +58,11 @@ func findAllModelsPackages() []string {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
 				p, err := addToPaths(paths, path, info, err)
-				paths = append(paths, p...)
 				if err != nil {
 					return err
+				}
+				if p != nil {
+					paths = append(paths, p...)
 				}
 				return nil
 			})
