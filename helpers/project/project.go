@@ -35,15 +35,14 @@ func NewProject(config *config.Project) *Project {
 
 var SchemasLib = Schemas{}
 
-func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]string, error) {
+func addToPaths(path string, info os.FileInfo, err error) (bool, error) {
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
-		return nil, nil
+	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") || strings.Contains(path, ".go") {
+		return false, nil
 	}
-	paths = append(paths, path)
-	return paths, nil
+	return true, nil
 }
 
 func findAllModelsPackages() []string {
@@ -58,17 +57,17 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				// fmt.Println("paths", paths, p)
+				fmt.Println("paths", paths, p, path)
 				if slices.Contains(paths, path) {
 					return nil
 				}
-				pathsToAdd, err := addToPaths(paths, path, info, err)
+				add, err := addToPaths(path, info, err)
 				if err != nil {
 					return err
 				}
 
-				if pathsToAdd != nil || len(pathsToAdd) > 0 {
-					paths = append(paths, pathsToAdd...)
+				if add {
+					paths = append(paths, path)
 				}
 				return nil
 			})
