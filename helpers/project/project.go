@@ -55,17 +55,12 @@ func findAllModelsPackages() []string {
 	paths := make([]string, 0)
 
 	for _, p := range pathsToParse {
-		fmt.Println(p)
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				fmt.Println(path)
 				paths, err = addToPaths(paths, path, info, err)
 				if err != nil {
 					return err
 				}
-				// if p != nil {
-				// 	paths = append(paths, p...)
-				// }
 				return nil
 			})
 		if err != nil {
@@ -101,6 +96,7 @@ func (i *Project) InitSchemas() {
 
 	i.Schemas.InitFieldsLinksToSchemas()
 	SchemasLib = i.Schemas
+	fmt.Println(SchemasLib)
 }
 
 func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map[*ast.TypeSpec][]*ast.Field { //nolint:all
