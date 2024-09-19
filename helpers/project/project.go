@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -38,7 +39,7 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 	if err != nil {
 		return nil, err
 	}
-	if !info.IsDir() || !strings.Contains(path, "models") || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
+	if !info.IsDir() || strings.Contains(path, "static") || strings.Contains(path, "modules") || strings.Contains(path, "logs") || strings.Contains(path, ".vscode") {
 		return nil, nil
 	}
 	paths = append(paths, path)
@@ -57,12 +58,14 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				p, err := addToPaths(paths, path, info, err)
+				fmt.Println("paths", paths, p)
+				pathsToAdd, err := addToPaths(paths, path, info, err)
 				if err != nil {
 					return err
 				}
-				if p != nil {
-					paths = append(paths, p...)
+
+				if pathsToAdd != nil && !slices.Contains(paths, path) {
+					paths = append(paths, pathsToAdd...)
 				}
 				return nil
 			})
