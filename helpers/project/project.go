@@ -42,6 +42,7 @@ func addToPaths(paths []string, path string, info os.FileInfo, err error) ([]str
 		return nil, nil
 	}
 	paths = append(paths, path)
+	fmt.Println(paths)
 	return paths, nil
 }
 
@@ -55,6 +56,7 @@ func findAllModelsPackages() []string {
 	paths := make([]string, 0)
 
 	for _, p := range pathsToParse {
+		fmt.Println(p)
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
 				fmt.Println(path)
