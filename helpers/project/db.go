@@ -41,6 +41,11 @@ func initSchemaTables(db *bun.DB) {
 		log.Fatalln(err)
 	}
 
+	_, err = db.NewCreateTable().Model((*SchemaField)(nil)).IfNotExists().Exec(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
+
 	_, err = db.NewCreateIndex().
 		IfNotExists().
 		Model((*SchemaField)(nil)).
@@ -48,10 +53,6 @@ func initSchemaTables(db *bun.DB) {
 		Unique().
 		Column("name_camel", "schema_id").
 		Exec(context.Background())
-	if err != nil {
-		log.Fatalln(err)
-	}
-	_, err = db.NewCreateTable().Model((*SchemaField)(nil)).IfNotExists().Exec(context.Background())
 	if err != nil {
 		log.Fatalln(err)
 	}
