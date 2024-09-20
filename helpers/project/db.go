@@ -40,6 +40,15 @@ func initSchemaTables(db *bun.DB) {
 		log.Fatalln(err)
 	}
 
+	_, err = db.NewCreateIndex().
+		Model((*SchemaField)(nil)).
+		Index("name_col_idx").
+		Unique().
+		Column("name_col").
+		Exec(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
 	_, err = db.NewCreateTable().Model((*SchemaField)(nil)).IfNotExists().Exec(context.Background())
 	if err != nil {
 		log.Fatalln(err)
