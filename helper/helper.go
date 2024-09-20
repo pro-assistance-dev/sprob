@@ -2,7 +2,6 @@ package helper
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 
 	"github.com/pro-assistance/pro-assister/config"
@@ -100,8 +99,8 @@ func (i *Helper) Run(migrations *migrate.Migrations, init func(*gin.Engine, *Hel
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
 
-	fmt.Println(i.Project.Schemas)
+	project.UpdateSchemasDB(i.DB.DB, i.Project.Schemas)
+
 	i.HTTP.ListenAndServe(router)
-	fmt.Println(i.Project.Schemas)
 	return Listen
 }

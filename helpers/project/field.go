@@ -10,8 +10,9 @@ type SchemaField struct {
 	bun.BaseModel `bun:"schema_fields,alias:schema_fields"`
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 
-	Schema *Schema
-	Type   string
+	Schema   *Schema
+	SchemaID uuid.NullUUID
+	Type     string
 
 	NamePascal string
 	NameCamel  string
