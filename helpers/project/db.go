@@ -9,7 +9,13 @@ import (
 
 func UpdateSchemasDB(db *bun.DB, schemas Schemas) {
 	initSchemaTables(db)
-	insertSchemas(db, schemas)
+
+	schemasForInsert := make([]*Schema, 0)
+	for _, item := range schemas {
+		schemasForInsert = append(schemasForInsert, item)
+	}
+	insertSchemas(db, schemasForInsert)
+
 	fields := make(SchemaFields, 0)
 	for _, item := range schemas {
 		for _, field := range item.Fields {
@@ -31,7 +37,7 @@ func initSchemaTables(db *bun.DB) {
 	}
 }
 
-func insertSchemas(db *bun.DB, schemas Schemas) {
+func insertSchemas(db *bun.DB, schemas []*Schema) {
 	_, err := db.NewInsert().Model(&schemas).On("CONFLICT (name_table) do update").
 		Set("name_table = EXCLUDED.name_table").
 		Set("name_pascal = EXCLUDED.name_pascal").
