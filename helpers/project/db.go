@@ -30,6 +30,15 @@ func initSchemaTables(db *bun.DB) {
 	if err != nil {
 		log.Fatalln(err)
 	}
+	_, err = db.NewCreateIndex().
+		Model((*Schema)(nil)).
+		Index("name_camel_idx").
+		Unique().
+		Column("name_camel").
+		Exec(context.Background())
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	_, err = db.NewCreateTable().Model((*SchemaField)(nil)).IfNotExists().Exec(context.Background())
 	if err != nil {
@@ -38,7 +47,7 @@ func initSchemaTables(db *bun.DB) {
 }
 
 func insertSchemas(db *bun.DB, schemas []*Schema) {
-	_, err := db.NewInsert().Model(&schemas).On("CONFLICT (name_table) do update").
+	_, err := db.NewInsert().Model(&schemas).On("CONFLICT (name_camel) do update").
 		Set("name_table = EXCLUDED.name_table").
 		Set("name_pascal = EXCLUDED.name_pascal").
 		Set("name_plural = EXCLUDED.name_plural").
