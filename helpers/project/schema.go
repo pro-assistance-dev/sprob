@@ -27,7 +27,7 @@ type Schema struct {
 	Label      string
 	Value      string
 
-	Fields map[string]*SchemaField `bun:"rel:has-many" json:"fields"`
+	Fields map[string]*SchemaField `bun:"-" json:"fields"`
 }
 
 type (
