@@ -32,6 +32,7 @@ func initSchemaTables(db *bun.DB) {
 	}
 	_, err = db.NewCreateIndex().
 		Model((*Schema)(nil)).
+		IfNotExists().
 		Index("name_camel_idx").
 		Unique().
 		Column("name_camel").
@@ -41,6 +42,7 @@ func initSchemaTables(db *bun.DB) {
 	}
 
 	_, err = db.NewCreateIndex().
+		IfNotExists().
 		Model((*SchemaField)(nil)).
 		Index("name_col_idx").
 		Unique().
