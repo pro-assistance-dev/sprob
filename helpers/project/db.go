@@ -16,13 +16,13 @@ func UpdateSchemasDB(db *bun.DB, schemas Schemas) {
 	}
 	insertSchemas(db, schemasForInsert)
 
-	// fields := make(SchemaFields, 0)
-	// for _, item := range schemas {
-	// 	for _, field := range item.Fields {
-	// 		fields = append(fields, field)
-	// 	}
-	// }
-	// insertFields(db, fields)
+	fields := make(SchemaFields, 0)
+	for _, item := range schemas {
+		for _, field := range item.Fields {
+			fields = append(fields, field)
+		}
+	}
+	insertFields(db, fields)
 }
 
 func initSchemaTables(db *bun.DB) {
