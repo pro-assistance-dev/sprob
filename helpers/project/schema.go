@@ -113,6 +113,7 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	m.Value = "id"
 	// m.Key = strcase.ToLowerCamel(structure.Name.Name)
 	m.NamePascal = structure.Name.Name
+	m.NameCamel = strcase.ToCamel(structure.Name.Name)
 	m.Fields = make(map[string]*SchemaField)
 
 	for index, field := range fields {
