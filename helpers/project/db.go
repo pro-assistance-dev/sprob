@@ -44,7 +44,7 @@ func initSchemaTables(db *bun.DB) {
 	_, err = db.NewCreateIndex().
 		IfNotExists().
 		Model((*SchemaField)(nil)).
-		Index("name_camel_idx").
+		Index("name_schema_field_camel_idx").
 		Unique().
 		Column("name_camel").
 		Exec(context.Background())
