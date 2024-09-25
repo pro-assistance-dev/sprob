@@ -1,7 +1,6 @@
 package project
 
 import (
-	"fmt"
 	"go/ast"
 	"go/build"
 	"go/parser"
@@ -57,7 +56,6 @@ func findAllModelsPackages() []string {
 	for _, p := range pathsToParse {
 		err := filepath.Walk(p,
 			func(path string, info os.FileInfo, err error) error {
-				fmt.Println("paths", paths, p, path)
 				if slices.Contains(paths, path) {
 					return nil
 				}
@@ -92,7 +90,6 @@ func (i *Project) InitSchemas() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println("modelsPackage", modelsPackage)
 		structs := i.getStructsOfProject(modelsPackage)
 
 		for s := range structs {
@@ -103,7 +100,6 @@ func (i *Project) InitSchemas() {
 	}
 
 	i.Schemas.InitFieldsLinksToSchemas()
-	fmt.Println(SchemasLib)
 	SchemasLib = i.Schemas
 }
 
