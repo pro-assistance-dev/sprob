@@ -31,6 +31,11 @@ type Schema struct {
 	Fields map[string]*SchemaField `bun:"-" json:"fields"`
 }
 
+type SchemasWithCount struct {
+	Schemas Schemas `json:"items"`
+	Count   int     `json:"count"`
+}
+
 type (
 	Schemas map[string]*Schema
 )

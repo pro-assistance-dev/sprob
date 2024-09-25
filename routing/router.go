@@ -8,6 +8,7 @@ import (
 	"github.com/pro-assistance/pro-assister/handlers/ftsppresets"
 	"github.com/pro-assistance/pro-assister/handlers/menus"
 	"github.com/pro-assistance/pro-assister/handlers/phones"
+	"github.com/pro-assistance/pro-assister/handlers/schemas"
 	"github.com/pro-assistance/pro-assister/handlers/search"
 	"github.com/pro-assistance/pro-assister/handlers/usersaccounts"
 	"github.com/pro-assistance/pro-assister/handlers/valuetypes"
@@ -20,6 +21,7 @@ import (
 	ftsppresetsRouter "github.com/pro-assistance/pro-assister/routing/ftsppresets"
 	menusRouter "github.com/pro-assistance/pro-assister/routing/menus"
 	phonesRouter "github.com/pro-assistance/pro-assister/routing/phones"
+	schemasRouter "github.com/pro-assistance/pro-assister/routing/schemas"
 	searchRouter "github.com/pro-assistance/pro-assister/routing/search"
 	useraccountsRouter "github.com/pro-assistance/pro-assister/routing/usersaccounts"
 	valuetypesRouter "github.com/pro-assistance/pro-assister/routing/valuetypes"
@@ -47,6 +49,9 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	ftsppresets.Init(h)
 	ftsppresetsRouter.Init(apiToken.Group("/ftsp-presets"), ftsppresets.H)
+
+	schemas.Init(h)
+	schemasRouter.Init(apiToken.Group("/schemas"), schemas.H)
 
 	emails.Init(h)
 	emailsRouter.Init(apiToken.Group("/emails"), emails.H)
