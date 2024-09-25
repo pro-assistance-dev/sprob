@@ -71,7 +71,7 @@ type RouterHandler interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
-func (i *Helper) Run(migrations *migrate.Migrations, init func(*gin.Engine, *Helper)) Mode {
+func (i *Helper) Run(migrations []*migrate.Migrations, init func(*gin.Engine, *Helper)) Mode {
 	mode := flag.String("mode", "run", "init/create")
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")

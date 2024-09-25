@@ -44,27 +44,29 @@ func (i *DB) initDB() {
 	i.DB = db
 }
 
-func (i *DB) DoAction(migrations *migrate.Migrations, name *string, action *string) {
-	migrator := migrate.NewMigrator(i.DB, migrations)
-	switch *action {
-	case "init":
-		initMigration(migrator)
-	case "dropDatabase":
-		dropDatabase(migrator)
-	case "create":
-		createMigrationSQL(migrator, name)
-	case "migrate":
-		runMigration(migrator)
-	case "status":
-		ms, err := migrator.MigrationsWithStatus(context.TODO())
-		if err != nil {
-			log.Fatalln(err)
+func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *string) {
+	for _, migration := range migrations {
+		migrator := migrate.NewMigrator(i.DB, migration)
+		switch *action {
+		case "init":
+			initMigration(migrator)
+		case "dropDatabase":
+			dropDatabase(migrator)
+		case "create":
+			createMigrationSQL(migrator, name)
+		case "migrate":
+			runMigration(migrator)
+		case "status":
+			ms, err := migrator.MigrationsWithStatus(context.TODO())
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Printf("migrations: %s\n", ms)
+			fmt.Printf("unapplied migrations: %s\n", ms.Unapplied())
+			fmt.Printf("last migration group: %s\n", ms.LastGroup())
+		default:
+			log.Fatal("cannot parse action")
 		}
-		fmt.Printf("migrations: %s\n", ms)
-		fmt.Printf("unapplied migrations: %s\n", ms.Unapplied())
-		fmt.Printf("last migration group: %s\n", ms.LastGroup())
-	default:
-		log.Fatal("cannot parse action")
 	}
 }
 
