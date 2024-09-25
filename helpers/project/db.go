@@ -63,6 +63,7 @@ func insertSchemas(db *bun.DB, schemas []*Schema) {
 		Set("name_table = EXCLUDED.name_table").
 		Set("name_pascal = EXCLUDED.name_pascal").
 		Set("name_plural = EXCLUDED.name_plural").
+		Set("name_rus = EXCLUDED.name_rus").
 		Set("sort_column = EXCLUDED.sort_column").
 		Set("label = EXCLUDED.label").
 		Set("value = EXCLUDED.value").
@@ -76,6 +77,7 @@ func insertFields(db *bun.DB, fields SchemaFields) {
 	_, err := db.NewInsert().Model(&fields).On("CONFLICT (name_camel, schema_id) do update").
 		Set("name_col = EXCLUDED.name_col").
 		Set("name_pascal = EXCLUDED.name_pascal").
+		Set("name_rus = EXCLUDED.name_rus").
 		Set("type = EXCLUDED.type").
 		Exec(context.Background())
 	if err != nil {

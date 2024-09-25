@@ -17,15 +17,17 @@ type SchemaField struct {
 	NamePascal string
 	NameCamel  string
 	NameCol    string
+	NameRus    string
 }
 
 type SchemaFields []*SchemaField
 
-func NewSchemaField(name string, colName string, t string) *SchemaField {
+func NewSchemaField(name string, colName string, nameRus string, t string) *SchemaField {
 	return &SchemaField{
 		NamePascal: name,
 		NameCol:    colName,
 		NameCamel:  strcase.ToLowerCamel(name),
 		Type:       t,
+		NameRus:    nameRus,
 	}
 }

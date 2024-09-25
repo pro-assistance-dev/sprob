@@ -22,6 +22,7 @@ type Schema struct {
 	NamePascal string
 	NameCamel  string
 	NamePlural string
+	NameRus    string
 
 	SortColumn string
 	Label      string
@@ -48,6 +49,7 @@ const (
 	TagModel  = "model"
 	TagBun    = "bun"
 	TagPlural = "plural"
+	TagRus    = "rus"
 )
 
 func (item Schema) GetFieldsWithSchema() SchemaFields {
@@ -123,12 +125,13 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		tags := parseTags(field.Tag.Value)
 		if index == 0 {
 			m.NameTable = getBunSelectTableName(tags)
+			m.NameRus = getTagName(tags, TagRus)
 			// m.PluralName = ToCapCamel(m.TableName)
 			continue
 		}
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(types.ExprString(field.Type)))
-		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewSchemaField(field.Names[0].Name, getColName(tags), typeString)
+		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewSchemaField(field.Names[0].Name, getColName(tags), typeString, getTagName(tags, TagRus))
 	}
 	return m
 }
@@ -150,7 +153,7 @@ func getColName(tags *structtag.Tags) string {
 }
 
 func getBunSelectTableName(tags *structtag.Tags) string {
-	bunTag, err := tags.Get("bun")
+	bunTag, err := tags.Get(TagBun)
 	if err != nil {
 		return ""
 	}
