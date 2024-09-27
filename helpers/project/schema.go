@@ -28,7 +28,8 @@ type Schema struct {
 	Label      string
 	Value      string
 
-	Fields map[string]*SchemaField `bun:"-" json:"fields"`
+	FieldsMap map[string]*SchemaField `bun:"-"  `
+	Fields    SchemaFields            `bun:"rel:has-many" json:"fields"`
 }
 
 type SchemasWithCount struct {
@@ -42,9 +43,9 @@ type (
 
 func (items Schemas) InitFieldsLinksToSchemas() {
 	for _, item := range items {
-		for i := range item.Fields {
-			schema := items[item.Fields[i].Type]
-			item.Fields[i].Schema = schema
+		for i := range item.FieldsMap {
+			schema := items[item.FieldsMap[i].Type]
+			item.FieldsMap[i].Schema = schema
 		}
 	}
 }
@@ -60,7 +61,7 @@ const (
 func (item Schema) GetFieldsWithSchema() SchemaFields {
 	fields := make(SchemaFields, 0)
 
-	for _, field := range item.Fields {
+	for _, field := range item.FieldsMap {
 		if field.Schema == nil {
 			continue
 		}
@@ -72,7 +73,7 @@ func (item Schema) GetFieldsWithSchema() SchemaFields {
 
 func (item Schema) GetFieldsCols() SchemaFields {
 	fields := make(SchemaFields, 0)
-	for _, field := range item.Fields {
+	for _, field := range item.FieldsMap {
 		if field.Schema != nil {
 			continue
 		}
@@ -105,7 +106,7 @@ func (item Schema) GetTableName() string {
 }
 
 func (item Schema) GetField(fieldCamelCaseName string) *SchemaField {
-	field := item.Fields[fieldCamelCaseName]
+	field := item.FieldsMap[fieldCamelCaseName]
 	return field
 }
 
@@ -121,7 +122,7 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 	// m.Key = strcase.ToLowerCamel(structure.Name.Name)
 	m.NamePascal = structure.Name.Name
 	m.NameCamel = strcase.ToCamel(structure.Name.Name)
-	m.Fields = make(map[string]*SchemaField)
+	m.FieldsMap = make(map[string]*SchemaField)
 
 	for index, field := range fields {
 		if field.Tag == nil {
@@ -136,7 +137,9 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 		}
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(types.ExprString(field.Type)))
-		m.Fields[strcase.ToLowerCamel(field.Names[0].Name)] = NewSchemaField(field.Names[0].Name, getColName(tags), typeString, getTagName(tags, TagRus))
+		fieldSchema := NewSchemaField(field.Names[0].Name, getColName(tags), typeString, getTagName(tags, TagRus))
+		m.FieldsMap[strcase.ToLowerCamel(field.Names[0].Name)] = fieldSchema
+		m.Fields = append(m.Fields, fieldSchema)
 	}
 	return m
 }
