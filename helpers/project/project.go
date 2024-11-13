@@ -18,7 +18,7 @@ import (
 const defaultModelDir = "models"
 
 type Project struct {
-	Schemas    Schemas `json:"schemas"`
+	Schemas    SchemasMap `json:"schemas"`
 	ModelsPath string
 }
 
@@ -32,7 +32,10 @@ func NewProject(config *config.Project) *Project {
 	return p
 }
 
-var SchemasLib = Schemas{}
+var (
+	SchemasLib   = SchemasMap{}
+	SchemasSlice = make(Schemas, 0)
+)
 
 func addToPaths(path string, info os.FileInfo, err error) (bool, error) {
 	if err != nil {
@@ -83,7 +86,7 @@ func (i *Project) InitSchemas() {
 	}
 	paths := findAllModelsPackages()
 
-	i.Schemas = make(Schemas, 0)
+	i.Schemas = make(SchemasMap, 0)
 
 	for _, path := range paths {
 		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
@@ -96,6 +99,7 @@ func (i *Project) InitSchemas() {
 			schema := newSchema(s, structs[s])
 			key := strcase.ToLowerCamel(s.Name.String())
 			i.Schemas[key] = &schema
+			SchemasSlice = append(SchemasSlice, &schema)
 		}
 	}
 

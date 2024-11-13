@@ -49,7 +49,7 @@ func GetConfigPath(name string) string {
 func loadConfig(path string, name string) (config *Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
-	viper.SetConfigType("yaml")
+	viper.SetConfigType("env")
 	// fmt.Println(path, name)
 
 	// viper.AutomaticEnv()

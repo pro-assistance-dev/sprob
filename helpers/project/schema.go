@@ -32,16 +32,16 @@ type Schema struct {
 	Fields    SchemaFields            `bun:"rel:has-many" json:"fields"`
 }
 
-type SchemasWithCount struct {
-	Schemas Schemas `json:"items"`
-	Count   int     `json:"count"`
-}
-
 type (
-	Schemas map[string]*Schema
+	SchemasWithCount struct {
+		Schemas Schemas `json:"items"`
+		Count   int     `json:"count"`
+	}
+	Schemas    []*Schema
+	SchemasMap map[string]*Schema
 )
 
-func (items Schemas) InitFieldsLinksToSchemas() {
+func (items SchemasMap) InitFieldsLinksToSchemas() {
 	for _, item := range items {
 		for i := range item.FieldsMap {
 			schema := items[item.FieldsMap[i].Type]
@@ -97,7 +97,7 @@ func (item Schema) ConcatTableCol(colNameInCamelCase string) string {
 	return fmt.Sprintf("%s.%s", item.NameTable, item.GetColName(colNameInCamelCase))
 }
 
-func (items Schemas) GetSchema(schemaName string) *Schema {
+func (items SchemasMap) GetSchema(schemaName string) *Schema {
 	return items[schemaName]
 }
 
