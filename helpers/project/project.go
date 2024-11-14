@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance-dev/sprob/config"
 )
 
 const defaultModelDir = "models"
@@ -49,7 +49,7 @@ func addToPaths(path string, info os.FileInfo, err error) (bool, error) {
 
 func findAllModelsPackages() []string {
 	ctx := build.Default
-	pkg, err := ctx.Import("github.com/pro-assistance/pro-assister/models", ".", build.FindOnly)
+	pkg, err := ctx.Import("github.com/pro-assistance-dev/sprob/models", ".", build.FindOnly)
 	if err != nil {
 		panic(err)
 	}

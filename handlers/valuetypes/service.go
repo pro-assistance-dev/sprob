@@ -3,7 +3,7 @@ package valuetypes
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (s *Service) GetAll(c context.Context) (items models.ValueTypes, err error) {

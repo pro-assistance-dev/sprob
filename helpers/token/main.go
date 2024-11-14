@@ -9,7 +9,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
-	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance-dev/sprob/config"
 )
 
 type Token struct {

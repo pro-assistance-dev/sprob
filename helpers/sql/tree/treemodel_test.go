@@ -5,10 +5,10 @@ import (
 	"log"
 	"testing"
 
-	"github.com/pro-assistance/pro-assister/config"
-	"github.com/pro-assistance/pro-assister/helpers/db"
-	"github.com/pro-assistance/pro-assister/helpers/project"
-	// "github.com/pro-assistance/pro-assister/helpers/sql/tree/mocks"
+	"github.com/pro-assistance-dev/sprob/config"
+	"github.com/pro-assistance-dev/sprob/helpers/db"
+	"github.com/pro-assistance-dev/sprob/helpers/project"
+	// "github.com/pro-assistance-dev/sprob/helpers/sql/tree/mocks"
 )
 
 func prepare() *db.DB {

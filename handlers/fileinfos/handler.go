@@ -1,7 +1,7 @@
 package fileinfos
 
 import (
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"

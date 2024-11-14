@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/helpers/project"
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/helpers/project"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (h *Handler) Create(c *gin.Context) {

@@ -1,7 +1,7 @@
 package emails
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/emails"
+	handler "github.com/pro-assistance-dev/sprob/handlers/emails"
 
 	"github.com/gin-gonic/gin"
 )

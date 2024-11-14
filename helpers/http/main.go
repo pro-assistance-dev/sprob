@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance-dev/sprob/config"
 )
 
 type HTTP struct {

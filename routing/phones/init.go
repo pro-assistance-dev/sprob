@@ -1,7 +1,7 @@
 package phones
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/phones"
+	handler "github.com/pro-assistance-dev/sprob/handlers/phones"
 
 	"github.com/gin-gonic/gin"
 )

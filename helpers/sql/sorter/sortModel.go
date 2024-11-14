@@ -3,7 +3,7 @@ package sorter
 import (
 	"encoding/json"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	"github.com/pro-assistance-dev/sprob/helpers/project"
 )
 
 // sortModel model

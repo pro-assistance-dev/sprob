@@ -1,7 +1,7 @@
 package contacts
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/contacts"
+	handler "github.com/pro-assistance-dev/sprob/handlers/contacts"
 
 	"github.com/gin-gonic/gin"
 )

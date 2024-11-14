@@ -3,7 +3,7 @@ package menus
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/models"
 	"github.com/uptrace/bun"
 	// _ "github.com/go-pg/pg/v10/orm"
 )

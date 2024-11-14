@@ -3,7 +3,7 @@ package ftsppresets
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (r *Repository) Create(c context.Context, item *models.FTSPPreset) (err error) {

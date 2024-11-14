@@ -1,7 +1,7 @@
 package schemas
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/schemas"
+	handler "github.com/pro-assistance-dev/sprob/handlers/schemas"
 
 	"github.com/gin-gonic/gin"
 )

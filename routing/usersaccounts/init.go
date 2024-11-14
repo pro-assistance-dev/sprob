@@ -1,7 +1,7 @@
 package usersaccounts
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/usersaccounts"
+	handler "github.com/pro-assistance-dev/sprob/handlers/usersaccounts"
 
 	"github.com/gin-gonic/gin"
 )

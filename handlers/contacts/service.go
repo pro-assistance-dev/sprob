@@ -3,7 +3,7 @@ package contacts
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/models"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (s *Service) Create(c context.Context, item *models.Contact) error {

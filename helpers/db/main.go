@@ -16,7 +16,7 @@ import (
 	"github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 
-	"github.com/pro-assistance/pro-assister/config"
+	"github.com/pro-assistance-dev/sprob/config"
 )
 
 type DB struct {

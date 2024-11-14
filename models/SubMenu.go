@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/pro-assistance/pro-assister/helpers/uploader"
+	"github.com/pro-assistance-dev/sprob/helpers/uploader"
 
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"

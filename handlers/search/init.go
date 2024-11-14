@@ -1,7 +1,7 @@
 package search
 
 import (
-	"github.com/pro-assistance/pro-assister/helper"
+	"github.com/pro-assistance-dev/sprob/helper"
 )
 
 type Handler struct {

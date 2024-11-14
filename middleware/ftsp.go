@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/pro-assistance/pro-assister/helpers/sql"
+	"github.com/pro-assistance-dev/sprob/helpers/sql"
 )
 
 type FTSPStore struct {

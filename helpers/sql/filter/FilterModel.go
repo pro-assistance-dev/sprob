@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	project "github.com/pro-assistance/pro-assister/helpers/project"
-	"github.com/pro-assistance/pro-assister/helpers/util"
+	project "github.com/pro-assistance-dev/sprob/helpers/project"
+	"github.com/pro-assistance-dev/sprob/helpers/util"
 
 	"github.com/uptrace/bun"
 )

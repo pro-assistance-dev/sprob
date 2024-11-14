@@ -1,7 +1,7 @@
 package menus
 
 import (
-	handler "github.com/pro-assistance/pro-assister/handlers/menus"
+	handler "github.com/pro-assistance-dev/sprob/handlers/menus"
 
 	"github.com/gin-gonic/gin"
 )

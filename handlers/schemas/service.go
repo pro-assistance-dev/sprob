@@ -3,7 +3,7 @@ package schemas
 import (
 	"context"
 
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	"github.com/pro-assistance-dev/sprob/helpers/project"
 )
 
 func (s *Service) Create(c context.Context, item *project.Schema) error {

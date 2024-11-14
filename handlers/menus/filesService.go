@@ -4,7 +4,7 @@ import (
 	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance/pro-assister/handlers/basehandler"
+	"github.com/pro-assistance-dev/sprob/handlers/basehandler"
 )
 
 func (s *FilesService) Upload(c *gin.Context, item basehandler.Filer, files map[string][]*multipart.FileHeader) (err error) {

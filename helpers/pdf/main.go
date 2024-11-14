@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
-	"github.com/pro-assistance/pro-assister/config"
-	"github.com/pro-assistance/pro-assister/helpers/templater"
+	"github.com/pro-assistance-dev/sprob/config"
+	"github.com/pro-assistance-dev/sprob/helpers/templater"
 	"github.com/unidoc/unidoc/pdf/creator"
 )
 

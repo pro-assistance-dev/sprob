@@ -7,7 +7,7 @@ import (
 
 	"github.com/gertd/go-pluralize"
 	"github.com/iancoleman/strcase"
-	"github.com/pro-assistance/pro-assister/helpers/project"
+	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/uptrace/bun"
 )
 
