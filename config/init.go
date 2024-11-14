@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"path"
 
 	"github.com/spf13/viper"
 )
@@ -13,10 +12,10 @@ func LoadConfig(name string) (config *Config, err error) {
 		panic("config path not exist: " + dir)
 	}
 
-	configFile := path.Join(dir, name+".yaml")
-	if _, err := os.Stat(configFile); os.IsNotExist(err) {
-		panic("config file not exist: " + dir)
-	}
+	// configFile := path.Join(dir, name+".yaml")
+	// if _, err := os.Stat(configFile); os.IsNotExist(err) {
+	// 	panic("config file not exist: " + dir)
+	// }
 
 	return loadConfig(dir, name)
 }
