@@ -99,7 +99,7 @@ func (i *Helper) Run(migrations []*migrate.Migrations, init func(*gin.Engine, *H
 	search.InitSearchGroupsTables(i.DB.DB)
 	i.DB.DoAction(migrations, name, action)
 
-	project.UpdateSchemasDB(i.DB.DB, i.Project.Schemas)
+	// project.UpdateSchemasDB(i.DB.DB, i.Project.Schemas)
 
 	i.HTTP.ListenAndServe(router)
 	return Listen

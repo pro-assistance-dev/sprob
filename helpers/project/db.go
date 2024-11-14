@@ -18,9 +18,7 @@ func UpdateSchemasDB(db *bun.DB, schemas Schemas) {
 
 	fields := make(SchemaFields, 0)
 	for _, item := range schemas {
-		for _, field := range item.Fields {
-			fields = append(fields, field)
-		}
+		fields = append(fields, item.Fields...)
 	}
 	insertFields(db, fields)
 }
