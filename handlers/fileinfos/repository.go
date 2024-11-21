@@ -2,9 +2,8 @@ package fileinfos
 
 import (
 	"context"
-	"github.com/pro-assistance-dev/sprob/models"
 
-	"github.com/google/uuid"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (r *Repository) Create(c context.Context, item *models.FileInfo) (err error) {
@@ -47,6 +46,7 @@ func (r *Repository) UpsertMany(c context.Context, items models.FileInfos) (err 
 	return err
 }
 
-func (r *Repository) Delete(c context.Context, id uuid.NullUUID) (err error) {
+func (r *Repository) Delete(c context.Context, id string) (err error) {
+	_, err = r.helper.DB.IDB(c).NewDelete().Model(&models.FileInfo{}).Where("id = ?", id).Exec(c)
 	return err
 }

@@ -1,8 +1,9 @@
 package fileinfos
 
 import (
-	"github.com/pro-assistance-dev/sprob/models"
 	"net/http"
+
+	"github.com/pro-assistance-dev/sprob/models"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,4 +35,12 @@ func (h *Handler) Create(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, item)
+}
+
+func (h *Handler) Delete(c *gin.Context) {
+	err := S.Delete(c.Request.Context(), c.Param("id"))
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{})
 }

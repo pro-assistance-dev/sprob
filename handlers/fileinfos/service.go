@@ -3,9 +3,8 @@ package fileinfos
 import (
 	"context"
 	"fmt"
-	"github.com/pro-assistance-dev/sprob/models"
 
-	"github.com/google/uuid"
+	"github.com/pro-assistance-dev/sprob/models"
 )
 
 func (s *Service) Create(c context.Context, item *models.FileInfo) error {
@@ -48,6 +47,6 @@ func (s *Service) UpsertMany(c context.Context, items models.FileInfos) error {
 	return R.UpsertMany(c, items)
 }
 
-func (s *Service) Delete(c context.Context, id uuid.NullUUID) error {
+func (s *Service) Delete(c context.Context, id string) error {
 	return R.Delete(c, id)
 }
