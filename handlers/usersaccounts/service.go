@@ -7,6 +7,10 @@ import (
 )
 
 func (s *Service) Create(c context.Context, item *models.UserAccount) error {
+	err := item.HashPassword()
+	if err != nil {
+		return err
+	}
 	return R.Create(c, item)
 }
 
