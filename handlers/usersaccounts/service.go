@@ -23,6 +23,10 @@ func (s *Service) Get(c context.Context, id string) (*models.UserAccount, error)
 }
 
 func (s *Service) Update(c context.Context, item *models.UserAccount) error {
+	err := item.HashPassword()
+	if err != nil {
+		return err
+	}
 	return R.Update(c, item)
 }
 
