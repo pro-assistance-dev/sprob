@@ -2,6 +2,7 @@ package helper
 
 import (
 	"flag"
+	"log"
 	"net/http"
 
 	"github.com/pro-assistance-dev/sprob/config"
@@ -71,36 +72,43 @@ type RouterHandler interface {
 	ServeHTTP(http.ResponseWriter, *http.Request)
 }
 
-func (i *Helper) Run(migrations []*migrate.Migrations, init func(*gin.Engine, *Helper)) Mode {
+func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.Engine, *Helper)) Mode {
 	mode := flag.String("mode", "run", "init/create")
 	action := flag.String("action", "migrate", "init/create/createSql/run/rollback")
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
 
 	if Mode(*mode) == Dump {
-		i.DB.Dump()
+		err := i.DB.Dump()
+		if err != nil {
+			log.Fatal(err)
+		}
 		return Dump
 	}
 	if Mode(*mode) == Migrate {
 		search.InitSearchGroupsTables(i.DB.DB)
-		i.DB.DoAction(migrations, name, action)
+		err := i.DB.DoAction(migrations, name, action)
+		if err != nil {
+			log.Fatal(err)
+		}
 		return Migrate
 	}
 
-	router := gin.New()
-	router.Use(gin.Recovery())
-	router.Use(logger.LoggingMiddleware(i.Logger))
-	router.Use(logger.LoggingMiddleware(i.Logger), gin.Recovery())
 	i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
-	init(router, i)
 
 	defer i.DB.DB.Close()
 	i.Project.InitSchemas()
 	search.InitSearchGroupsTables(i.DB.DB)
-	i.DB.DoAction(migrations, name, action)
 
-	// project.UpdateSchemasDB(i.DB.DB, i.Project.Schemas)
-
-	i.HTTP.ListenAndServe(router)
+	i.HTTP.ListenAndServe(initRouter(i, routerInitFunc))
 	return Listen
+}
+
+func initRouter(h *Helper, routerInitFunc func(*gin.Engine, *Helper)) *gin.Engine {
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(logger.LoggingMiddleware(h.Logger))
+	router.Use(logger.LoggingMiddleware(h.Logger), gin.Recovery())
+	routerInitFunc(router, h)
+	return router
 }

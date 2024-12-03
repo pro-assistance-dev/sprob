@@ -2,18 +2,31 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/uptrace/bun/migrate"
 )
 
-func createMigrationSQL(migrator *migrate.Migrator, name *string) {
-	_, err := migrator.CreateSQLMigrations(context.TODO(), *name)
-	if err != nil {
-		log.Fatalln(err)
+func validateMigrateName(name string) error {
+	if name == "" {
+		return errors.New("migration name cannot be empty")
 	}
-	// fmt.Printf("created migration %s (%s)\n", mf.FileName, mf.FilePath)
+	return nil
+}
+
+func createMigrationSQL(migrator *migrate.Migrator, name *string) error {
+	err := validateMigrateName(*name)
+	if err != nil {
+		return err
+	}
+	mf, err := migrator.CreateSQLMigrations(context.TODO(), *name)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("created migration %s (%s)\n", mf[0].Name, mf[0].Path)
+	return nil
 }
 
 func dropDatabase(migrator *migrate.Migrator) {

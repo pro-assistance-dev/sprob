@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
-	"log"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -44,11 +44,11 @@ func (i *DB) initDB() {
 	i.DB = db
 }
 
-func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *string) {
+func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *string) error {
 	if len(migrations) == 0 {
-		return
+		return errors.New("no migrations modules")
 	}
-
+	var err error
 	migrator := migrate.NewMigrator(i.DB, migrations[0])
 	switch *action {
 	case "init":
@@ -56,7 +56,7 @@ func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *st
 	case "dropDatabase":
 		dropDatabase(migrator)
 	case "create":
-		createMigrationSQL(migrator, name)
+		err = createMigrationSQL(migrator, name)
 	case "migrate":
 		for _, migration := range migrations {
 			migrator = migrate.NewMigrator(i.DB, migration)
@@ -65,17 +65,18 @@ func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *st
 	case "status":
 		ms, err := migrator.MigrationsWithStatus(context.TODO())
 		if err != nil {
-			log.Fatalln(err)
+			return err
 		}
 		fmt.Printf("migrations: %s\n", ms)
 		fmt.Printf("unapplied migrations: %s\n", ms.Unapplied())
 		fmt.Printf("last migration group: %s\n", ms.LastGroup())
 	default:
-		log.Fatal("cannot parse action")
+		return errors.New("cannot parse action")
 	}
+	return err
 }
 
-func (i *DB) Dump() {
+func (i *DB) Dump() error {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		panic("err")
@@ -83,9 +84,5 @@ func (i *DB) Dump() {
 	exPath := filepath.Dir(filename)
 
 	cmd := exec.Command("/bin/bash", filepath.Join(exPath, "dump_pg.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword) //nolint:gosec
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalln(err.Error())
-		return
-	}
+	return cmd.Run()
 }
