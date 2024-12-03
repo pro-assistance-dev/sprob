@@ -1,7 +1,9 @@
 package helper
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -21,6 +23,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/helpers/uploader"
 	"github.com/pro-assistance-dev/sprob/helpers/util"
 	"github.com/pro-assistance-dev/sprob/helpers/validator"
+	coreMigrations "github.com/pro-assistance-dev/sprob/migrations"
 
 	httpHelper "github.com/pro-assistance-dev/sprob/helpers/http"
 
@@ -96,12 +99,27 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 
 	i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
 
+	migrator := migrate.NewMigrator(i.DB.DB, coreMigrations.Init())
+	updateDB(migrator)
 	defer i.DB.DB.Close()
 	i.Project.InitSchemas()
-	search.InitSearchGroupsTables(i.DB.DB)
 
 	i.HTTP.ListenAndServe(initRouter(i, routerInitFunc))
 	return Listen
+}
+
+func updateDB(migrator *migrate.Migrator) {
+	group, err := migrator.Migrate(context.TODO())
+	if err != nil {
+		log.Fatalf("fail migrate: %s", err)
+	}
+
+	if group == nil || group.ID == 0 {
+		fmt.Printf("there are no new migrations to run\n")
+		return
+	}
+
+	fmt.Printf("migrated to %s\n", group)
 }
 
 func initRouter(h *Helper, routerInitFunc func(*gin.Engine, *Helper)) *gin.Engine {

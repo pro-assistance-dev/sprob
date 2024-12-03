@@ -10,8 +10,10 @@ type UserAccount struct {
 	bun.BaseModel `bun:"users_accounts,alias:users_accounts"`
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	UUID          uuid.UUID     `bun:"type:uuid,nullzero,notnull,default:uuid_generate_v4()"  json:"uuid"` // для восстановления пароля - обеспечивает уникальность страницы на фронте
-	Password      string        `json:"password"`
-	Email         string        `json:"email"`
+
+	Email    string `json:"email"`
+	Login    string `json:"login"`
+	Password string `json:"password"`
 
 	Phone string `json:"phone"`
 }
