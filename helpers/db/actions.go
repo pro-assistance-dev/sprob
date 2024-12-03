@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/iancoleman/strcase"
 	"github.com/uptrace/bun/migrate"
 )
 
@@ -16,12 +17,13 @@ func validateMigrateName(name string) error {
 	return nil
 }
 
-func createMigrationSQL(migrator *migrate.Migrator, name *string) error {
-	err := validateMigrateName(*name)
+func createMigrationSQL(migrator *migrate.Migrator, name string) error {
+	err := validateMigrateName(name)
 	if err != nil {
 		return err
 	}
-	mf, err := migrator.CreateSQLMigrations(context.TODO(), *name)
+	nameInSnake := strcase.ToSnake(name)
+	mf, err := migrator.CreateSQLMigrations(context.TODO(), nameInSnake)
 	if err != nil {
 		return err
 	}

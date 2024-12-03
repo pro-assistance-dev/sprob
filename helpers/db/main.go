@@ -44,7 +44,7 @@ func (i *DB) initDB() {
 	i.DB = db
 }
 
-func (i *DB) DoAction(migrations []*migrate.Migrations, name *string, action *string) error {
+func (i *DB) DoAction(migrations []*migrate.Migrations, name string, action *string) error {
 	if len(migrations) == 0 {
 		return errors.New("no migrations modules")
 	}

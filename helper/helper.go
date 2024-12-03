@@ -87,7 +87,7 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 	}
 	if Mode(*mode) == Migrate {
 		search.InitSearchGroupsTables(i.DB.DB)
-		err := i.DB.DoAction(migrations, name, action)
+		err := i.DB.DoAction(migrations, *name, action)
 		if err != nil {
 			log.Fatal(err)
 		}
