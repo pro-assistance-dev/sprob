@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/pro-assistance-dev/sprob/models"
+	"github.com/uptrace/bun"
 )
 
 func (r *Repository) Create(c context.Context, item *models.UserAccount) error {
@@ -14,7 +15,7 @@ func (r *Repository) Create(c context.Context, item *models.UserAccount) error {
 func (r *Repository) Get(c context.Context, loginBy string, value string) (*models.UserAccount, error) {
 	item := models.UserAccount{}
 	err := r.helper.DB.IDB(c).NewSelect().Model(&item).
-		Where("?TableAlias.? = ?", loginBy, value).
+		Where("?TableAlias.? = ?", bun.Ident(loginBy), value).
 		Scan(c)
 	return &item, err
 }
