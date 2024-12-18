@@ -14,8 +14,7 @@ type UserAccount struct {
 	Email    string `json:"email"`
 	Login    string `json:"login"`
 	Password string `json:"password"`
-
-	Phone string `json:"phone"`
+	Phone    string `json:"phone"`
 }
 
 type UsersAccounts []*UserAccount

@@ -15,7 +15,7 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	item.Email = email
 	item.Password = password
 
-	existingUserAccount, _ := R.GetByEmail(c, item.Email)
+	existingUserAccount, _ := R.Get(c, item.Email, "")
 	if existingUserAccount.ID.Valid {
 		emailStruct := struct {
 			RestoreLink string
@@ -63,15 +63,19 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	return item.ID, false, err
 }
 
-func (s *Service) Login(c context.Context, email string, password string) (uuid.NullUUID, error, error) {
-	item, err := R.GetByEmail(c, email)
-	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || !item.PasswordEqWithHashed(password) {
-		return uuid.NullUUID{}, errors.New("неверный логин или пароль"), err
+func (s *Service) Login(c context.Context, authData *models.AuthData) (uuid.NullUUID, error) {
+	err := authData.SetLoginBy()
+	if err != nil {
+		return uuid.NullUUID{}, err
+	}
+	item, err := R.Get(c, authData.LoginBy, authData.Value)
+	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || !item.PasswordEqWithHashed(authData.Password) {
+		return uuid.NullUUID{}, errors.New("неверный логин или пароль")
 	}
 	if err != nil {
-		return uuid.NullUUID{}, err, err
+		return uuid.NullUUID{}, err
 	}
-	return item.ID, err, err
+	return item.ID, err
 }
 
 func (h *Service) CheckUUID(c context.Context, id string, uid string) error {

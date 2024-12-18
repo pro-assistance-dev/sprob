@@ -11,10 +11,10 @@ func (r *Repository) Create(c context.Context, item *models.UserAccount) error {
 	return err
 }
 
-func (r *Repository) GetByEmail(c context.Context, email string) (*models.UserAccount, error) {
+func (r *Repository) Get(c context.Context, loginBy string, value string) (*models.UserAccount, error) {
 	item := models.UserAccount{}
 	err := r.helper.DB.IDB(c).NewSelect().Model(&item).
-		Where("?TableAlias.email = ?", email).
+		Where("?TableAlias.? = ?", loginBy, value).
 		Scan(c)
 	return &item, err
 }
