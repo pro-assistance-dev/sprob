@@ -14,7 +14,7 @@ import (
 // treeModel model
 type TreeModel struct {
 	Model  string      `json:"model"`
-	Cols   []string    `json:"col"`
+	Cols   []string    `json:"cols"`
 	Models []TreeModel `json:"models"`
 	Full   bool        `json:"full"`
 
