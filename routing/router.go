@@ -17,12 +17,10 @@ import (
 
 	"github.com/pro-assistance-dev/sprob/modules/buildings"
 	"github.com/pro-assistance-dev/sprob/modules/chats"
+	"github.com/pro-assistance-dev/sprob/modules/documents"
 	"github.com/pro-assistance-dev/sprob/modules/extracts"
 	"github.com/pro-assistance-dev/sprob/modules/forms"
-	"github.com/pro-assistance-dev/sprob/modules/inns"
-	"github.com/pro-assistance-dev/sprob/modules/passports"
 	"github.com/pro-assistance-dev/sprob/modules/settings"
-	"github.com/pro-assistance-dev/sprob/modules/snilss"
 
 	contactsRouter "github.com/pro-assistance-dev/sprob/routing/contacts"
 	emailsRouter "github.com/pro-assistance-dev/sprob/routing/emails"
@@ -88,9 +86,7 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	extracts.InitRoutes(apiToken, h)
 	buildings.InitRoutes(apiToken, h)
 	chats.InitRoutes(apiToken, h)
-	passports.InitRoutes(apiToken, h)
-	snilss.InitRoutes(apiToken, h)
-	inns.InitRoutes(apiToken, h)
+	documents.InitRoutes(apiToken, h)
 
 	return apiToken, apiNoToken
 }
