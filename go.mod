@@ -22,7 +22,7 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/unidoc/unidoc v2.2.0+incompatible
 	github.com/uptrace/bun v1.2.6
-	github.com/uptrace/bun/dialect/sqlitedialect v1.2.6
+	github.com/uptrace/bun/dialect/pgdialect v1.2.6
 	github.com/uptrace/bun/driver/pgdriver v1.2.6
 	golang.org/x/crypto v0.31.0
 	golang.org/x/net v0.33.0

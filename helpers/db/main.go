@@ -13,7 +13,9 @@ import (
 	"github.com/uptrace/bun/migrate"
 
 	"github.com/uptrace/bun"
-	"github.com/uptrace/bun/dialect/sqlitedialect"
+
+	"github.com/uptrace/bun/dialect/pgdialect"
+	// "github.com/uptrace/bun/dialect/sqlitedialect"
 	"github.com/uptrace/bun/driver/pgdriver"
 
 	"github.com/pro-assistance-dev/sprob/config"
@@ -38,7 +40,7 @@ func NewDB(config config.DB) *DB {
 func (i *DB) initDB() {
 	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", i.config.DB, i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
-	db := bun.NewDB(conn, sqlitedialect.New())
+	db := bun.NewDB(conn, pgdialect.New())
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS tablefunc;`)
 	i.DB = db
