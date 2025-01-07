@@ -13,7 +13,7 @@ type PassportScan struct {
 	Passport   *Passport     `bun:"rel:belongs-to" json:"passport"`
 	PassportID uuid.NullUUID `json:"passportId"`
 
-	FileInfo   *baseModels.FileInfo `json:"fileInfo"`
+	FileInfo   *baseModels.FileInfo ` bun:"rel:belongs-to" json:"fileInfo"`
 	FileInfoID uuid.NullUUID        `json:"fileInfoId"`
 	Order      uint                 `bun:"item_order" json:"order"`
 }

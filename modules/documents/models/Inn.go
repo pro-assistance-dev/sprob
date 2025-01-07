@@ -11,7 +11,7 @@ type Inn struct {
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	Num           string        `json:"num"`
 
-	FileInfo   *baseModels.FileInfo `json:"fileInfo"`
+	FileInfo   *baseModels.FileInfo `bun:"rel:belongs-to" json:"fileInfo"`
 	FileInfoID uuid.NullUUID        `json:"fileInfoId"`
 }
 
