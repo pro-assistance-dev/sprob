@@ -1,7 +1,7 @@
 lint:
 	./cmd/scripts/golangci.sh
 
-update_assister:
+update:
 	./cmd/scripts/update_assister.sh
 
 test:

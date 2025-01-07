@@ -22,10 +22,12 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/forms"
 	"github.com/pro-assistance-dev/sprob/modules/settings"
 
+	"github.com/pro-assistance-dev/sprob/handlers/humans"
 	contactsRouter "github.com/pro-assistance-dev/sprob/routing/contacts"
 	emailsRouter "github.com/pro-assistance-dev/sprob/routing/emails"
 	fileinfosRouter "github.com/pro-assistance-dev/sprob/routing/fileinfos"
 	ftsppresetsRouter "github.com/pro-assistance-dev/sprob/routing/ftsppresets"
+	humansR "github.com/pro-assistance-dev/sprob/routing/humans"
 	menusRouter "github.com/pro-assistance-dev/sprob/routing/menus"
 	phonesRouter "github.com/pro-assistance-dev/sprob/routing/phones"
 	schemasRouter "github.com/pro-assistance-dev/sprob/routing/schemas"
@@ -53,6 +55,9 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 
 	phones.Init(h)
 	phonesRouter.Init(apiToken.Group("/phones"), phones.H)
+
+	humans.Init(h)
+	humansR.Init(apiToken.Group("/humans"), humans.H)
 
 	ftsppresets.Init(h)
 	ftsppresetsRouter.Init(apiToken.Group("/ftsp-presets"), ftsppresets.H)
