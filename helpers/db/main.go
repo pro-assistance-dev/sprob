@@ -50,11 +50,10 @@ func (i *DB) DoAction(migrations []*migrate.Migrations, name string, action *str
 	if len(migrations) == 0 {
 		return errors.New("no migrations modules")
 	}
-	var err error
 	migrator := migrate.NewMigrator(i.DB, migrations[0])
+	var err error
+	initMigration(migrator)
 	switch *action {
-	case "init":
-		initMigration(migrator)
 	case "dropDatabase":
 		dropDatabase(migrator)
 	case "create":
