@@ -1,13 +1,12 @@
 create table if not exists passports (
     id uuid default uuid_generate_v4() not null,
     name varchar,
-    schema_id uuid,
-
-  	num varchar NULL,
-  	seria varchar NULL,
-  	division varchar NULL,
-  	division_code varchar NULL,
-  	citzenship varchar NULL,
+  	num varchar,
+  	seria varchar,
+  	division varchar,
+  	division_code varchar,
+  	citzenship varchar,
+    adress varchar,
     item_date timestamp without time zone
 );
 
