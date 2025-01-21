@@ -6,7 +6,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
 )
 
-func (s *Service) Create(c context.Context, item *models.Chat) error {
+func (s *Service) Create(c context.Context, item *models.Chat[any]) error {
 	err := R.Create(c, item)
 	if err != nil {
 		return err
@@ -14,7 +14,7 @@ func (s *Service) Create(c context.Context, item *models.Chat) error {
 	return err
 }
 
-func (s *Service) Get(c context.Context, id string) (*models.Chat, error) {
+func (s *Service) Get(c context.Context, id string) (*models.Chat[any], error) {
 	item, err := R.Get(c, id)
 	if err != nil {
 		return nil, err
@@ -22,11 +22,11 @@ func (s *Service) Get(c context.Context, id string) (*models.Chat, error) {
 	return item, nil
 }
 
-func (s *Service) GetAll(c context.Context) (models.ChatsWithCount, error) {
+func (s *Service) GetAll(c context.Context) (models.ChatsWithCount[any], error) {
 	return R.GetAll(c)
 }
 
-func (s *Service) Update(c context.Context, item *models.Chat) error {
+func (s *Service) Update(c context.Context, item *models.Chat[any]) error {
 	err := R.Update(c, item)
 	if err != nil {
 		return err

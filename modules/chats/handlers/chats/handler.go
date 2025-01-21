@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) Create(c *gin.Context) {
-	var item models.Chat
+	var item models.Chat[any]
 	err := c.ShouldBindWith(&item, binding.FormMultipart)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
@@ -60,7 +60,7 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
-	var item models.Chat
+	var item models.Chat[any]
 	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return

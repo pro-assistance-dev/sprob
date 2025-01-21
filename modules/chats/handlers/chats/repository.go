@@ -4,21 +4,26 @@ import (
 	"context"
 
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
-
-	"github.com/uptrace/bun"
 )
 
-func (r *Repository) db() *bun.DB {
-	return r.helper.DB.DB
-}
-
-func (r *Repository) Create(c context.Context, chats *models.Chat) (err error) {
-	_, err = r.db().NewInsert().Model(chats).Exec(c)
+func (r *Repository) Create(c context.Context, item *models.Chat[any]) (err error) {
+	_, err = r.helper.DB.IDB(c).NewInsert().Model(item).Exec(c)
 	return err
 }
 
-func (r *Repository) Get(c context.Context, id string) (*models.Chat, error) {
-	item := models.Chat{}
+func (r *Repository) GetAll(c context.Context) (items models.ChatsWithCount[any], err error) {
+	items.Chats = make(models.Chats[any], 0)
+	query := r.helper.DB.IDB(c).NewSelect().
+		Model(&items.Chats)
+
+	r.helper.SQL.ExtractFTSP(c).HandleQuery(query)
+
+	items.Count, err = query.ScanAndCount(c)
+	return items, err
+}
+
+func (r *Repository) Get(c context.Context, id string) (*models.Chat[any], error) {
+	item := models.Chat[any]{}
 	err := r.helper.DB.IDB(c).NewSelect().
 		Model(&item).
 		Where("?TableAlias.id = ?", id).Scan(c)
@@ -28,22 +33,17 @@ func (r *Repository) Get(c context.Context, id string) (*models.Chat, error) {
 	return &item, err
 }
 
-func (r *Repository) GetAll(c context.Context) (items models.ChatsWithCount, err error) {
-	items.Chats = make(models.Chats, 0)
-	query := r.helper.DB.IDB(c).NewSelect().
-		Model(&items.Chats)
-	r.helper.SQL.ExtractFTSP(c).HandleQuery(query)
-
-	items.Count, err = query.ScanAndCount(c)
-	return items, err
+func (r *Repository) Delete(c context.Context, id *string) (err error) {
+	_, err = r.helper.DB.IDB(c).NewDelete().Model(&models.Chat[any]{}).Where("id = ?", *id).Exec(c)
+	return err
 }
 
-func (r *Repository) Update(c context.Context, item *models.Chat) (err error) {
+func (r *Repository) Update(c context.Context, item *models.Chat[any]) (err error) {
 	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Where("id = ?", item.ID).Exec(c)
 	return err
 }
 
-func (r *Repository) Delete(c context.Context, id *string) (err error) {
-	_, err = r.db().NewDelete().Model(&models.Chat{}).Where("id = ?", id).Exec(c)
+func (r *Repository) UpdateMany(c context.Context, item models.Chats[any]) (err error) {
+	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Exec(c)
 	return err
 }
