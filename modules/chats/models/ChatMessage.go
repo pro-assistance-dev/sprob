@@ -10,14 +10,14 @@ import (
 
 type ChatMessage[UserT any] struct {
 	bun.BaseModel `bun:"chat_messages,alias:chat_messages"`
-	ID            uuid.UUID       `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
-	UserID        uuid.NullUUID   `bun:"type:uuid" json:"userId"`
-	User          UserT           `bun:"rel:belongs-to" json:"user"`
-	Chat          *Chat[UserT]    `bun:"rel:belongs-to" json:"chat"`
-	ChatID        uuid.NullUUID   `bun:"type:uuid" json:"chatId"`
-	Message       string          `json:"message"`
-	Type          ChatMessageType `bun:"-" json:"type"`
-	CreatedOn     time.Time       `bun:",nullzero,notnull" json:"createdOn"`
+	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
+	UserID        uuid.NullUUID `bun:"type:uuid" json:"userId"`
+	User          UserT         `bun:"rel:belongs-to" json:"user"`
+	// Chat          *Chat[UserT]    `bun:"rel:belongs-to" json:"chat"`
+	ChatID    uuid.NullUUID   `bun:"type:uuid" json:"chatId"`
+	Message   string          `json:"message"`
+	Type      ChatMessageType `bun:"-" json:"type"`
+	CreatedOn time.Time       `bun:",nullzero,notnull" json:"createdOn"`
 }
 
 type ChatMessageType string

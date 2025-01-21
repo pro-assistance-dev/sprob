@@ -9,7 +9,7 @@ import (
 
 type Chat[UserT any] struct {
 	bun.BaseModel `bun:"chats"`
-	ID            uuid.UUID           `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
+	ID            uuid.NullUUID       `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	Name          string              `json:"name"`
 	CreatedOn     time.Time           `bun:",nullzero,notnull" json:"createdOn"`
 	ChatMessages  ChatMessages[UserT] `bun:"rel:has-many" json:"chatMessages"`
