@@ -12,7 +12,7 @@ type Chat[UserT any] struct {
 	ID            uuid.NullUUID       `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	Name          string              `json:"name"`
 	CreatedOn     time.Time           `bun:",nullzero,notnull" json:"createdOn"`
-	ChatMessages  ChatMessages[UserT] `bun:"rel:has-many" json:"chatMessages"`
+	ChatMessages  ChatMessages[UserT] `bun:"rel:has-many,join:id=chat_id" json:"chatMessages"`
 }
 
 type Chats[UserT any] []*Chat[UserT]

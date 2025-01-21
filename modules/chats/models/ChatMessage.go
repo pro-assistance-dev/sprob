@@ -11,9 +11,9 @@ import (
 type ChatMessage[UserT any] struct {
 	bun.BaseModel `bun:"chat_messages,alias:chat_messages"`
 	ID            uuid.NullUUID   `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
-	User          UserT           `bun:"rel:belongs-to" json:"user"`
+	User          UserT           `bun:"rel:belongs-to,join:user_id=id" json:"user"`
 	UserID        uuid.NullUUID   `bun:"type:uuid" json:"userId"`
-	Chat          *Chat[UserT]    `bun:"rel:belongs-to" json:"chat"`
+	Chat          *Chat[UserT]    `bun:"rel:belongs-to,join:chat_id=id" json:"chat"`
 	ChatID        uuid.NullUUID   `bun:"type:uuid" json:"chatId"`
 	Message       string          `json:"message"`
 	Type          ChatMessageType `bun:"-" json:"type"`
