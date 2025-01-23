@@ -4,12 +4,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pro-assistance-dev/sprob/helpers/util"
 	baseModels "github.com/pro-assistance-dev/sprob/models"
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
 )
 
 func (h *Handler) Create(c *gin.Context) {
-	var item models.ChatUser[any]
+	var item models.ChatUser[util.WithId]
 	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
@@ -56,7 +57,7 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
-	var item models.ChatUser[any]
+	var item models.ChatUser[util.WithId]
 	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return

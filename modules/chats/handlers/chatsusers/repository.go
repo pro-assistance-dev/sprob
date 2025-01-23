@@ -3,16 +3,17 @@ package chatsusers
 import (
 	"context"
 
+	"github.com/pro-assistance-dev/sprob/helpers/util"
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
 )
 
-func (r *Repository) Create(c context.Context, item *models.ChatUser[any]) (err error) {
+func (r *Repository) Create(c context.Context, item *models.ChatUser[util.WithId]) (err error) {
 	_, err = r.helper.DB.IDB(c).NewInsert().Model(item).Exec(c)
 	return err
 }
 
-func (r *Repository) GetAll(c context.Context) (items models.ChatsUsersWithCount[any], err error) {
-	items.ChatsUsers = make(models.ChatsUsers[any], 0)
+func (r *Repository) GetAll(c context.Context) (items models.ChatsUsersWithCount[util.WithId], err error) {
+	items.ChatsUsers = make(models.ChatsUsers[util.WithId], 0)
 	query := r.helper.DB.IDB(c).NewSelect().
 		Model(&items.ChatsUsers)
 
@@ -22,8 +23,8 @@ func (r *Repository) GetAll(c context.Context) (items models.ChatsUsersWithCount
 	return items, err
 }
 
-func (r *Repository) Get(c context.Context, id string) (*models.ChatUser[any], error) {
-	item := models.ChatUser[any]{}
+func (r *Repository) Get(c context.Context, id string) (*models.ChatUser[util.WithId], error) {
+	item := models.ChatUser[util.WithId]{}
 	err := r.helper.DB.IDB(c).NewSelect().
 		Model(&item).
 		Where("?TableAlias.id = ?", id).Scan(c)
@@ -34,16 +35,16 @@ func (r *Repository) Get(c context.Context, id string) (*models.ChatUser[any], e
 }
 
 func (r *Repository) Delete(c context.Context, id *string) (err error) {
-	_, err = r.helper.DB.IDB(c).NewDelete().Model(&models.ChatUser[any]{}).Where("id = ?", *id).Exec(c)
+	_, err = r.helper.DB.IDB(c).NewDelete().Model(&models.ChatUser[util.WithId]{}).Where("id = ?", *id).Exec(c)
 	return err
 }
 
-func (r *Repository) Update(c context.Context, item *models.ChatUser[any]) (err error) {
+func (r *Repository) Update(c context.Context, item *models.ChatUser[util.WithId]) (err error) {
 	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Where("id = ?", item.ID).Exec(c)
 	return err
 }
 
-func (r *Repository) UpdateMany(c context.Context, item models.ChatsUsers[any]) (err error) {
+func (r *Repository) UpdateMany(c context.Context, item models.ChatsUsers[util.WithId]) (err error) {
 	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Exec(c)
 	return err
 }

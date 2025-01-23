@@ -5,12 +5,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/pro-assistance-dev/sprob/helpers/util"
 	baseModels "github.com/pro-assistance-dev/sprob/models"
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
 )
 
 func (h *Handler) Create(c *gin.Context) {
-	var item models.ChatMessage[any]
+	var item models.ChatMessage[util.WithId]
 	err := c.ShouldBindWith(&item, binding.FormMultipart)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
@@ -59,7 +60,7 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func (h *Handler) Update(c *gin.Context) {
-	var item models.ChatMessage[any]
+	var item models.ChatMessage[util.WithId]
 	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
