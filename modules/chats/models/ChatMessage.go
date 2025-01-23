@@ -17,7 +17,7 @@ type ChatMessage[UserT any] struct {
 	ChatID        uuid.NullUUID   `bun:"type:uuid" json:"chatId"`
 	Message       string          `json:"message"`
 	Type          ChatMessageType `bun:"-" json:"type"`
-	CreatedOn     time.Time       `bun:",nullzero,notnull" json:"createdOn"`
+	CreatedAt     time.Time       `bun:",nullzero,notnull" json:"createdAt"`
 }
 
 type ChatMessageType string

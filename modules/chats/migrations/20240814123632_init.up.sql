@@ -1,7 +1,7 @@
 create table if not exists chats (
     id uuid default uuid_generate_v4() not null primary key,
     name varchar,
-    created_on timestamp default CURRENT_TIMESTAMP  not null,
+    created_at timestamp default CURRENT_TIMESTAMP  not null,
     chat_messages varchar
 );
 
@@ -11,7 +11,7 @@ create table if not exists chat_messages (
     chat_id    uuid,
     message varchar,
     type varchar,
-    created_on timestamp default CURRENT_TIMESTAMP  not null
+    created_at timestamp default CURRENT_TIMESTAMP  not null
 );
 
 create table if not exists chat_users (

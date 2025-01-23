@@ -11,7 +11,7 @@ type Chat[UserT any] struct {
 	bun.BaseModel `bun:"chats"`
 	ID            uuid.NullUUID       `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	Name          string              `json:"name"`
-	CreatedAt     time.Time           `bun:",nullzero,notnull" json:"createdOn"`
+	CreatedAt     time.Time           `bun:",nullzero,notnull" json:"createdAt"`
 	ChatMessages  ChatMessages[UserT] `bun:"rel:has-many,join:id=chat_id" json:"chatMessages"`
 }
 
