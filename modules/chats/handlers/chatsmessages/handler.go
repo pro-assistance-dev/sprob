@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 	"github.com/pro-assistance-dev/sprob/helpers/util"
 	baseModels "github.com/pro-assistance-dev/sprob/models"
 	"github.com/pro-assistance-dev/sprob/modules/chats/models"
@@ -12,7 +11,7 @@ import (
 
 func (h *Handler) Create(c *gin.Context) {
 	var item models.ChatMessage[util.WithId]
-	err := c.ShouldBindWith(&item, binding.FormMultipart)
+	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
