@@ -18,8 +18,8 @@ func InitRoutes(api *gin.RouterGroup, helper *helperPack.Helper) {
 	chatsRouter.Init(api.Group("/chats"), chats.H)
 
 	chatsmessages.Init(helper)
-	chatsmessagesRouter.Init(api.Group("/chatsmessages"), chatsmessages.H)
+	chatsmessagesRouter.Init(api.Group("/chat-messages"), chatsmessages.H)
 
 	chatsusers.Init(helper)
-	chatsusersRouter.Init(api.Group("/chatsusers"), chatsusers.H)
+	chatsusersRouter.Init(api.Group("/chats-users"), chatsusers.H)
 }
