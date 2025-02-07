@@ -21,10 +21,17 @@ func (r *Repository) GetAll(c context.Context) (items models.FormsWithCount, err
 	fmt.Println(lib)
 	items.Forms = make(models.Forms, 0)
 	query := r.helper.DB.IDB(c).NewSelect().
-		Model(&items.Forms)
-	// Relation("Fields.FieldFillVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
-	// 	return q.Order("FieldFill_variants.item_order")
-	// }).
+		Model(&items.Forms).
+		Relation("FormSections", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("form_sections.item_order")
+		}).
+		Relation("FormSections.Fields", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("fields.item_order")
+		}).
+		Relation("FormSections.Fields.ValueType").
+		Relation("FormSections.Fields.AnswerVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("answer_variants.item_order")
+		})
 	// Relation("Fields.FieldExamples").
 	// Relation("Fields.ValueType")
 	// Relation("Fields.FieldVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
