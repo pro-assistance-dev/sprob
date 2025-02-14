@@ -50,11 +50,11 @@ func initMigration(migrator *migrate.Migrator) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = migrator.DB().Exec("create sequence bun_migration_locks_id_seq if not exists;")
+	_, err = migrator.DB().Exec("create sequence if not exists bun_migration_locks_id_seq;")
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = migrator.DB().Exec("create sequence bun_migrations_id_seq if not exists;")
+	_, err = migrator.DB().Exec("create sequence if not exists bun_migrations_id_seq;")
 	if err != nil {
 		fmt.Println(err)
 	}
