@@ -1,52 +1,35 @@
 package basehandler
 
 import (
-	"mime/multipart"
-
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
+	"github.com/pro-assistance-dev/sprob/helper"
 )
 
-type IHandler interface {
-	GetAll(c *gin.Context)
-	Get(c *gin.Context)
-	Create(c *gin.Context)
-	Delete(c *gin.Context)
-	Update(c *gin.Context)
+type Handler struct {
+	helper *helper.Helper
 }
 
-type IService[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(*TSingle) error
-	GetAll() (TPluralWithCount, error)
-	Get(string) (*TSingle, error)
-	Delete(string) error
-	Update(*TSingle) error
-	SetQueryFilter(c *gin.Context) error
+type Service struct {
+	helper *helper.Helper
 }
 
-type IServiceWithMany[TSingle, TPlural, TPluralWithCount any] interface {
-	IService[TSingle, TPlural, TPluralWithCount]
-	UpsertMany(TPlural) error
-	DeleteMany([]uuid.UUID) error
+type Repository[TSingle, TPlural, TPluralWithCount any] struct {
+	helper *helper.Helper
 }
 
-type IRepository[TSingle, TPlural, TPluralWithCount any] interface {
-	Create(*TSingle) error
-	Update(*TSingle) error
-	GetAll() (TPluralWithCount, error)
-	Get(string) (*TSingle, error)
-	Delete(string) error
-
-	SetQueryFilter(c *gin.Context) error
+type FilesService struct {
+	helper *helper.Helper
 }
 
-type IRepositoryWithMany[TSingle, TPlural, TPluralWithCount any] interface {
-	IRepository[TSingle, TPlural, TPluralWithCount]
-	Upsert(*TSingle) error
-	UpsertMany(TPlural) error
-	DeleteMany([]uuid.UUID) error
-}
+// var (
+// 	H *Handler
+// 	S *Service
+// 	R *Repository
+// 	F *FilesService
+// )
 
-type IFilesService interface {
-	Upload(*gin.Context, Filer, map[string][]*multipart.FileHeader) error
-}
+// func Init(h *helper.Helper) {
+// 	H = &Handler{helper: h}
+// 	S = &Service{helper: h}
+// 	R = &Repository{helper: h}
+// 	F = &FilesService{helper: h}
+// }
