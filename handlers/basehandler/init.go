@@ -4,11 +4,13 @@ import (
 	"github.com/pro-assistance-dev/sprob/helper"
 )
 
-type Handler struct {
+type Handler[TSingle, TPlural, TPluralWithCount any] struct {
+	S      Service[TSingle, TPlural, TPluralWithCount]
 	helper *helper.Helper
 }
 
-type Service struct {
+type Service[TSingle, TPlural, TPluralWithCount any] struct {
+	R      Repository[TSingle, TPlural, TPluralWithCount]
 	helper *helper.Helper
 }
 
