@@ -15,7 +15,7 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	item.Email = email
 	item.Password = password
 
-	existingUserAccount, _ := R.Get(c, item.Email, "")
+	existingUserAccount, _ := R.Get(c, "email", item.Email)
 	if existingUserAccount.ID.Valid {
 		emailStruct := struct {
 			RestoreLink string
