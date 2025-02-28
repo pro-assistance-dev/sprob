@@ -96,10 +96,7 @@ func (h *Service) EmailIsConfirm(c context.Context, email string) error {
 	if err == nil {
 		return nil
 	}
-	err = h.SendConfirmEmailMail(item.ID.UUID.String(), email)
-	if err != nil {
-		return nil
-	}
+	_ = h.SendConfirmEmailMail(item.ID.UUID.String(), email)
 	return err
 }
 
