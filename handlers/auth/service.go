@@ -80,10 +80,6 @@ func (s *Service) Login(c context.Context, authData *models.AuthData) (uuid.Null
 }
 
 func (h *Service) ConfirmEmail(c context.Context, id string) error {
-	userAccount, err := R.Get(c, "id", id)
-	if userAccount == nil || err != nil {
-		return err
-	}
 	return R.ConfirmEmail(c, id)
 }
 
