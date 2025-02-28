@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/pro-assistance-dev/sprob/models"
 	"github.com/uptrace/bun"
@@ -32,11 +31,10 @@ func (r *Repository) GetByUUID(c context.Context, uid string) (*models.UserAccou
 
 func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
 	item := models.UserAccount{}
-	_, err := r.helper.DB.IDB(c).NewSelect().
+	err := r.helper.DB.IDB(c).NewSelect().
 		Model(&item).
 		Where("email = ?", email).
-		Exec(c)
-	fmt.Println(item, err, email)
+		Scan(c)
 	if item.ID.Valid && !item.ConfirmEmail {
 		return errors.New("emailIsNotConfirm")
 	}
