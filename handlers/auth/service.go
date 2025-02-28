@@ -44,24 +44,32 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 	if err != nil {
 		return uuid.NullUUID{}, false, err
 	}
+
+	err = s.SendConfirmEmailMail(item.ID.UUID.String(), item.Email)
+	if err != nil {
+		return uuid.NullUUID{}, false, err
+	}
+	return item.ID, false, err
+}
+
+func (s *Service) SendConfirmEmailMail(id, email string) error {
 	emailStruct := struct {
 		Host string
 		ID   string
 	}{
 		s.helper.HTTP.Host,
-		item.ID.UUID.String(),
+		id,
 	}
 
 	mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegistration.gohtml")
 	if err != nil {
-		return uuid.NullUUID{}, false, err
+		return err
 	}
-	err = s.helper.Email.SendEmail([]string{item.Email}, "Подтверждение email", mail)
+	err = s.helper.Email.SendEmail([]string{email}, "Подтверждение email", mail)
 	if err != nil {
-		return uuid.NullUUID{}, false, err
+		return err
 	}
-
-	return item.ID, false, err
+	return nil
 }
 
 func (s *Service) Login(c context.Context, authData *models.AuthData) (uuid.NullUUID, error) {

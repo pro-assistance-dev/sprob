@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	"github.com/pro-assistance-dev/sprob/models"
@@ -31,12 +30,13 @@ func (r *Repository) GetByUUID(c context.Context, uid string) (*models.UserAccou
 }
 
 func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
+	item := models.UserAccount{}
 	_, err := r.helper.DB.IDB(c).NewSelect().
-		Model((*models.UserAccount)(nil)).
+		Model(&item).
 		Where("lower(?TableAlias.email) = lower(?)", email).
 		Where("?TableAlias.confirm_email = true").
 		Exec(c)
-	if err.Error() == sql.ErrNoRows.Error() {
+	if item.ID.Valid && !item.ConfirmEmail {
 		return errors.New("emailIsNotConfirm")
 	}
 	return err
