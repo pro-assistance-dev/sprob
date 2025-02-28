@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/pro-assistance-dev/sprob/models"
 	"github.com/uptrace/bun"
@@ -35,6 +36,7 @@ func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
 		Model(&item).
 		Where("lower(?TableAlias.email) = lower(?)", email).
 		Exec(c)
+	fmt.Println(item)
 	if item.ID.Valid && !item.ConfirmEmail {
 		return errors.New("emailIsNotConfirm")
 	}
