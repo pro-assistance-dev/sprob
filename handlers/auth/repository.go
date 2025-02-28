@@ -36,7 +36,7 @@ func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
 		Model(&item).
 		Where("email = ?", email).
 		Exec(c)
-	fmt.Println(item)
+	fmt.Println(item, err, email)
 	if item.ID.Valid && !item.ConfirmEmail {
 		return errors.New("emailIsNotConfirm")
 	}
