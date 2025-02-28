@@ -34,7 +34,6 @@ func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
 	_, err := r.helper.DB.IDB(c).NewSelect().
 		Model(&item).
 		Where("lower(?TableAlias.email) = lower(?)", email).
-		Where("?TableAlias.confirm_email = true").
 		Exec(c)
 	if item.ID.Valid && !item.ConfirmEmail {
 		return errors.New("emailIsNotConfirm")
