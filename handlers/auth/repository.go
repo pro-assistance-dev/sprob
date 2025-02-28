@@ -29,16 +29,16 @@ func (r *Repository) GetByUUID(c context.Context, uid string) (*models.UserAccou
 	return &item, err
 }
 
-func (r *Repository) EmailIsConfirm(c context.Context, email string) error {
+func (r *Repository) EmailIsConfirm(c context.Context, email string) (*models.UserAccount, error) {
 	item := models.UserAccount{}
 	err := r.helper.DB.IDB(c).NewSelect().
 		Model(&item).
 		Where("email = ?", email).
 		Scan(c)
 	if item.ID.Valid && !item.ConfirmEmail {
-		return errors.New("emailIsNotConfirm")
+		return &item, errors.New("emailIsNotConfirm")
 	}
-	return err
+	return nil, err
 }
 
 func (r *Repository) ConfirmEmail(c context.Context, id string) (err error) {

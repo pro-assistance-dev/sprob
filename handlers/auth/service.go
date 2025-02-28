@@ -92,7 +92,15 @@ func (h *Service) ConfirmEmail(c context.Context, id string) error {
 }
 
 func (h *Service) EmailIsConfirm(c context.Context, email string) error {
-	return R.EmailIsConfirm(c, email)
+	item, err := R.EmailIsConfirm(c, email)
+	if err == nil {
+		return nil
+	}
+	err = h.SendConfirmEmailMail(item.ID.UUID.String(), email)
+	if err == nil {
+		return nil
+	}
+	return err
 }
 
 func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
