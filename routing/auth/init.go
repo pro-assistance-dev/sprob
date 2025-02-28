@@ -6,7 +6,8 @@ import (
 )
 
 // Init func
-func Init(r *gin.RouterGroup, h handler.IHandler) {
+func Init(r *gin.RouterGroup, h *handler.Handler) {
 	r.PUT("/refresh-password", h.RefreshPassword)
+	r.PUT("/confirm-email/:id", h.ConfirmEmail)
 	r.GET("/check-uuid/:id/:uuid", h.CheckUUID)
 }

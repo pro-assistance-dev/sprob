@@ -15,7 +15,7 @@ func (r *Repository) Create(c context.Context, item *models.UserAccount) error {
 func (r *Repository) Get(c context.Context, loginBy string, value string) (*models.UserAccount, error) {
 	item := models.UserAccount{}
 	err := r.helper.DB.IDB(c).NewSelect().Model(&item).
-		Where("?TableAlias.? = ?", bun.Ident(loginBy), value).
+		Where("lower(?TableAlias.?) = lower(?)", bun.Ident(loginBy), value).
 		Scan(c)
 	return &item, err
 }
@@ -26,6 +26,15 @@ func (r *Repository) GetByUUID(c context.Context, uid string) (*models.UserAccou
 		Where("?TableAlias.uuid = ?", uid).
 		Scan(c)
 	return &item, err
+}
+
+func (r *Repository) ConfirmEmail(c context.Context, id string) (err error) {
+	_, err = r.helper.DB.IDB(c).NewUpdate().
+		Model((*models.UserAccount)(nil)).
+		Set("confirm_email = true").
+		Where("?TableAlias.id = ?", id).
+		Exec(c)
+	return err
 }
 
 func (r *Repository) UpdateUUID(c context.Context, userID string) (err error) {

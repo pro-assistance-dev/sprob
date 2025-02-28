@@ -34,21 +34,6 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 			return uuid.NullUUID{}, false, err
 		}
 		return uuid.NullUUID{}, true, nil
-	} else {
-		emailStruct := struct {
-			Host string
-		}{
-			s.helper.HTTP.Host,
-		}
-
-		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegistration.gohtml")
-		if err != nil {
-			return uuid.NullUUID{}, false, err
-		}
-		err = s.helper.Email.SendEmail([]string{item.Email}, "Успешная регистрация на сайте", mail)
-		if err != nil {
-			return uuid.NullUUID{}, false, err
-		}
 	}
 
 	err := item.HashPassword()
@@ -56,6 +41,22 @@ func (s *Service) Register(c context.Context, email string, password string) (uu
 		return uuid.NullUUID{}, false, err
 	}
 	err = R.Create(c, item)
+	if err != nil {
+		return uuid.NullUUID{}, false, err
+	}
+	emailStruct := struct {
+		Host string
+		ID   string
+	}{
+		s.helper.HTTP.Host,
+		item.ID.UUID.String(),
+	}
+
+	mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/successRegistration.gohtml")
+	if err != nil {
+		return uuid.NullUUID{}, false, err
+	}
+	err = s.helper.Email.SendEmail([]string{item.Email}, "Подтверждение email", mail)
 	if err != nil {
 		return uuid.NullUUID{}, false, err
 	}
@@ -76,6 +77,14 @@ func (s *Service) Login(c context.Context, authData *models.AuthData) (uuid.Null
 		return uuid.NullUUID{}, err
 	}
 	return item.ID, err
+}
+
+func (h *Service) ConfirmEmail(c context.Context, id string) error {
+	userAccount, err := R.Get(c, "id", id)
+	if userAccount == nil || err != nil {
+		return err
+	}
+	return R.ConfirmEmail(c, id)
 }
 
 func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
