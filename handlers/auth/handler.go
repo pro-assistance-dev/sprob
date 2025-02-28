@@ -16,6 +16,14 @@ func (h *Handler) ConfirmEmail(c *gin.Context) {
 	c.JSON(http.StatusOK, nil)
 }
 
+func (h *Handler) EmailIsConfirm(c *gin.Context) {
+	err := S.EmailIsConfirm(c.Request.Context(), c.Param("email"))
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, nil)
+}
+
 func (h *Handler) CheckUUID(c *gin.Context) {
 	err := S.CheckUUID(c.Request.Context(), c.Param("id"), c.Param("uuid"))
 	if h.helper.HTTP.HandleError(c, err) {

@@ -83,6 +83,10 @@ func (h *Service) ConfirmEmail(c context.Context, id string) error {
 	return R.ConfirmEmail(c, id)
 }
 
+func (h *Service) EmailIsConfirm(c context.Context, email string) error {
+	return R.EmailIsConfirm(c, email)
+}
+
 func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
 	userAccount, err := R.GetByUUID(c, uid)
 	if userAccount == nil || err != nil {
