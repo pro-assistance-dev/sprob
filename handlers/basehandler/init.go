@@ -2,36 +2,66 @@ package basehandler
 
 import (
 	"github.com/pro-assistance-dev/sprob/helper"
+	"github.com/uptrace/bun"
 )
 
-type Handler[TSingle, TPlural, TPluralWithCount any] struct {
-	S      Service[TSingle, TPlural, TPluralWithCount]
+var Helper *helper.Helper
+
+func SetHelper(h *helper.Helper) {
+	Helper = h
+}
+
+type Relationable interface {
+	Relation(*bun.SelectQuery) *bun.SelectQuery
+}
+
+type Handler[T Relationable] struct {
+	S      Service[T]
 	helper *helper.Helper
 }
 
-type Service[TSingle, TPlural, TPluralWithCount any] struct {
-	R      Repository[TSingle, TPlural, TPluralWithCount]
+type Service[T Relationable] struct {
+	R      Repository[T]
 	helper *helper.Helper
 }
 
-type Repository[TSingle, TPlural, TPluralWithCount any] struct {
-	helper *helper.Helper
+type Repository[T Relationable] struct {
+	t        T
+	helper   *helper.Helper
+	relation func(*bun.SelectQuery) *bun.SelectQuery
 }
 
-type FilesService struct {
-	helper *helper.Helper
+func InitR[T Relationable]() Repository[T] {
+	r := Repository[T]{helper: Helper}
+	return r
 }
 
-// var (
-// 	H *Handler
-// 	S *Service
-// 	R *Repository
-// 	F *FilesService
-// )
+func rel[T Relationable](x T) func(*bun.SelectQuery) *bun.SelectQuery {
+	return func(q *bun.SelectQuery) *bun.SelectQuery {
+		return x.Relation(q)
+	}
+}
 
-// func Init(h *helper.Helper) {
-// 	H = &Handler{helper: h}
-// 	S = &Service{helper: h}
-// 	R = &Repository{helper: h}
-// 	F = &FilesService{helper: h}
-// }
+func InitH[T Relationable]() Handler[T] {
+	handler := Handler[T]{helper: Helper}
+	r := InitR[T]()
+	t := Str[T]{}
+	r.relation = t.genericValue.Relation
+	handler.S = InitS[T](r)
+	return handler
+}
+
+type Str[T Relationable] struct {
+	genericValue T
+}
+
+func InitS[T Relationable](r Repository[T]) Service[T] {
+	s := Service[T]{helper: Helper}
+	s.R = r
+	return s
+}
+
+func Init[T Relationable]() Handler[T] {
+	he := InitH[T]()
+	return he
+}
