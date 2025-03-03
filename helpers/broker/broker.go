@@ -61,8 +61,9 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 		messageChan = nil
 	}()
 
+	notify := c.Writer.(http.CloseNotifier).CloseNotify()
 	w := c.Writer
-	notify := c.Request.Context().Done()
+	// notify := c.Request.Context().Done()
 	f, ok := w.(http.Flusher)
 
 	if !ok {
@@ -73,6 +74,10 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 	for {
 		select {
 		case <-notify:
+			return
+		case <-c.Request.Context().Done():
+			// remove this client from the map of connected clients
+			broker.closingClients <- messageChan
 			return
 		default:
 			event := <-messageChan
@@ -109,8 +114,10 @@ func (broker *Broker) Listen() {
 		select {
 		case s := <-broker.newClients:
 			broker.clients[s] = true
-		// case s := <-broker.closingClients:
-		//	delete(broker.clients, s)
+			log.Printf("Client added. %d registered clients", len(broker.clients))
+		case s := <-broker.closingClients:
+			delete(broker.clients, s)
+			log.Printf("Removed client. %d registered clients", len(broker.clients))
 		case event := <-broker.notifier:
 			for clientMessageChan := range broker.clients {
 				select {
