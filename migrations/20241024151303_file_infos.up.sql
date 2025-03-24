@@ -1,1 +1,1 @@
-ALTER TABLE file_infos ADD COLUMN type varchar
+ALTER TABLE file_infos ADD COLUMN type varchar;
