@@ -12,6 +12,7 @@ type FileInfo struct {
 	FileSystemPath string        `json:"fileSystemPath"`
 	ItemID         uuid.NullUUID `bun:"type:uuid" json:"itemId"`
 	Description    string        `json:"description"`
+	Order          uint          `bun:"item_order" json:"order"`
 }
 
 type FileInfos []*FileInfo
