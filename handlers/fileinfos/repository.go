@@ -27,6 +27,8 @@ func (r *Repository) Upsert(c context.Context, item *models.FileInfo) (err error
 	_, err = R.helper.DB.IDB(c).NewInsert().On("conflict (id) do update").
 		Set("original_name = EXCLUDED.original_name").
 		Set("file_system_path = EXCLUDED.file_system_path").
+		Set("description = EXCLUDED.description").
+		Set("item_order = EXCLUDED.item_order").
 		Model(item).
 		Exec(c)
 	return err
@@ -41,6 +43,8 @@ func (r *Repository) UpsertMany(c context.Context, items models.FileInfos) (err 
 	_, err = R.helper.DB.IDB(c).NewInsert().On("conflict (id) do update").
 		Set("original_name = EXCLUDED.original_name").
 		Set("file_system_path = EXCLUDED.file_system_path").
+		Set("description = EXCLUDED.description").
+		Set("item_order = EXCLUDED.item_order").
 		Model(&items).
 		Exec(c)
 	return err
