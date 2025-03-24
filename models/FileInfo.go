@@ -10,6 +10,8 @@ type FileInfo struct {
 	ID             uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	OriginalName   string        `json:"originalName"`
 	FileSystemPath string        `json:"fileSystemPath"`
+	ItemID         uuid.NullUUID `bun:"type:uuid" json:"itemId"`
+	Description    string        `json:"description"`
 }
 
 type FileInfos []*FileInfo
