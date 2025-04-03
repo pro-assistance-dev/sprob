@@ -64,3 +64,16 @@ func (h *Handler[T]) Update(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, item)
 }
+
+func (h *Handler[T]) UpdateMany(c *gin.Context) {
+	var items []*T
+	_, err := h.helper.HTTP.GetForm(c, &items)
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	err = h.S.UpdateMany(c.Request.Context(), items)
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, items)
+}

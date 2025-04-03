@@ -50,6 +50,11 @@ func (r *Repository[T]) Update(c context.Context, item *T) (err error) {
 	return err
 }
 
+func (r *Repository[T]) UpdateMany(c context.Context, items []*T) (err error) {
+	_, err = r.helper.DB.IDB(c).NewUpdate().Model(&items).WherePK().Exec(c)
+	return err
+}
+
 // func (r *Repository[TSingle, TPlural, TPluralWithCount]) UpdateMany(c context.Context, item models.Chats[util.WithId]) (err error) {
 // 	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Exec(c)
 // 	return err
