@@ -39,11 +39,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 func (h *Handler) Update(c *gin.Context) {
 	var item models.FileInfo
-	files, err := h.helper.HTTP.GetForm(c, &item)
-	if h.helper.HTTP.HandleError(c, err) {
-		return
-	}
-	err = F.Upload(c, &item, files)
+	_, err := h.helper.HTTP.GetForm(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
