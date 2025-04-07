@@ -9,7 +9,8 @@ import (
 	"github.com/pro-assistance-dev/sprob/handlers/menus"
 	"github.com/pro-assistance-dev/sprob/handlers/phones"
 	"github.com/pro-assistance-dev/sprob/handlers/schemas"
-	"github.com/pro-assistance-dev/sprob/handlers/search"
+
+	// "github.com/pro-assistance-dev/sprob/handlers/search"
 	"github.com/pro-assistance-dev/sprob/handlers/usersaccounts"
 	"github.com/pro-assistance-dev/sprob/handlers/valuetypes"
 	"github.com/pro-assistance-dev/sprob/helper"
@@ -31,7 +32,6 @@ import (
 	menusRouter "github.com/pro-assistance-dev/sprob/routing/menus"
 	phonesRouter "github.com/pro-assistance-dev/sprob/routing/phones"
 	schemasRouter "github.com/pro-assistance-dev/sprob/routing/schemas"
-	searchRouter "github.com/pro-assistance-dev/sprob/routing/search"
 	useraccountsRouter "github.com/pro-assistance-dev/sprob/routing/usersaccounts"
 	valuetypesRouter "github.com/pro-assistance-dev/sprob/routing/valuetypes"
 
@@ -74,8 +74,8 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	menus.Init(h)
 	menusRouter.Init(apiToken.Group("/menus"), menus.H)
 
-	search.Init(h)
-	searchRouter.Init(apiToken.Group("/search"), search.H)
+	// search.Init(h)
+	// searchRouter.Init(apiToken.Group("/search"), search.H)
 
 	fileinfos.Init(h)
 	fileinfosRouter.Init(apiToken.Group("/file-infos"), fileinfos.H)
