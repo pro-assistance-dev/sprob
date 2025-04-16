@@ -2,12 +2,9 @@ package routing
 
 import (
 	"github.com/pro-assistance-dev/sprob/handlers/auth"
-	"github.com/pro-assistance-dev/sprob/handlers/contacts"
-	"github.com/pro-assistance-dev/sprob/handlers/emails"
 	"github.com/pro-assistance-dev/sprob/handlers/fileinfos"
 	"github.com/pro-assistance-dev/sprob/handlers/ftsppresets"
 	"github.com/pro-assistance-dev/sprob/handlers/menus"
-	"github.com/pro-assistance-dev/sprob/handlers/phones"
 	"github.com/pro-assistance-dev/sprob/handlers/schemas"
 
 	// "github.com/pro-assistance-dev/sprob/handlers/search"
@@ -24,13 +21,10 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/settings"
 
 	"github.com/pro-assistance-dev/sprob/handlers/humans"
-	contactsRouter "github.com/pro-assistance-dev/sprob/routing/contacts"
-	emailsRouter "github.com/pro-assistance-dev/sprob/routing/emails"
 	fileinfosRouter "github.com/pro-assistance-dev/sprob/routing/fileinfos"
 	ftsppresetsRouter "github.com/pro-assistance-dev/sprob/routing/ftsppresets"
 	humansR "github.com/pro-assistance-dev/sprob/routing/humans"
 	menusRouter "github.com/pro-assistance-dev/sprob/routing/menus"
-	phonesRouter "github.com/pro-assistance-dev/sprob/routing/phones"
 	schemasRouter "github.com/pro-assistance-dev/sprob/routing/schemas"
 	useraccountsRouter "github.com/pro-assistance-dev/sprob/routing/usersaccounts"
 	valuetypesRouter "github.com/pro-assistance-dev/sprob/routing/valuetypes"
@@ -53,8 +47,8 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	auth.Init(h)
 	// authRouter.Init(api.Group("/auth"), auth.H)
 
-	phones.Init(h)
-	phonesRouter.Init(apiToken.Group("/phones"), phones.H)
+	// phones.Init(h)
+	// phonesRouter.Init(apiToken.Group("/phones"), phones.H)
 
 	humans.Init(h)
 	humansR.Init(apiToken.Group("/humans"), humans.H)
@@ -65,11 +59,11 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	schemas.Init(h)
 	schemasRouter.Init(apiToken.Group("/schemas"), schemas.H)
 
-	emails.Init(h)
-	emailsRouter.Init(apiToken.Group("/emails"), emails.H)
+	// emails.Init(h)
+	// emailsRouter.Init(apiToken.Group("/emails"), emails.H)
 
-	contacts.Init(h)
-	contactsRouter.Init(apiToken.Group("/contacts"), contacts.H)
+	// contacts.Init(h)
+	// contactsRouter.Init(apiToken.Group("/contacts"), contacts.H)
 
 	menus.Init(h)
 	menusRouter.Init(apiToken.Group("/menus"), menus.H)
