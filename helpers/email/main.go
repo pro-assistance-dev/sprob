@@ -196,10 +196,21 @@ func (m *request) ToBytes(from string) []byte {
 			buf.WriteString("Content-Transfer-Encoding: base64\n")
 			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
 
+			// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
+			// base64.StdEncoding.Encode(b, v)
+			// buf.Write(b)
+			// buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+
 			b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
 			base64.StdEncoding.Encode(b, v)
-			buf.Write(b)
-			buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+
+			// write base64 content in lines of up to 76 chars
+			for i, l := 0, len(b); i < l; i++ {
+				buf.WriteByte(b[i])
+				if (i+1)%76 == 0 {
+					buf.WriteString("\r\n")
+				}
+			}
 		}
 
 		buf.WriteString("--")
