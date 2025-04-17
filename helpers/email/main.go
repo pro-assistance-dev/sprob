@@ -72,7 +72,7 @@ func (e *Email) sendEmail() error {
 	if e.config.AuthMethod == string(LoginAuthMethod) {
 		auth = LoginAuth(e.config.From, e.config.Password)
 	}
-	body := e.request.ToBytes()
+	body := e.request.ToBytes(e.config.From)
 	// header := map[string]string{}
 	// header["To"] = strings.Join(e.request.To, ",")
 	// header["From"] = e.config.From
@@ -160,11 +160,12 @@ func (e *Email) sendEmail() error {
 	return nil
 }
 
-func (m *request) ToBytes() []byte {
+func (m *request) ToBytes(from string) []byte {
 	buf := bytes.NewBuffer(nil)
 	withAttachments := len(m.Attachments) > 0
 	buf.WriteString(fmt.Sprintf("Subject: %s\n", m.Subject))
 	buf.WriteString(fmt.Sprintf("To: %s\n", strings.Join(m.To, ",")))
+	buf.WriteString(fmt.Sprintf("From: %s\n", strings.Join([]string{from}, ",")))
 	// if len(m.CC) > 0 {
 	// 	buf.WriteString(fmt.Sprintf("Cc: %s\n", strings.Join(m.CC, ",")))
 	// }
