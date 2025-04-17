@@ -13,7 +13,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/pro-assistance-dev/sprob/config"
 )
@@ -248,47 +247,6 @@ func (m *request) ToBytes(from string) []byte {
 		// 	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
 		// }
 
-		buf.WriteString("--")
-	}
-
-	return buf.Bytes()
-}
-
-// Bytes returns the mail data
-func (m *request) Bytes() []byte {
-	buf := bytes.NewBuffer(nil)
-
-	buf.WriteString("From: " + m.From + "\r\n")
-
-	t := time.Now()
-	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\r\n")
-
-	buf.WriteString("To: " + strings.Join(m.To, ",") + "\r\n")
-	// if len(m.Cc) > 0 {
-	// 	buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\r\n")
-	// }
-
-	// fix  Encode
-	coder := base64.StdEncoding
-	subject := "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
-	buf.WriteString("Subject: " + subject + "\r\n")
-
-	// if len(m.ReplyTo) > 0 {
-	// 	buf.WriteString("Reply-To: " + m.ReplyTo + "\r\n")
-	// }
-
-	buf.WriteString("MIME-Version: 1.0\r\n")
-
-	// Add custom headers
-	if len(m.Headers) > 0 {
-		for _, header := range m.Headers {
-			buf.WriteString(fmt.Sprintf("%s: %s\r\n", header.Key, header.Value))
-		}
-	}
-
-	boundary := "f46d043c813270fc6b04c2d223da"
-
-	if len(m.Attachments) > 0 {
 		buf.WriteString("--")
 	}
 
