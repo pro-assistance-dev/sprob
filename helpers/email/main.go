@@ -178,14 +178,17 @@ func (m *request) ToBytes(from string) []byte {
 	writer := multipart.NewWriter(buf)
 	boundary := writer.Boundary()
 	if withAttachments {
-		// header["Content-Type"] = "text/html; charset=\"utf-8\""
-		buf.WriteString(fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\"; boundary=%s\n", boundary))
+		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\n", boundary))
 		buf.WriteString(fmt.Sprintf("--%s\n", boundary))
 	} else {
 		buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
 	}
 
+	buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
+	buf.WriteString(fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\" boundary=%s\n", boundary))
 	buf.WriteString(m.Body)
+	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+
 	if withAttachments {
 		for k, v := range m.Attachments {
 			buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
