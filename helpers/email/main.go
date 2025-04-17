@@ -52,8 +52,11 @@ func (e *Email) SendEmail(to []string, subject string, body string) error {
 
 func (e *Email) SendEmailWithAttachments(to []string, subject string, body string, files []string) error {
 	e.request = request{To: to, Subject: subject, Body: body}
-	for _, f := range files {
-		e.request.AttachFile(f)
+	if len(files) > 0 {
+		e.request.Attachments = make(map[string][]byte)
+		for _, f := range files {
+			e.request.AttachFile(f)
+		}
 	}
 	return e.sendEmail()
 }
