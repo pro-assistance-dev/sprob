@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pro-assistance-dev/sprob/config"
 )
@@ -189,19 +190,24 @@ func (m *request) ToBytes(from string) []byte {
 	buf.WriteString(m.Body)
 	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
 
+	coder := base64.StdEncoding
 	if withAttachments {
 		for k, v := range m.Attachments {
-			buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
+			buf.WriteString("\r\n\r\n--" + boundary + "\r\n")
 
 			ext := filepath.Ext(k)
 			mimetype := mime.TypeByExtension(ext)
-			buf.WriteString(fmt.Sprintf("Content-Type: %s\n", mimetype))
-			buf.WriteString("Content-Transfer-Encoding: base64\n")
-			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
+			if mimetype != "" {
+				mime := fmt.Sprintf("Content-Type: %s\r\n", mimetype)
+				buf.WriteString(mime)
+			} else {
+				buf.WriteString("Content-Type: application/octet-stream\r\n")
+			}
+			buf.WriteString("Content-Transfer-Encoding: base64\r\n")
 
-			// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
-			// base64.StdEncoding.Encode(b, v)
-			// buf.Write(b)
+			buf.WriteString("Content-Disposition: attachment; filename=\"=?UTF-8?B?")
+			buf.WriteString(coder.EncodeToString([]byte(k)))
+			buf.WriteString("?=\"\r\n\r\n")
 
 			b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
 			base64.StdEncoding.Encode(b, v)
@@ -213,9 +219,76 @@ func (m *request) ToBytes(from string) []byte {
 					buf.WriteString("\r\n")
 				}
 			}
-			buf.WriteString(fmt.Sprintf("\n--%s", boundary))
-		}
 
+			buf.WriteString("\r\n--" + boundary)
+		}
+		// for k, v := range m.Attachments {
+		// 	buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
+		//
+		// 	ext := filepath.Ext(k)
+		// 	mimetype := mime.TypeByExtension(ext)
+		// 	buf.WriteString(fmt.Sprintf("Content-Type: %s\n", mimetype))
+		// 	buf.WriteString("Content-Transfer-Encoding: base64\n")
+		// 	buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
+		//
+		// 	// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
+		// 	// base64.StdEncoding.Encode(b, v)
+		// 	// buf.Write(b)
+		//
+		// 	b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
+		// 	base64.StdEncoding.Encode(b, v)
+		//
+		// 	// write base64 content in lines of up to 76 chars
+		// 	for i, l := 0, len(b); i < l; i++ {
+		// 		buf.WriteByte(b[i])
+		// 		if (i+1)%76 == 0 {
+		// 			buf.WriteString("\r\n")
+		// 		}
+		// 	}
+		// 	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+		// }
+
+		buf.WriteString("--")
+	}
+
+	return buf.Bytes()
+}
+
+// Bytes returns the mail data
+func (m *request) Bytes() []byte {
+	buf := bytes.NewBuffer(nil)
+
+	buf.WriteString("From: " + m.From + "\r\n")
+
+	t := time.Now()
+	buf.WriteString("Date: " + t.Format(time.RFC1123Z) + "\r\n")
+
+	buf.WriteString("To: " + strings.Join(m.To, ",") + "\r\n")
+	// if len(m.Cc) > 0 {
+	// 	buf.WriteString("Cc: " + strings.Join(m.Cc, ",") + "\r\n")
+	// }
+
+	// fix  Encode
+	coder := base64.StdEncoding
+	subject := "=?UTF-8?B?" + coder.EncodeToString([]byte(m.Subject)) + "?="
+	buf.WriteString("Subject: " + subject + "\r\n")
+
+	// if len(m.ReplyTo) > 0 {
+	// 	buf.WriteString("Reply-To: " + m.ReplyTo + "\r\n")
+	// }
+
+	buf.WriteString("MIME-Version: 1.0\r\n")
+
+	// Add custom headers
+	if len(m.Headers) > 0 {
+		for _, header := range m.Headers {
+			buf.WriteString(fmt.Sprintf("%s: %s\r\n", header.Key, header.Value))
+		}
+	}
+
+	boundary := "f46d043c813270fc6b04c2d223da"
+
+	if len(m.Attachments) > 0 {
 		buf.WriteString("--")
 	}
 
