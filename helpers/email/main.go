@@ -188,7 +188,7 @@ func (m *request) ToBytes(from string) []byte {
 	buf.WriteString(fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\" boundary=%s\n", boundary))
 	buf.WriteString(m.Body)
 	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
-	coder := base64.StdEncoding
+
 	if withAttachments {
 		for k, v := range m.Attachments {
 			buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
@@ -197,9 +197,7 @@ func (m *request) ToBytes(from string) []byte {
 			mimetype := mime.TypeByExtension(ext)
 			buf.WriteString(fmt.Sprintf("Content-Type: %s\n", mimetype))
 			buf.WriteString("Content-Transfer-Encoding: base64\n")
-			buf.WriteString("Content-Disposition: attachment; filename=\"=?UTF-8?B?")
-			buf.WriteString(coder.EncodeToString([]byte(k)))
-			// buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
+			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
 
 			// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
 			// base64.StdEncoding.Encode(b, v)
