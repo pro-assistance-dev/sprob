@@ -178,7 +178,8 @@ func (m *request) ToBytes(from string) []byte {
 	writer := multipart.NewWriter(buf)
 	boundary := writer.Boundary()
 	if withAttachments {
-		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\n", boundary))
+		// header["Content-Type"] = "text/html; charset=\"utf-8\""
+		buf.WriteString(fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\"; boundary=%s\n", boundary))
 		buf.WriteString(fmt.Sprintf("--%s\n", boundary))
 	} else {
 		buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
