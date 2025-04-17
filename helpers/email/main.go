@@ -1,12 +1,17 @@
 package email
 
 import (
+	"bytes"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"log"
+	"mime/multipart"
 	"net"
+	"net/http"
 	"net/smtp"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/pro-assistance-dev/sprob/config"
@@ -32,14 +37,20 @@ func NewEmail(c config.Email) *Email {
 
 // request struct
 type request struct {
-	From    string
-	To      []string
-	Subject string
-	Body    string
+	From        string
+	To          []string
+	Subject     string
+	Body        string
+	Attachments map[string][]byte
 }
 
 // SetRequest struct
 func (e *Email) SendEmail(to []string, subject string, body string) error {
+	e.request = request{To: to, Subject: subject, Body: body}
+	return e.sendEmail()
+}
+
+func (e *Email) SendEmailWithAttachments(to []string, subject string, body string, files []string) error {
 	e.request = request{To: to, Subject: subject, Body: body}
 	return e.sendEmail()
 }
@@ -55,19 +66,38 @@ func (e *Email) sendEmail() error {
 	if e.config.AuthMethod == string(LoginAuthMethod) {
 		auth = LoginAuth(e.config.From, e.config.Password)
 	}
-	header := map[string]string{}
-	header["To"] = strings.Join(e.request.To, ",")
-	header["From"] = e.config.From
-	header["Subject"] = e.request.Subject
-	header["MIME-Version"] = "1.0"
-	header["Content-Type"] = "text/html; charset=\"utf-8\""
-	// header["Content-Transfer-Encoding"] = "base64"
-	message := ""
-	for k, v := range header {
-		message += fmt.Sprintf("%s: %s\r\n", k, v)
-	}
-	// message += "\r\n" + base64.StdEncoding.EncodeToString([]byte(e.request.Body))
-	message += "\r\n" + e.request.Body
+	body := e.request.ToBytes()
+	// header := map[string]string{}
+	// header["To"] = strings.Join(e.request.To, ",")
+	// header["From"] = e.config.From
+	// header["Subject"] = e.request.Subject
+	// header["MIME-Version"] = "1.0"
+	// header["Content-Type"] = "text/html; charset=\"utf-8\""
+	// // header["Content-Transfer-Encoding"] = "base64"
+	// message := ""
+	// for k, v := range header {
+	// 	message += fmt.Sprintf("%s: %s\r\n", k, v)
+	// }
+	// // message += "\r\n" + base64.StdEncoding.EncodeToString([]byte(e.request.Body))
+	// message += "\r\n" + e.request.Body
+	//
+	// boundary := "\r"
+	// if e.request.Attachments.len > 0 {
+	// 	for k, v := range e.request.Attachments {
+	// 		buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
+	// 		buf.WriteString(fmt.Sprintf("Content-Type: %s\n", http.DetectContentType(v)))
+	// 		buf.WriteString("Content-Transfer-Encoding: base64\n")
+	// 		buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
+	//
+	// 		b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
+	// 		base64.StdEncoding.Encode(b, v)
+	// 		buf.Write(b)
+	// 		buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+	// 	}
+	//
+	// 	buf.WriteString("--")
+	// }
+
 	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
 	host, _, _ := net.SplitHostPort(servername)
 
@@ -101,7 +131,7 @@ func (e *Email) sendEmail() error {
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(message))
+	_, err = w.Write(body)
 	if err != nil {
 		return err
 	}
@@ -115,11 +145,65 @@ func (e *Email) sendEmail() error {
 	}
 
 	if e.config.WriteTestFile {
-		err = os.WriteFile("./application-generate_send.html", []byte(message), 0600)
+		err = os.WriteFile("./application-generate_send.html", []byte(body), 0600)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
+	return nil
+}
+
+func (m *request) ToBytes() []byte {
+	buf := bytes.NewBuffer(nil)
+	withAttachments := len(m.Attachments) > 0
+	buf.WriteString(fmt.Sprintf("Subject: %s\n", m.Subject))
+	buf.WriteString(fmt.Sprintf("To: %s\n", strings.Join(m.To, ",")))
+	// if len(m.CC) > 0 {
+	// 	buf.WriteString(fmt.Sprintf("Cc: %s\n", strings.Join(m.CC, ",")))
+	// }
+	//
+	// if len(m.BCC) > 0 {
+	// 	buf.WriteString(fmt.Sprintf("Bcc: %s\n", strings.Join(m.BCC, ",")))
+	// }
+	//
+	buf.WriteString("MIME-Version: 1.0\n")
+	writer := multipart.NewWriter(buf)
+	boundary := writer.Boundary()
+	if withAttachments {
+		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\n", boundary))
+		buf.WriteString(fmt.Sprintf("--%s\n", boundary))
+	} else {
+		buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
+	}
+
+	buf.WriteString(m.Body)
+	if withAttachments {
+		for k, v := range m.Attachments {
+			buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
+			buf.WriteString(fmt.Sprintf("Content-Type: %s\n", http.DetectContentType(v)))
+			buf.WriteString("Content-Transfer-Encoding: base64\n")
+			buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
+
+			b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
+			base64.StdEncoding.Encode(b, v)
+			buf.Write(b)
+			buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+		}
+
+		buf.WriteString("--")
+	}
+
+	return buf.Bytes()
+}
+
+func (r *request) AttachFile(src string) error {
+	b, err := os.ReadFile(src)
+	if err != nil {
+		return err
+	}
+
+	_, fileName := filepath.Split(src)
+	r.Attachments[fileName] = b
 	return nil
 }
