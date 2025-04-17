@@ -202,7 +202,6 @@ func (m *request) ToBytes(from string) []byte {
 			// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
 			// base64.StdEncoding.Encode(b, v)
 			// buf.Write(b)
-			// buf.WriteString(fmt.Sprintf("\n--%s", boundary))
 
 			b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
 			base64.StdEncoding.Encode(b, v)
@@ -214,6 +213,7 @@ func (m *request) ToBytes(from string) []byte {
 					buf.WriteString("\r\n")
 				}
 			}
+			buf.WriteString(fmt.Sprintf("\n--%s", boundary))
 		}
 
 		buf.WriteString("--")
