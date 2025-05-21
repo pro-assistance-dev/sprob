@@ -40,6 +40,19 @@ func (r *Repository[T]) Get(c context.Context, id string) (item T, err error) {
 	return item, err
 }
 
+func (r *Repository[T]) GetBySlug(c context.Context, slug string) (item T, err error) {
+	q := r.helper.DB.IDB(c).NewSelect().
+		Model(&item)
+
+	r.relation(q)
+
+	err = q.Where("?TableAlias.slug = ?", slug).Scan(c)
+	if err != nil {
+		return item, err
+	}
+	return item, err
+}
+
 func (r *Repository[T]) Delete(c context.Context, id string) (err error) {
 	_, err = r.helper.DB.IDB(c).NewDelete().Model((*T)(nil)).Where("id = ?", id).Exec(c)
 	return err

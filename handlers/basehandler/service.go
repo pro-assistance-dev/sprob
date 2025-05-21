@@ -16,6 +16,10 @@ func (s *Service[T]) Get(c context.Context, id string) (T, error) {
 	return s.R.Get(c, id)
 }
 
+func (s *Service[T]) GetBySlug(c context.Context, slug string) (T, error) {
+	return s.R.Get(c, slug)
+}
+
 func (s *Service[T]) Update(c context.Context, item *T) error {
 	return s.R.Update(c, item)
 }

@@ -36,6 +36,14 @@ func (h *Handler[T]) Get(c *gin.Context) {
 	c.JSON(http.StatusOK, item)
 }
 
+func (h *Handler[T]) GetBySlug(c *gin.Context) {
+	item, err := h.S.Get(c.Request.Context(), c.Param("slug"))
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, item)
+}
+
 func (h *Handler[T]) GetAll(c *gin.Context) {
 	items, err := h.S.GetAll(c.Request.Context())
 	if h.helper.HTTP.HandleError(c, err) {

@@ -16,6 +16,7 @@ type Human struct {
 	Surname       string        `json:"surname"`
 	Patronymic    string        `json:"patronymic"`
 	DateBirth     *time.Time    `json:"dateBirth"`
+	ItemID        uuid.NullUUID `bun:"type:uuid" json:"itemId"`
 }
 
 type Humans []*Human

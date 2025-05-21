@@ -11,11 +11,12 @@ type UserAccount struct {
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	UUID          uuid.UUID     `bun:"type:uuid,nullzero,notnull,default:uuid_generate_v4()"  json:"uuid"` // для восстановления пароля - обеспечивает уникальность страницы на фронте
 
-	Email        string `json:"email"`
-	Login        string `json:"login"`
-	Password     string `json:"password"`
-	Phone        string `json:"phone"`
-	ConfirmEmail bool   `json:"confirmEmail"`
+	Email        string        `json:"email"`
+	Login        string        `json:"login"`
+	Password     string        `json:"password"`
+	ItemID       uuid.NullUUID `bun:"type:uuid" json:"itemId"`
+	Phone        string        `json:"phone"`
+	ConfirmEmail bool          `json:"confirmEmail"`
 }
 
 type UsersAccounts []*UserAccount
