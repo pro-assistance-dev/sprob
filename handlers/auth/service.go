@@ -73,19 +73,19 @@ func (s *Service) SendConfirmEmailMail(id, email string) error {
 	return nil
 }
 
-func (s *Service) Login(c context.Context, authData *models.AuthData) (uuid.NullUUID, error) {
+func (s *Service) Login(c context.Context, authData *models.AuthData) (*models.UserAccount, error) {
 	err := authData.SetLoginBy()
 	if err != nil {
-		return uuid.NullUUID{}, err
+		return nil, err
 	}
 	item, err := R.Get(c, authData.LoginBy, authData.Value)
 	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || !item.PasswordEqWithHashed(authData.Password) {
-		return uuid.NullUUID{}, errors.New("неверный логин или пароль")
+		return nil, errors.New("неверный логин или пароль")
 	}
 	if err != nil {
-		return uuid.NullUUID{}, err
+		return nil, err
 	}
-	return item.ID, err
+	return item, err
 }
 
 func (h *Service) ConfirmEmail(c context.Context, id string) error {
