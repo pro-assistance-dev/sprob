@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Service) Register(c context.Context, email string, password string, itemID uuid.NullUUID) (uuid.NullUUID, bool, error) {
+func (s *Service) Register(c context.Context, email string, password string, itemID uuid.NullUUID) (&models.UserAccount, bool, error) {
 	item := &models.UserAccount{}
 	item.Email = email
 	item.Password = password
@@ -28,29 +28,29 @@ func (s *Service) Register(c context.Context, email string, password string, ite
 
 		mail, err := s.helper.Templater.ParseTemplate(emailStruct, "email/refreshToDouble.gohtml")
 		if err != nil {
-			return uuid.NullUUID{}, false, err
+			return nil, false, err
 		}
 		go s.helper.Email.SendEmail([]string{item.Email}, "Восстановление пароля", mail)
 		// if err != nil {
 		// 	return uuid.NullUUID{}, false, err
 		// }
-		return uuid.NullUUID{}, true, nil
+		return nil, true, nil
 	}
 
 	err := item.HashPassword()
 	if err != nil {
-		return uuid.NullUUID{}, false, err
+		return nil, false, err
 	}
 	err = R.Create(c, item)
 	if err != nil {
-		return uuid.NullUUID{}, false, err
+		return nil, false, err
 	}
 
 	err = s.SendConfirmEmailMail(item.ID.UUID.String(), item.Email)
 	if err != nil {
-		return uuid.NullUUID{}, false, err
+		return nil, false, err
 	}
-	return item.ID, false, err
+	return item, false, err
 }
 
 func (s *Service) SendConfirmEmailMail(id, email string) error {
