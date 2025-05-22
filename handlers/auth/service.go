@@ -10,10 +10,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (s *Service) Register(c context.Context, email string, password string) (uuid.NullUUID, bool, error) {
+func (s *Service) Register(c context.Context, email string, password string, itemID uuid.NullUUID) (uuid.NullUUID, bool, error) {
 	item := &models.UserAccount{}
 	item.Email = email
 	item.Password = password
+	item.ItemID = itemID
 
 	existingUserAccount, _ := R.Get(c, "email", item.Email)
 	if existingUserAccount.ID.Valid {
