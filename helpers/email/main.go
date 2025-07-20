@@ -55,7 +55,10 @@ func (e *Email) SendEmailWithAttachments(to []string, subject string, body strin
 	if len(files) > 0 {
 		e.request.Attachments = make(map[string][]byte)
 		for _, f := range files {
-			e.request.AttachFile(f)
+			err := e.request.AttachFile(f)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return e.sendEmail()
@@ -151,7 +154,7 @@ func (e *Email) sendEmail() error {
 	}
 
 	if e.config.WriteTestFile {
-		err = os.WriteFile("./application-generate_send.html", []byte(body), 0600)
+		err = os.WriteFile("./application-generate_send.html", body, 0o600)
 		if err != nil {
 			log.Fatal(err)
 		}

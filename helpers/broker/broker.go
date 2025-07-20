@@ -61,7 +61,8 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 		messageChan = nil
 	}()
 
-	notify := c.Writer.(http.CloseNotifier).CloseNotify()
+	// no-lint
+	notify := c.Done()
 	w := c.Writer
 	// notify := c.Request.Context().Done()
 	f, ok := w.(http.Flusher)

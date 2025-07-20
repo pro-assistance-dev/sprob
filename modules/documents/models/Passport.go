@@ -17,7 +17,7 @@ type Passport struct {
 	DivisionCode string    `json:"divisionCode"`
 	Citzenship   string    `json:"citzenship"`
 	Date         time.Time `bun:"item_date" json:"date"`
-	Adress       string    `json:"adress"`
+	Address      string    `json:"address"`
 
 	PassportScans PassportScans `bun:"rel:has-many" json:"passportScans"`
 }

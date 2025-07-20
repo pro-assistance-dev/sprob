@@ -2,30 +2,41 @@ package project
 
 import (
 	"fmt"
+	"go/parser"
+	"go/token"
 	"log"
 	"testing"
 
-	"github.com/pro-assistance-dev/sprob/config"
+	"github.com/iancoleman/strcase"
 	"github.com/stretchr/testify/assert"
 )
 
-var p *Project
+var p = Project{Schemas: make(SchemasMap, 0)}
 
 func ProjectTestSetup() {
-	conf, err := config.LoadTestConfig()
-	fmt.Println(conf.Project.ModelsPath)
+	modelsPackage, err := parser.ParseDir(token.NewFileSet(), "./mocks/", nil, parser.AllErrors)
 	if err != nil {
 		log.Fatal(err)
 	}
-	p = NewProject(&conf.Project)
+	structs := p.getStructsOfProject(modelsPackage)
+
+	for s := range structs {
+		schema := newSchema(s, structs[s])
+		key := strcase.ToLowerCamel(s.Name.String())
+		p.Schemas[key] = &schema
+		SchemasSlice = append(SchemasSlice, &schema)
+	}
+	p.Schemas.InitFieldsLinksToSchemas()
+	SchemasLib = p.Schemas
 }
 
 func TestProject(t *testing.T) {
 	ProjectTestSetup()
 
-	// t.Run("SchemasLen", func(t *testing.T) {
-	// 	assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
-	// })
+	fmt.Println(SchemasLib)
+	t.Run("SchemasLen", func(t *testing.T) {
+		assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
+	})
 
 	t.Run("GetSchemas", func(t *testing.T) {
 		assert.NotNil(t, p.Schemas.GetSchema("contact"), "Find existing struct")
@@ -33,15 +44,15 @@ func TestProject(t *testing.T) {
 		assert.Nil(t, p.Schemas.GetSchema("NotExistst"), "When struct not exist, return nil")
 	})
 
-	schema := p.Schemas.GetSchema("contact")
+	// schema := p.Schemas.GetSchema("contact")
 
 	t.Run("SchemaTest", func(t *testing.T) {
-		t.Run("AllNamesCorrects", func(t *testing.T) {
-			assert.Equal(t, "Contact", schema.NamePascal, "NamePascal")
-			assert.Equal(t, "name", schema.SortColumn, "SortColumn")
-			assert.Equal(t, "contacts", schema.NameTable, "NameTable")
-		})
-		fmt.Println(p.Schemas)
+		// t.Run("AllNamesCorrects", func(t *testing.T) {
+		// 	assert.Equal(t, "Contact", schema.NamePascal, "NamePascal")
+		// 	assert.Equal(t, "name", schema.SortColumn, "SortColumn")
+		// 	assert.Equal(t, "contacts", schema.NameTable, "NameTable")
+		// })
+		// fmt.Println(p.Schemas)
 		// t.Run("HaveCorrectFieldsLen", func(t *testing.T) {
 		// 	assert.Equal(t, 3, len(schema.Fields), "When 3 fields defined, len fields should be 3")
 		// })

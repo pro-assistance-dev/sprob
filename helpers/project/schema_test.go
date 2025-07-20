@@ -7,7 +7,7 @@ import (
 )
 
 func TestSchema(t *testing.T) {
-	ProjectTestSetup()
+	// ProjectTestSetup()
 
 	t.Run("GetSchemas", func(t *testing.T) {
 		assert.NotNil(t, p.Schemas.GetSchema("contact"), "Find existing struct")

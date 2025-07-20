@@ -30,10 +30,11 @@ func (s *Service) Register(c context.Context, email string, password string, ite
 		if err != nil {
 			return nil, false, err
 		}
-		go s.helper.Email.SendEmail([]string{item.Email}, "Восстановление пароля", mail)
-		// if err != nil {
-		// 	return uuid.NullUUID{}, false, err
-		// }
+
+		err = s.helper.Email.SendEmail([]string{item.Email}, "Восстановление пароля", mail)
+		if err != nil {
+			return nil, false, err
+		}
 		return nil, true, nil
 	}
 
@@ -66,10 +67,10 @@ func (s *Service) SendConfirmEmailMail(id, email string) error {
 	if err != nil {
 		return err
 	}
-	go s.helper.Email.SendEmail([]string{email}, "Подтверждение email", mail)
-	// if err != nil {
-	// 	return err
-	// }
+	err = s.helper.Email.SendEmail([]string{email}, "Подтверждение email", mail)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

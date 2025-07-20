@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/filter"
+	"github.com/pro-assistance-dev/sprob/helpers/sql/filter/f"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/paginator"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/sorter"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/tree"
@@ -19,6 +20,7 @@ type FTSP struct {
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
+	F2    f.Models             `json:"f2"`
 	T     tree.TreeModel       `json:"t"`
 	S     sorter.SortModels    `json:"s"`
 	P     *paginator.Paginator `json:"p"`

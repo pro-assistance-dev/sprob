@@ -91,6 +91,9 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 }
 
 func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
+	if len(f.Set) == 0 {
+		return
+	}
 	// if f.JoinTable == "" {
 	// 	query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
 	// 	return

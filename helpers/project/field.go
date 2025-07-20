@@ -12,7 +12,8 @@ type SchemaField struct {
 
 	Schema   *Schema `bun:"rel:belongs-to" json:"schema"`
 	SchemaID uuid.NullUUID
-	Type     string
+
+	Type string
 
 	NamePascal string
 	NameCamel  string

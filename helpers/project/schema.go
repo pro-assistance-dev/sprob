@@ -138,6 +138,11 @@ func newSchema(structure *ast.TypeSpec, fields []*ast.Field) Schema {
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(types.ExprString(field.Type)))
 		fieldSchema := NewSchemaField(field.Names[0].Name, getColName(tags), typeString, getTagName(tags, TagRus))
+		// v1 := []string{"ast"}
+		// t := reflect.TypeOf(v1)
+
+		// fieldSchema.Type1  =	reflect.Type(field.Type
+		// fmt.Println(field.Type, field.Names[0].Name, types.ExprString(field.Type), t.String())
 		m.FieldsMap[strcase.ToLowerCamel(field.Names[0].Name)] = fieldSchema
 		m.Fields = append(m.Fields, fieldSchema)
 	}
