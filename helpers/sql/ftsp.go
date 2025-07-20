@@ -33,6 +33,7 @@ func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
 	i.distinctOn(query)
 	i.P.CreatePagination(query)
 	i.F.CreateFilter(query)
+	i.F2.Filter(query)
 	i.S.CreateOrder(query)
 	i.T.CreateTree(query)
 }
