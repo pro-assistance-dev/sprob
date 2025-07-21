@@ -142,9 +142,8 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	modelTable := model.GetTableName()
 	joinTable := joinModel.GetTableName()
 	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
-	// fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
 
-	query.Join("JOIN ?", joinTable)
+	query.Join(fmt.Sprintf("JOIN %s", joinTable))
 	query.JoinOn(joinCondition)
 	// joinTable := joinModel.GetTableName()
 
