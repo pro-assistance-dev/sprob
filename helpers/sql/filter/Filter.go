@@ -5,16 +5,24 @@ import (
 )
 
 func (items FilterModels) mergeJoins() {
-	joinModels := make(map[string]int)
+	joinModels := make(map[string]*FilterModel)
 	for i := range items {
 		if items[i].Type == JoinType && items[i].Operator == In {
-			index, ok := joinModels[items[i].Model]
+			items[i].JoinIn = []string{items[i].Col}
+			items[i].JoinSets = [][]string{items[i].Set}
+
+			findedModel, ok := joinModels[items[i].JoinTable]
+
 			if ok {
-				items[index].Set = append(items[index].Set, items[i].Set...)
+
+				findedModel.JoinIn = append(findedModel.JoinIn, items[i].Col)
+				findedModel.JoinSets = append(findedModel.JoinSets, items[i].Set)
+
 				items[i].ignore = true
 			} else {
-				joinModels[items[i].Model] = i
+				joinModels[items[i].JoinTable] = items[i]
 			}
+
 		}
 	}
 }

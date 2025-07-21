@@ -34,6 +34,9 @@ type FilterModel struct { //nolint:golint
 	JoinTableID    string `json:"joinTableId"`
 	JoinTableIDCol string `json:"joinTableIdCol"`
 
+	JoinIn   []string
+	JoinSets [][]string
+
 	ignore bool
 }
 
@@ -135,17 +138,24 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	model := project.SchemasLib.GetSchema(f.Model)
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
-	if f.Operator == In {
-		col := joinModel.GetColName(f.Col)
-		modelTable := model.GetTableName()
-		joinTable := joinModel.GetTableName()
-		joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
-		q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), joinCondition, col)
-		query.Where(q, bun.In(f.Set))
-		// query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
-	} else {
-		query.Join(f.getJoinExpression(model, joinModel))
+	query.Join(f.getJoinExpression(model, joinModel))
+	joinTable := joinModel.GetTableName()
+
+	for _, joinIn := range f.JoinIn {
+		joinCondition := fmt.Sprintf("%s.%s in (?)", joinTable, joinModel.GetColName(joinIn))
+		query.JoinOn(joinCondition, bun.In(f.JoinSets))
 	}
+
+	// if f.Operator == In {
+	// 	col := joinModel.GetColName(f.Col)
+	// 	modelTable := model.GetTableName()
+	// 	joinTable := joinModel.GetTableName()
+	// 	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
+	// 	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", joinModel.GetTableName(), joinCondition, col)
+	// 	query.Where(q, bun.In(f.Set))
+	// 	// query.Where("?.? in (?)", bun.Ident(joinModel.GetTableName()), bun.Ident(col), bun.In(f.Set))
+	// } else {
+	// }
 }
 
 //
