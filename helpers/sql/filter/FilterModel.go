@@ -138,8 +138,15 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	model := project.SchemasLib.GetSchema(f.Model)
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
-	query.Join(f.getJoinExpression(model, joinModel))
+
+	modelTable := model.GetTableName()
 	joinTable := joinModel.GetTableName()
+	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
+	// fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
+
+	query.Join("JOIN ?", joinTable)
+	query.JoinOn(joinCondition)
+	// joinTable := joinModel.GetTableName()
 
 	for _, joinIn := range f.JoinIn {
 		joinCondition := fmt.Sprintf("%s.%s in (?)", joinTable, joinModel.GetColName(joinIn))
