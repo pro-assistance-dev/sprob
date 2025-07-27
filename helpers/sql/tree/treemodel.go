@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -21,13 +20,13 @@ type TreeModel struct {
 	relationPath string
 }
 
-func parseJSONToTreeModel(args string) (treeModel TreeModel, err error) {
-	err = json.Unmarshal([]byte(args), &treeModel)
-	if err != nil {
-		return treeModel, err
-	}
-	return treeModel, err
-}
+// func parseJSONToTreeModel(args string) (treeModel TreeModel, err error) {
+// 	err = json.Unmarshal([]byte(args), &treeModel)
+// 	if err != nil {
+// 		return treeModel, err
+// 	}
+// 	return treeModel, err
+// }
 
 func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	schema := project.SchemasLib.GetSchema(i.Model)

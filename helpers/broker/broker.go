@@ -88,7 +88,10 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 				if err != nil {
 					_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
 				}
-				fmt.Fprintf(w, "data: %s\n\n", payload)
+				_, err = fmt.Fprintf(w, "data: %s\n\n", payload)
+				if err != nil {
+					_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))
+				}
 				f.Flush()
 			}
 		}

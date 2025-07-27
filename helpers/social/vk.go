@@ -87,5 +87,8 @@ func (i *vkStruct) decode(data *http.Response) {
 	if err != nil {
 		log.Println(err)
 	}
-	data.Body.Close()
+	err = data.Body.Close()
+	if err != nil {
+		log.Println(err)
+	}
 }

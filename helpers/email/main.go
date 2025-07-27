@@ -166,9 +166,9 @@ func (e *Email) sendEmail() error {
 func (m *request) ToBytes(from string) []byte {
 	buf := bytes.NewBuffer(nil)
 	withAttachments := len(m.Attachments) > 0
-	buf.WriteString(fmt.Sprintf("Subject: %s\n", m.Subject))
-	buf.WriteString(fmt.Sprintf("To: %s\n", strings.Join(m.To, ",")))
-	buf.WriteString(fmt.Sprintf("From: %s\n", strings.Join([]string{from}, ",")))
+	fmt.Fprintf(buf, "Subject: %s\n", m.Subject)
+	fmt.Fprintf(buf, "To: %s\n", strings.Join(m.To, ","))
+	fmt.Fprintf(buf, "From: %s\n", strings.Join([]string{from}, ","))
 	// if len(m.CC) > 0 {
 	// 	buf.WriteString(fmt.Sprintf("Cc: %s\n", strings.Join(m.CC, ",")))
 	// }
@@ -181,16 +181,16 @@ func (m *request) ToBytes(from string) []byte {
 	writer := multipart.NewWriter(buf)
 	boundary := writer.Boundary()
 	if withAttachments {
-		buf.WriteString(fmt.Sprintf("Content-Type: multipart/mixed; boundary=%s\n", boundary))
-		buf.WriteString(fmt.Sprintf("--%s\n", boundary))
+		fmt.Fprintf(buf, "Content-Type: multipart/mixed; boundary=%s\n", boundary)
+		fmt.Fprintf(buf, "--%s\n", boundary)
 	} else {
 		buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
 	}
 
-	buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
-	buf.WriteString(fmt.Sprintf("Content-Type: text/html; charset=\"utf-8\" boundary=%s\n", boundary))
+	fmt.Fprintf(buf, "\n\n--%s\n", boundary)
+	fmt.Fprintf(buf, "Content-Type: text/html; charset=\"utf-8\" boundary=%s\n", boundary)
 	buf.WriteString(m.Body)
-	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
+	fmt.Fprintf(buf, "\n--%s", boundary)
 
 	coder := base64.StdEncoding
 	if withAttachments {

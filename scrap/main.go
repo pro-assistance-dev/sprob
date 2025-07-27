@@ -59,14 +59,21 @@ func parse(g *geziyor.Geziyor, r *client.Response) {
 }
 
 func download(link string) {
-	out, err := os.Create(strings.Replace(link, "/files/", "", -1))
+	out, err := os.Create(strings.ReplaceAll(link, "/files/", ""))
 	fmt.Println(err)
-	defer out.Close()
+	defer func() {
+		err = out.Close()
+		fmt.Println(err)
+	}()
 
 	fileLink, err := url.JoinPath(site, link)
 	fmt.Println(err)
 	resp, err := http.Get(fileLink)
 	fmt.Println(err)
-	defer resp.Body.Close()
+	defer func() {
+		err = resp.Body.Close()
+		fmt.Println(err)
+	}()
+
 	_, _ = io.Copy(out, resp.Body)
 }

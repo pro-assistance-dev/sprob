@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 
 	"github.com/unidoc/unidoc/pdf/creator"
@@ -16,7 +17,12 @@ type PDFSource struct { //nolint:golint
 
 func (s PDFSource) MergeTo(c *creator.Creator) error {
 	f, _ := os.Open(s.path)
-	defer f.Close()
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	return addPdfPages(f, c)
 }

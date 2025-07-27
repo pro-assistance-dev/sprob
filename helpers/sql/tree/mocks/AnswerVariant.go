@@ -28,15 +28,15 @@ func (items AnswerVariants) GetRegisterPropertyOthersForDelete() []uuid.UUID {
 	return itemsForGet
 }
 
-func (item *AnswerVariant) writeXlsxAggregatedValues(key string) {
-	_, ok := item.AggregatedValues[key]
-	if ok {
-		item.AggregatedValues[key]++
-	} else {
-		item.AggregatedValues[key] = 1
-	}
-}
-
+// func (item *AnswerVariant) writeXlsxAggregatedValues(key string) {
+// 	_, ok := item.AggregatedValues[key]
+// 	if ok {
+// 		item.AggregatedValues[key]++
+// 	} else {
+// 		item.AggregatedValues[key] = 1
+// 	}
+// }
+//
 //
 // func (item *FieldFillVariant) GetAggregatedPercentage() {
 // 	sum := float64(0)

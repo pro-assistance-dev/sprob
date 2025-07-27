@@ -26,7 +26,7 @@ type Service[T Relationable] struct {
 }
 
 type Repository[T Relationable] struct {
-	t        T
+	// t        T
 	helper   *helper.Helper
 	relation func(*bun.SelectQuery) *bun.SelectQuery
 }
@@ -36,18 +36,18 @@ func InitR[T Relationable]() Repository[T] {
 	return r
 }
 
-func rel[T Relationable](x T) func(*bun.SelectQuery) *bun.SelectQuery {
-	return func(q *bun.SelectQuery) *bun.SelectQuery {
-		return x.Relation(q)
-	}
-}
+// func rel[T Relationable](x T) func(*bun.SelectQuery) *bun.SelectQuery {
+// 	return func(q *bun.SelectQuery) *bun.SelectQuery {
+// 		return x.Relation(q)
+// 	}
+// }
 
 func InitH[T Relationable]() Handler[T] {
 	handler := Handler[T]{helper: Helper}
 	r := InitR[T]()
 	t := Str[T]{}
 	r.relation = t.genericValue.Relation
-	handler.S = InitS[T](r)
+	handler.S = InitS(r)
 	return handler
 }
 

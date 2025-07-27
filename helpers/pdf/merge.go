@@ -45,7 +45,12 @@ func getMergeableFile(file IFile) Mergeable {
 		log.Fatal("Cannot read source file:", file.GetFullPath())
 	}
 
-	defer f.Close()
+	defer func() {
+		err = f.Close()
+		if err != nil {
+			log.Fatal("Cannot close source file:", file.GetFullPath())
+		}
+	}()
 
 	ext := filepath.Ext(file.GetOriginalName())
 	mime, err := getMimeType(f)

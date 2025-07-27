@@ -14,7 +14,7 @@ type Query struct {
 
 var queriesMap = make(map[string]*sql.FTSP)
 
-const ftsp = "ftsp"
+// const ftsp = "ftsp"
 
 func (item Query) Inject(r *http.Request, qid string) error {
 	ftsp := getFTSP(qid)
@@ -33,6 +33,6 @@ func getFTSP(qid string) *sql.FTSP {
 	return filter
 }
 
-func setFTSP(query Query) {
-	queriesMap[query.QID] = query.FTSP
-}
+// func setFTSP(query Query) {
+// 	queriesMap[query.QID] = query.FTSP
+// }

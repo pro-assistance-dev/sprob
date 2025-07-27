@@ -235,13 +235,12 @@ func (f *FilterModel) getJoinCondition() string {
 	return fmt.Sprintf("%s = %s", model.ConcatTableCol(f.JoinTablePK), joinModel.ConcatTableCol(f.JoinTableFK))
 }
 
-func (f *FilterModel) getJoinExpression(model *project.Schema, joinModel *project.Schema) string {
-	modelTable := model.GetTableName()
-	joinTable := joinModel.GetTableName()
-	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
-	return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
-}
-
+//	func (f *FilterModel) getJoinExpression(model *project.Schema, joinModel *project.Schema) string {
+//		modelTable := model.GetTableName()
+//		joinTable := joinModel.GetTableName()
+//		joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
+//		return fmt.Sprintf("JOIN %s ON %s", joinTable, joinCondition)
+//	}
 func (f *FilterModel) isUnary() bool {
 	return f.Operator == Eq || f.Operator == Ne || f.Operator == Gt || f.Operator == Ge || f.Operator == Like
 }

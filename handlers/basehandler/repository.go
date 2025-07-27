@@ -10,29 +10,27 @@ func (r *Repository[T]) Create(c context.Context, item *T) (err error) {
 	return err
 }
 
-type DbItemsWithCount[T any] struct {
+type DBItemsWithCount[T any] struct {
 	Items []T `json:"items"`
 	Count int `json:"count"`
 }
 
-type IdLabel struct{
-
+type LabelValue struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
 }
 
-func (r *Repository[T]) IdLabel(c context.Context, labelCol string) (items []T, err error) {
-	var i []
+func (r *Repository[T]) LabelValue(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
+	items := make([]*LabelValue, 0)
 
-	colExpr := fmt.Sprintf("id, % as label", labelCol)
+	colExpr := fmt.Sprintf("%s as value, %s as label", valueCol, labelCol)
 
-	q := r.helper.DB.IDB(c).NewSelect().Model(&i).ColumnExpr(colExpr)
-
-	err = q.Scan(c)
-	items.Items = i
+	err := r.helper.DB.IDB(c).NewSelect().Model((*T)(nil)).ColumnExpr(colExpr).Scan(c, &items)
 
 	return items, err
 }
 
-func (r *Repository[T]) GetAll(c context.Context) (items DbItemsWithCount[T], err error) {
+func (r *Repository[T]) GetAll(c context.Context) (items DBItemsWithCount[T], err error) {
 	var i []T
 
 	q := r.helper.DB.IDB(c).NewSelect().Model(&i)

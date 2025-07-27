@@ -12,6 +12,16 @@ func (s *Service[T]) GetAll(c context.Context) (any, error) {
 	return s.R.GetAll(c)
 }
 
+func (s *Service[T]) LabelValue(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
+	if labelCol == "" {
+		labelCol = "name"
+	}
+	if valueCol == "" {
+		valueCol = "id"
+	}
+	return s.R.LabelValue(c, labelCol, valueCol)
+}
+
 func (s *Service[T]) Get(c context.Context, id string) (T, error) {
 	return s.R.Get(c, id)
 }
@@ -25,7 +35,7 @@ func (s *Service[T]) Update(c context.Context, item *T) error {
 }
 
 func (s *Service[T]) UpdateMany(c context.Context, items []*T) error {
-	return s.R.UpdateMany(c, items)
+	return nil
 }
 
 func (s *Service[T]) Delete(c context.Context, id string) error {

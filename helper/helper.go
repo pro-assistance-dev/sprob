@@ -101,7 +101,13 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 
 	migrator := migrate.NewMigrator(i.DB.DB, coreMigrations.Init())
 	updateDB(migrator)
-	defer i.DB.DB.Close()
+
+	defer func() {
+		err := i.DB.DB.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}()
 	i.Project.InitSchemas()
 
 	i.HTTP.ListenAndServe(initRouter(i, routerInitFunc))
