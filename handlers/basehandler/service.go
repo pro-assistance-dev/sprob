@@ -12,14 +12,14 @@ func (s *Service[T]) GetAll(c context.Context) (any, error) {
 	return s.R.GetAll(c)
 }
 
-func (s *Service[T]) LabelValue(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
+func (s *Service[T]) Options(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
 	if labelCol == "" {
 		labelCol = "name"
 	}
 	if valueCol == "" {
 		valueCol = "id"
 	}
-	return s.R.LabelValue(c, labelCol, valueCol)
+	return s.R.Options(c, labelCol, valueCol)
 }
 
 func (s *Service[T]) Get(c context.Context, id string) (T, error) {

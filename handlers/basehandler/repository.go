@@ -20,7 +20,7 @@ type LabelValue struct {
 	Value string `json:"value"`
 }
 
-func (r *Repository[T]) LabelValue(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
+func (r *Repository[T]) Options(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
 	items := make([]*LabelValue, 0)
 
 	colExpr := fmt.Sprintf("%s as value, %s as label", valueCol, labelCol)

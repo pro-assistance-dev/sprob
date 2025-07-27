@@ -12,7 +12,7 @@ import (
 
 type IHandler interface {
 	GetAll(c *gin.Context)
-	LabelValue(c *gin.Context)
+	Options(c *gin.Context)
 	FTSP(c *gin.Context)
 	Get(c *gin.Context)
 	Create(c *gin.Context)
@@ -75,7 +75,7 @@ func InitR[T basehandler.Relationable](routerGroup *gin.RouterGroup, opts ...opt
 		routerOpts.ws = routerOpts.ws.Group(routerOpts.key)
 	}
 
-	r.GET("/label-value/:label/:value", routerOpts.h.LabelValue)
+	r.GET("/options/:label/:value", routerOpts.h.Options)
 	r.GET("", routerOpts.h.GetAll)
 	r.POST("/ftsp", routerOpts.h.FTSP)
 	r.GET("/:id", routerOpts.h.Get)
