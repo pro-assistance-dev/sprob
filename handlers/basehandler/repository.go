@@ -25,7 +25,7 @@ func (r *Repository[T]) Options(c context.Context, labelCol string, valueCol str
 
 	colExpr := fmt.Sprintf("%s as value, %s as label", valueCol, labelCol)
 
-	err := r.helper.DB.IDB(c).NewSelect().Model((*T)(nil)).ColumnExpr(colExpr).Scan(c, &items)
+	err := r.helper.DB.IDB(c).NewSelect().Model((*T)(nil)).ColumnExpr(colExpr).Order(labelCol).Scan(c, &items)
 
 	return items, err
 }
