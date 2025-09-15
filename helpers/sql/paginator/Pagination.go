@@ -5,11 +5,11 @@ import (
 )
 
 type Paginator struct {
-	Offset     *int    `json:"offset"`
-	Limit      *int    `json:"limit"`
-	CursorMode bool    `json:"cursorMode"`
-	Cursor     *Cursor `json:"cursor"`
-	TableName  string  `json:"tableName"`
+	Page        *int    `json:"page"`
+	RowsPerPage *int    `json:"rowsPerPage"`
+	CursorMode  bool    `json:"cursorMode"`
+	Cursor      *Cursor `json:"cursor"`
+	TableName   string  `json:"tableName"`
 }
 
 func (i *Paginator) CreatePagination(query *bun.SelectQuery) {
@@ -19,7 +19,7 @@ func (i *Paginator) CreatePagination(query *bun.SelectQuery) {
 	if i.CursorMode {
 		i.Cursor.createPagination(query)
 	} else {
-		query = query.Offset(*i.Offset)
+		query = query.Offset(*i.Page)
 	}
-	query.Limit(*i.Limit)
+	query.Limit(*i.RowsPerPage)
 }
