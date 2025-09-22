@@ -38,8 +38,8 @@ func (h *Handler[T]) Get(c *gin.Context) {
 }
 
 func (h *Handler[T]) Options(c *gin.Context) {
-	label := strcase.ToLowerCamel(c.Param("label"))
-	value := strcase.ToLowerCamel(c.Param("value"))
+	label := strcase.ToSnake(c.Param("label"))
+	value := strcase.ToSnake(c.Param("value"))
 	item, err := h.S.Options(c.Request.Context(), label, value)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
