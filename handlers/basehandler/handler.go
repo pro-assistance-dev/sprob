@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/iancoleman/strcase"
 	baseModels "github.com/pro-assistance-dev/sprob/models"
 )
 
@@ -37,7 +38,9 @@ func (h *Handler[T]) Get(c *gin.Context) {
 }
 
 func (h *Handler[T]) Options(c *gin.Context) {
-	item, err := h.S.Options(c.Request.Context(), c.Param("label"), c.Param("value"))
+	label := strcase.ToLowerCamel(c.Param("label"))
+	value := strcase.ToLowerCamel(c.Param("value"))
+	item, err := h.S.Options(c.Request.Context(), label, value)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
