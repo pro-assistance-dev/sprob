@@ -5,13 +5,15 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"mime"
 	"mime/multipart"
+	"mime/quotedprintable"
+	"net"
+	"net/smtp"
 	"os"
 	"path/filepath"
 	"strings"
-
-	gomail "gopkg.in/gomail.v2"
 
 	"github.com/pro-assistance-dev/sprob/config"
 )
@@ -65,23 +67,96 @@ func (e *Email) SendEmailWithAttachments(to []string, subject string, body strin
 
 // SendEmail func
 func (e *Email) sendEmail() error {
-	m := gomail.NewMessage()
-	m.SetHeader("From", e.config.From)
-	m.SetHeader("To", e.request.To...)
-	m.SetHeader("Subject", e.request.Subject)
-	m.SetBody("text/html", e.request.Body)
-
-	d := gomail.NewDialer(
-		e.config.Server,
-		e.config.Port,
+	auth := smtp.PlainAuth(
+		"",
 		e.config.From,
 		e.config.Password,
+		e.config.Server,
 	)
-	d.SSL = false
-	d.TLSConfig = &tls.Config{ServerName: e.config.Server}
+	if e.config.AuthMethod == string(LoginAuthMethod) {
+		auth = LoginAuth(e.config.From, e.config.Password)
+	}
 
-	if err := d.DialAndSend(m); err != nil {
+	// Формируем правильные заголовки для HTML письма
+	headers := make(map[string]string)
+	headers["From"] = e.config.From
+	headers["To"] = strings.Join(e.request.To, ", ")
+	headers["Subject"] = e.request.Subject
+	headers["MIME-Version"] = "1.0"
+	headers["Content-Type"] = "text/html; charset=\"utf-8\""
+	headers["Content-Transfer-Encoding"] = "quoted-printable"
+
+	// Собираем сообщение
+	var message strings.Builder
+	for k, v := range headers {
+		message.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
+	}
+	message.WriteString("\r\n") // разделитель заголовков и тела
+
+	// Кодируем тело в quoted-printable для корректной передачи
+	bodyEncoded := quotedprintable.NewWriter(&message)
+	_, err := bodyEncoded.Write([]byte(e.request.Body))
+	if err != nil {
 		return err
+	}
+	bodyEncoded.Close()
+
+	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
+	host, _, _ := net.SplitHostPort(servername)
+
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: false,
+		ServerName:         host,
+	}
+	conn, err := tls.Dial("tcp", servername, tlsconfig)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	c, err := smtp.NewClient(conn, host)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	// Auth
+	if err = c.Auth(auth); err != nil {
+		return err
+	}
+	// To && From
+	if err = c.Mail(e.config.From); err != nil {
+		return err
+	}
+	for _, t := range e.request.To {
+		if err = c.Rcpt(t); err != nil {
+			return err
+		}
+	}
+	// Data
+	w, err := c.Data()
+	if err != nil {
+		return err
+	}
+
+	_, err = w.Write([]byte(message.String()))
+	if err != nil {
+		return err
+	}
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+	err = c.Quit()
+	if err != nil {
+		return err
+	}
+
+	if e.config.WriteTestFile {
+		err = os.WriteFile("./application-generate_send.html", []byte(message.String()), 0o600)
+		if err != nil {
+			log.Printf("Error writing test file: %v", err)
+		}
 	}
 
 	return nil

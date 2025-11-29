@@ -49,7 +49,7 @@ type Email struct {
 	Password      string `mapstructure:"EMAIL_PASSWORD" yaml:"password"`
 	From          string `mapstructure:"EMAIL_FROM" yaml:"from"`
 	Server        string `mapstructure:"EMAIL_SERVER" yaml:"server"`
-	Port          int    `mapstructure:"EMAIL_PORT" yaml:"port"`
+	Port          string `mapstructure:"EMAIL_PORT" yaml:"port"`
 	AuthMethod    string `mapstructure:"EMAIL_AUTH_METHOD" yaml:"auth_method"`
 	WriteTestFile bool   `mapstructure:"EMAIL_WRITE_TEST_FILE" yaml:"write_test_file"`
 }
