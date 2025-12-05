@@ -1,6 +1,7 @@
 package pdf
 
 import (
+	"github.com/pro-assistance-dev/sprob/config"
 	"github.com/pro-assistance-dev/sprob/helpers/templater"
 	"github.com/unidoc/unidoc/pdf/creator"
 )
@@ -13,17 +14,17 @@ type PDF struct {
 	ws      *mywriter
 }
 
-// func NewPDF(config config.Project) *PDF {
-// 	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	return &PDF{
-// 		ws:        &mywriter{},
-// 		templater: templater.NewTemplater(config),
-// 		// generator: pdfg,
-// 	}
-// }
+func NewPDF(config config.Project) *PDF {
+	// pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	return &PDF{
+		ws:        &mywriter{},
+		templater: templater.NewTemplater(config),
+		// generator: pdfg,
+	}
+}
 
 // func (i *PDF) GeneratePDF(template string, data interface{}) ([]byte, error) {
 // 	dataString := i.templater.Parse(template, data)
