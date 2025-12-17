@@ -81,13 +81,6 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 	name := flag.String("name", "dummy", "init/create/createSql/run/rollback")
 	flag.Parse()
 
-	if Mode(*mode) == Dump {
-		err := i.DB.Dump()
-		if err != nil {
-			log.Fatal(err)
-		}
-		return Dump
-	}
 	if Mode(*mode) == Migrate {
 		search.InitSearchGroupsTables(i.DB.DB)
 		err := i.DB.DoAction(migrations, *name, action)
