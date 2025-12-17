@@ -22,7 +22,7 @@ func NewTemplater(config config.Project) *Templater {
 	return &Templater{templatesPath: config.TemplatesPath}
 }
 
-func (i *Templater) Parse(templateName string, data interface{}) string {
+func (i *Templater) Parse(templateName string, data any) string {
 	var buf strings.Builder
 	templateName = fmt.Sprintf("%s.gohtml", filepath.Join(i.templatesPath, templateName))
 	tmpl, err := template.ParseFiles(templateName)
@@ -35,7 +35,7 @@ func (i *Templater) Parse(templateName string, data interface{}) string {
 }
 
 // ParseTemplate func
-func (i *Templater) ParseTemplate(data interface{}, templates ...string) (string, error) {
+func (i *Templater) ParseTemplate(data any, templates ...string) (string, error) {
 	templatesForParse := []string{}
 	templates = append(templates, "_footer.html", "_header.html") // добавляем хэдер и футер к шаблонам
 	for _, t := range templates {

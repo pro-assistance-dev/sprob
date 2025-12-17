@@ -11,9 +11,13 @@ type Config struct {
 }
 
 type Project struct {
-	BinPath       string `mapstructure:"BIN_PATH" yaml:"bin_path"`
-	UploadPath    string `mapstructure:"UPLOAD_PATH" yaml:"upload_path"`
-	TemplatesPath string `mapstructure:"TEMPLATES_PATH" yaml:"templates_path"`
+	Name string `mapstructure:"NAME" yaml:"name"`
+	Root string `mapstructure:"ROOT" yaml:"root"`
+
+	BinPath    string `mapstructure:"BIN_PATH" yaml:"bin_path"`
+	UploadPath string
+
+	TemplatesPath string
 	ModelsPath    string `mapstructure:"MODELS_PATH" yaml:"models_path"`
 }
 
@@ -32,16 +36,13 @@ type Token struct {
 }
 
 type DB struct {
-	DB             string `mapstructure:"DB_DB" yaml:"db"`
-	User           string `mapstructure:"DB_USER" yaml:"user"`
-	Password       string `mapstructure:"DB_PASSWORD" yaml:"password"`
-	Host           string `mapstructure:"DB_HOST" yaml:"host"`
-	Port           string `mapstructure:"DB_PORT" yaml:"port"`
-	Name           string `mapstructure:"DB_NAME" yaml:"name"`
-	LogPath        string `mapstructure:"DB_LOG_PATH" yaml:"log_path"`
-	RemoteUser     string `mapstructure:"DB_REMOTE_USER" yaml:"remote_user"`
-	RemotePassword string `mapstructure:"DB_REMOTE_PASSWORD" yaml:"remote_password"`
-	Verbose        string `mapstructure:"DB_VERBOSE" yaml:"verbose"`
+	User     string `mapstructure:"DB_USER" yaml:"user"`
+	Password string `mapstructure:"DB_PASSWORD" yaml:"password"`
+	Host     string `mapstructure:"DB_HOST" yaml:"host"`
+	Port     string `mapstructure:"DB_PORT" yaml:"port"`
+	Name     string
+	LogPath  string `mapstructure:"DB_LOG_PATH" yaml:"log_path"`
+	Verbose  string `mapstructure:"DB_VERBOSE" yaml:"verbose"`
 }
 
 type Email struct {

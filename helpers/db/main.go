@@ -5,9 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os/exec"
-	"path/filepath"
-	"runtime"
 	"strconv"
 
 	"github.com/uptrace/bun/migrate"
@@ -38,7 +35,7 @@ func NewDB(config config.DB) *DB {
 }
 
 func (i *DB) initDB() {
-	dsn := fmt.Sprintf("%s://%s:%s@%s:%s/%s?sslmode=disable", i.config.DB, i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, pgdialect.New())
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
@@ -75,15 +72,4 @@ func (i *DB) DoAction(migrations []*migrate.Migrations, name string, action *str
 		return errors.New("cannot parse action")
 	}
 	return err
-}
-
-func (i *DB) Dump() error {
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("err")
-	}
-	exPath := filepath.Dir(filename)
-
-	cmd := exec.Command("/bin/bash", filepath.Join(exPath, "dump_pg.sh"), i.config.Name, i.config.User, i.config.Password, i.config.RemoteUser, i.config.RemotePassword) //nolint:gosec
-	return cmd.Run()
 }

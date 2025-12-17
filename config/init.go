@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -11,11 +12,6 @@ func LoadConfig(name string) (config *Config, err error) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		panic("config path not exist: " + dir)
 	}
-
-	// configFile := path.Join(dir, name+".yaml")
-	// if _, err := os.Stat(configFile); os.IsNotExist(err) {
-	// 	panic("config file not exist: " + dir)
-	// }
 
 	return loadConfig(dir, name)
 }
@@ -57,5 +53,8 @@ func loadConfig(path string, name string) (config *Config, err error) {
 		return
 	}
 	err = viper.Unmarshal(&config)
+	config.DB.Name = config.Project.Name
+	config.Project.UploadPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "static")
+	config.Project.TemplatesPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "templates")
 	return config, err
 }
