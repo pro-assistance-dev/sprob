@@ -8,6 +8,7 @@ type Config struct {
 	ElasticSearch ElasticSearch `mapstructure:",squash" yaml:"elastic_search"`
 	Token         Token         `mapstructure:",squash" yaml:"token"`
 	Server        Server        `mapstructure:",squash" yaml:"server"`
+	Metabase      Metabase      `mapstructure:",squash" yaml:"server"`
 }
 
 type Project struct {
@@ -19,6 +20,12 @@ type Project struct {
 
 	TemplatesPath string
 	ModelsPath    string `mapstructure:"MODELS_PATH" yaml:"models_path"`
+}
+
+type Metabase struct {
+	APIKey string `mapstructure:"METABASE_API_KEY"`
+	URL    string `mapstructure:"METABASE_URL"`
+	DBID   string `mapstructure:"METABASE_DB_ID"`
 }
 
 type Server struct {
