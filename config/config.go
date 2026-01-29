@@ -23,9 +23,11 @@ type Project struct {
 }
 
 type Metabase struct {
-	APIKey string `mapstructure:"METABASE_API_KEY"`
-	URL    string `mapstructure:"METABASE_URL"`
-	DBID   string `mapstructure:"METABASE_DB_ID"`
+	APIKey    string `mapstructure:"METABASE_API_KEY"`
+	URL       string `mapstructure:"METABASE_URL"`
+	DBID      string `mapstructure:"METABASE_DB_ID"`
+	SiteURL   string `mapstructure:"METABASE_SITE_URL"`
+	SecretKey string `mapstructure:"METABASE_SECRET_KEY"`
 }
 
 type Server struct {

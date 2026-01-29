@@ -20,11 +20,17 @@ type Client struct {
 	dbID       string
 	httpClient *http.Client
 	headers    map[string]string
+
+	SiteURL   string
+	SecretKey string
 }
 
 // NewClient создает новый клиент Metabase
 func NewClient(config config.Metabase) *Client {
 	return &Client{
+		SiteURL:   config.SiteURL,
+		SecretKey: config.SecretKey,
+
 		baseURL: config.URL,
 		// apiKey:  config.APIKey,
 		apiKey: config.APIKey,

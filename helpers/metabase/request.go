@@ -31,27 +31,14 @@ func (c *Client) Request2(path string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to build URL: %w", err)
 	}
 
-	// Подготавливаем тело запроса
 	var bodyReader io.Reader
-	// if options.Body != nil {
-	// 	bodyBytes, err := json.Marshal(options.Body)
-	// 	if err != nil {
-	// 		return nil, fmt.Errorf("failed to marshal request body: %w", err)
-	// 	}
-	// 	bodyReader = bytes.NewReader(bodyBytes)
-	// }
-	//
-	// Создаем HTTP запрос
 	req, err := http.NewRequest("POST", fullURL, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	fmt.Println(fullURL)
-	// Устанавливаем заголовки
-	// c.setHeaders(req, options.Headers)
 	req.Header.Set("X-API-Key", c.apiKey)
-	// Выполняем запрос
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
@@ -64,16 +51,10 @@ func (c *Client) Request2(path string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	// Проверяем статус код
 	if resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
 	}
 	return body, nil
-	// return &Response{
-	// 	StatusCode: resp.StatusCode,
-	// 	Headers:    resp.Header,
-	// 	Body:       body,
-	// }, nil
 }
 
 func (c *Client) Request(options RequestOptions) (*Response, error) {
