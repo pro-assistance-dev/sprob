@@ -23,9 +23,9 @@ type Client struct {
 }
 
 // NewClient создает новый клиент Metabase
-func NewClient(config *config.Metabase) *Client {
+func NewClient(config config.Metabase) *Client {
 	return &Client{
-		baseURL: "http://metabase:3000",
+		baseURL: config.URL,
 		// apiKey:  config.APIKey,
 		apiKey: config.APIKey,
 		dbID:   config.DBID,

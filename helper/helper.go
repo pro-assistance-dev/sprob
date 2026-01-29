@@ -13,6 +13,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/helpers/db"
 	"github.com/pro-assistance-dev/sprob/helpers/email"
 	"github.com/pro-assistance-dev/sprob/helpers/logger"
+	"github.com/pro-assistance-dev/sprob/helpers/metabase"
 	"github.com/pro-assistance-dev/sprob/helpers/pdf"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/pro-assistance-dev/sprob/helpers/search"
@@ -49,6 +50,7 @@ type Helper struct {
 	Cron      *cron.Cron
 	Project   *project.Project
 	Logger    *logrus.Logger
+	Metabase  *metabase.Client
 }
 
 func NewHelper(c config.Config) *Helper {
@@ -67,7 +69,8 @@ func NewHelper(c config.Config) *Helper {
 	cr := cron.NewCron()
 	ph := project.NewProject(&c.Project)
 	l := logger.NewLogger()
-	return &Helper{HTTP: h, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: soc, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l}
+	m := metabase.NewClient(c.Metabase)
+	return &Helper{HTTP: h, Uploader: uploader, PDF: pdf, SQL: sql, Token: token, Email: email, Social: soc, Util: util, Templater: templ, Broker: brok, DB: db, Validator: v, Cron: cr, Project: ph, Logger: l, Metabase: m}
 }
 
 type RouterHandler interface {
