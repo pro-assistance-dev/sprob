@@ -13,12 +13,12 @@ import (
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/middleware"
 
+	"github.com/pro-assistance-dev/sprob/handlers/metabase"
 	"github.com/pro-assistance-dev/sprob/modules/buildings"
 	"github.com/pro-assistance-dev/sprob/modules/chats"
 	"github.com/pro-assistance-dev/sprob/modules/documents"
 	"github.com/pro-assistance-dev/sprob/modules/extracts"
 	"github.com/pro-assistance-dev/sprob/modules/forms"
-	"github.com/pro-assistance-dev/sprob/modules/metabase"
 	"github.com/pro-assistance-dev/sprob/modules/settings"
 
 	"github.com/pro-assistance-dev/sprob/handlers/humans"
