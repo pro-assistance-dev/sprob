@@ -23,6 +23,15 @@ func (h *Handler) XLSX(c *gin.Context) {
 	c.Data(http.StatusOK, "application/octet-stream", file)
 }
 
+func (h *Handler) Cards(c *gin.Context) {
+	url := "/api/card"
+	data, err := h.helper.Metabase.Request2(url)
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, data)
+}
+
 func (h *Handler) Frame(c *gin.Context) {
 	questionID := c.Param("questionId")
 	claims := jwt.MapClaims{
