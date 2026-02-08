@@ -57,6 +57,39 @@ func (c *Client) Request2(path string) ([]byte, error) {
 	return body, nil
 }
 
+func (c *Client) RequestGet(path string) ([]byte, error) {
+	// Собираем URL
+	fullURL, err := c.buildURL(path, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to build URL: %w", err)
+	}
+
+	var bodyReader io.Reader
+	req, err := http.NewRequest("GET", fullURL, bodyReader)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	fmt.Println(fullURL)
+	req.Header.Set("X-API-Key", c.apiKey)
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Читаем тело ответа
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("API error %d: %s", resp.StatusCode, string(body))
+	}
+	return body, nil
+}
+
 func (c *Client) Request(options RequestOptions) (*Response, error) {
 	// Собираем URL
 	fullURL, err := c.buildURL(options.Path, options.Query)
