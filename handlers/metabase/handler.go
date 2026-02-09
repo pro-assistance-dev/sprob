@@ -12,6 +12,7 @@ import (
 )
 
 func (h *Handler) XLSX(c *gin.Context) {
+	h.Cards()
 	name := c.Param("name")
 	card := cards.Find(name)
 	if card == nil {

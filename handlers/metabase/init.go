@@ -31,5 +31,5 @@ func (c Cards) Find(name string) *Card {
 
 func Init(h *helper.Helper) {
 	H = &Handler{helper: h}
-	H.Cards()
+	// H.Cards()
 }
