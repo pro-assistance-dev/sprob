@@ -8,12 +8,12 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/pro-assistance-dev/sprob/models/metabase"
 )
 
 func (h *Handler) XLSX(c *gin.Context) {
-	cardID := c.Param("cardId")
-	url := fmt.Sprintf("/api/card/%s/query/xlsx", cardID)
+	name := c.Param("name")
+	card := cards.Find(name)
+	url := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
 	file, err := h.helper.Metabase.Request2(url)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
@@ -31,12 +31,11 @@ func (h *Handler) Cards(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	var m []metabase.Card
-	err = json.Unmarshal(data, &m)
+
+	err = json.Unmarshal(data, &cards)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	c.JSON(http.StatusOK, m)
 }
 
 func (h *Handler) Frame(c *gin.Context) {
