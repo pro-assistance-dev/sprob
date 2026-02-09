@@ -31,7 +31,7 @@ func (h *Handler) Cards(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	var m metabase.Card
+	var m []metabase.Card
 	err = json.Unmarshal(data, &m)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
