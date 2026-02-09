@@ -25,7 +25,7 @@ func (h *Handler) XLSX(c *gin.Context) {
 
 func (h *Handler) Cards(c *gin.Context) {
 	url := "/api/card"
-	data, err := h.helper.Metabase.RequestGet()
+	data, err := h.helper.Metabase.RequestGet(url)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
