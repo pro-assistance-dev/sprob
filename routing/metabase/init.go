@@ -8,7 +8,6 @@ import (
 
 // Init func
 func Init(r *gin.RouterGroup, h *handler.Handler) {
-	r.GET("/cards", h.Cards)
 	r.GET("/xlsx/:name", h.XLSX)
 	r.GET("/frame/:questionId", h.Frame)
 }
