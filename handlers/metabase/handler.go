@@ -13,6 +13,11 @@ import (
 func (h *Handler) XLSX(c *gin.Context) {
 	name := c.Param("name")
 	card := cards.Find(name)
+	if card == nil {
+		fmt.Println(cards)
+		h.helper.HTTP.HandleError(c, fmt.Errorf("card not found"))
+		return
+	}
 	url := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
 	file, err := h.helper.Metabase.Request2(url)
 	if h.helper.HTTP.HandleError(c, err) {
