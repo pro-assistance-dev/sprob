@@ -72,6 +72,8 @@ func (c *Client) RequestGet(path string) ([]byte, error) {
 
 	fmt.Println(fullURL)
 	req.Header.Set("X-API-Key", c.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request failed: %w", err)
