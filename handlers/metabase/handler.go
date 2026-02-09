@@ -1,12 +1,14 @@
 package metabase
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/pro-assistance-dev/sprob/models/metabase"
 )
 
 func (h *Handler) XLSX(c *gin.Context) {
@@ -26,6 +28,11 @@ func (h *Handler) XLSX(c *gin.Context) {
 func (h *Handler) Cards(c *gin.Context) {
 	url := "/api/card"
 	data, err := h.helper.Metabase.RequestGet(url)
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	var m metabase.Card
+	err = json.Unmarshal(data, &m)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
