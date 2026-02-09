@@ -3,6 +3,7 @@ package metabase
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,16 +31,19 @@ func (h *Handler) XLSX(c *gin.Context) {
 	c.Data(http.StatusOK, "application/octet-stream", file)
 }
 
-func (h *Handler) Cards(c *gin.Context) {
+func (h *Handler) Cards() {
 	url := "/api/card"
 	data, err := h.helper.Metabase.RequestGet(url)
-	if h.helper.HTTP.HandleError(c, err) {
-		return
+	if err != nil {
+		log.Fatal(err)
 	}
+	// if h.helper.HTTP.HandleError(c, err) {
+	// 	return
+	// }
 
 	err = json.Unmarshal(data, &cards)
-	if h.helper.HTTP.HandleError(c, err) {
-		return
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
