@@ -21,6 +21,14 @@ func (h *Handler) XLSX(c *gin.Context) {
 		return
 	}
 	url := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
+
+	fmt.Println(c.Request.URL.RawQuery)
+
+	query := c.Request.URL.RawQuery
+	if query != "" {
+		url = url + "/?" + query
+	}
+
 	file, err := h.helper.Metabase.Request2(url)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
