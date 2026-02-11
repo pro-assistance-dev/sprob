@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -13,79 +12,71 @@ import (
 )
 
 type MetabaseParameter struct {
-	Type   string        `json:"type"`
-	Target []interface{} `json:"target"`
-	Value  interface{}   `json:"value"`
+	Type   string `json:"type"`
+	Target []any  `json:"target"`
+	Value  any    `json:"value"`
 }
 
 func (h *Handler) XLSX(c *gin.Context) {
+	// Обновляем список карточек
 	h.Cards()
+
 	name := c.Param("name")
 	card := cards.Find(name)
 	if card == nil {
-		fmt.Println(cards)
 		h.helper.HTTP.HandleError(c, fmt.Errorf("card not found"))
 		return
 	}
-	urlVar := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
 
-	fmt.Println(c.Request.URL.RawQuery)
-
-	rawQuery := c.Request.URL.RawQuery
-	values, err := url.ParseQuery(rawQuery)
-
-	var parameters []MetabaseParameter
-	for key, vals := range values {
-		if len(vals) == 0 {
+	parameters := []map[string]any{}
+	for key, vals := range c.Request.URL.Query() {
+		if len(vals) == 0 || key == "cardId" {
 			continue
 		}
 
-		// Пропускаем специальные параметры
-		if key == "cardId" {
-			continue
-		}
-
-		// Создаем параметр Metabase
-		param := MetabaseParameter{
-			Type: "category", // или определять из параметра
-			Target: []interface{}{
+		param := map[string]any{
+			"type": "string/=", // явно указываем string
+			"target": []any{
 				"variable",
-				[]interface{}{"template-tag", key},
+				[]any{"template-tag", key},
 			},
-			Value: vals[0],
+			"value": vals[0],
 		}
-
-		// Если в параметрах указан тип
-		if typeKey := fmt.Sprintf("%s_type", key); values.Get(typeKey) != "" {
-			param.Type = values.Get(typeKey)
-		}
-
 		parameters = append(parameters, param)
 	}
-	file, err := h.helper.Metabase.Request2(urlVar, parameters)
-	if h.helper.HTTP.HandleError(c, err) {
+
+	// Оборачиваем в правильную структуру
+	body := map[string]any{
+		"parameters": parameters,
+	}
+	// Выполняем запрос для получения XLSX
+	urlPath := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
+	resp, err := h.helper.Metabase.Post(urlPath, body, nil)
+	if err != nil {
+		h.helper.HTTP.HandleError(c, err)
 		return
 	}
+
+	// Отправляем файл
 	ext := ".xlsx"
 	downloadName := time.Now().UTC().Format("data-20060102150405" + ext)
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Content-Disposition", "attachment; filename="+`"`+downloadName+`"`)
-	c.Data(http.StatusOK, "application/octet-stream", file)
+	c.Data(http.StatusOK, "application/octet-stream", resp.Body)
 }
 
 func (h *Handler) Cards() {
-	url := "/api/card"
-	data, err := h.helper.Metabase.RequestGet(url)
+	data, err := h.helper.Metabase.Get("/api/card", nil, nil)
 	if err != nil {
-		log.Fatal(err)
+		// Используем хелпер для логирования ошибки
+		log.Println(err)
+		return
 	}
-	// if h.helper.HTTP.HandleError(c, err) {
-	// 	return
-	// }
 
-	err = json.Unmarshal(data, &cards)
+	err = json.Unmarshal(data.Body, &cards)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 }
 
