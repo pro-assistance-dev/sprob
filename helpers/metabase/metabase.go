@@ -36,7 +36,7 @@ type Response struct {
 
 func NewClient(c config.Metabase) *Client {
 	return &Client{
-		baseURL:   c.SiteURL,
+		baseURL:   c.URL,
 		apiKey:    c.APIKey,
 		SiteURL:   c.SiteURL,
 		SecretKey: c.SecretKey,
