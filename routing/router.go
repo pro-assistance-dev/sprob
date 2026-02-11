@@ -13,7 +13,6 @@ import (
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/middleware"
 
-	"github.com/pro-assistance-dev/sprob/handlers/metabase"
 	"github.com/pro-assistance-dev/sprob/modules/buildings"
 	"github.com/pro-assistance-dev/sprob/modules/chats"
 	"github.com/pro-assistance-dev/sprob/modules/documents"
@@ -26,7 +25,6 @@ import (
 	ftsppresetsRouter "github.com/pro-assistance-dev/sprob/routing/ftsppresets"
 	humansR "github.com/pro-assistance-dev/sprob/routing/humans"
 	menusRouter "github.com/pro-assistance-dev/sprob/routing/menus"
-	metabaseR "github.com/pro-assistance-dev/sprob/routing/metabase"
 	schemasRouter "github.com/pro-assistance-dev/sprob/routing/schemas"
 	useraccountsRouter "github.com/pro-assistance-dev/sprob/routing/usersaccounts"
 	valuetypesRouter "github.com/pro-assistance-dev/sprob/routing/valuetypes"
@@ -70,8 +68,8 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	menus.Init(h)
 	menusRouter.Init(apiToken.Group("/menus"), menus.H)
 
-	metabase.Init(h)
-	metabaseR.Init(apiToken.Group("/metabase"), metabase.H)
+	// metabase.Init(h)
+	// metabaseR.Init(apiToken.Group("/metabase"), metabase.H)
 	// search.Init(h)
 	// searchRouter.Init(apiToken.Group("/search"), search.H)
 

@@ -5,11 +5,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 )
+
+type MetabaseParameter struct {
+	Type   string        `json:"type"`
+	Target []interface{} `json:"target"`
+	Value  interface{}   `json:"value"`
+}
 
 func (h *Handler) XLSX(c *gin.Context) {
 	h.Cards()
@@ -20,16 +27,42 @@ func (h *Handler) XLSX(c *gin.Context) {
 		h.helper.HTTP.HandleError(c, fmt.Errorf("card not found"))
 		return
 	}
-	url := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
+	urlVar := fmt.Sprintf("/api/card/%d/query/xlsx", card.ID)
 
 	fmt.Println(c.Request.URL.RawQuery)
 
-	query := c.Request.URL.RawQuery
-	if query != "" {
-		url = url + "/?" + query
-	}
+	rawQuery := c.Request.URL.RawQuery
+	values, err := url.ParseQuery(rawQuery)
 
-	file, err := h.helper.Metabase.Request2(url)
+	var parameters []MetabaseParameter
+	for key, vals := range values {
+		if len(vals) == 0 {
+			continue
+		}
+
+		// Пропускаем специальные параметры
+		if key == "cardId" {
+			continue
+		}
+
+		// Создаем параметр Metabase
+		param := MetabaseParameter{
+			Type: "category", // или определять из параметра
+			Target: []interface{}{
+				"variable",
+				[]interface{}{"template-tag", key},
+			},
+			Value: vals[0],
+		}
+
+		// Если в параметрах указан тип
+		if typeKey := fmt.Sprintf("%s_type", key); values.Get(typeKey) != "" {
+			param.Type = values.Get(typeKey)
+		}
+
+		parameters = append(parameters, param)
+	}
+	file, err := h.helper.Metabase.Request2(urlVar, parameters)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

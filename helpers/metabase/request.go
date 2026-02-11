@@ -24,7 +24,7 @@ type Response struct {
 	Body       []byte
 }
 
-func (c *Client) Request2(path string) ([]byte, error) {
+func (c *Client) Request2(path string, params map[string]any) ([]byte, error) {
 	// Собираем URL
 	fullURL, err := c.buildURL(path, nil)
 	if err != nil {
@@ -32,6 +32,15 @@ func (c *Client) Request2(path string) ([]byte, error) {
 	}
 
 	var bodyReader io.Reader
+
+	if params != nil {
+		jsonData, err := json.Marshal(params)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+		bodyReader = bytes.NewBuffer(jsonData)
+	}
+
 	req, err := http.NewRequest("POST", fullURL, bodyReader)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
