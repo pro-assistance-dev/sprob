@@ -1,6 +1,8 @@
 package models
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/uptrace/bun"
 	"golang.org/x/crypto/bcrypt"
@@ -17,6 +19,9 @@ type UserAccount struct {
 	ItemID       uuid.NullUUID `bun:"type:uuid" json:"itemId"`
 	Phone        string        `json:"phone"`
 	ConfirmEmail bool          `json:"confirmEmail"`
+
+	CreatedAt time.Time `bun:"created_at,nullzero,notnull,default:current_timestamp"`
+	UpdatedAt time.Time `bun:"updated_at,nullzero,notnull,default:current_timestamp"`
 }
 
 type UsersAccounts []*UserAccount
