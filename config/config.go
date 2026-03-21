@@ -18,7 +18,7 @@ type Project struct {
 	BinPath    string `mapstructure:"BIN_PATH" yaml:"bin_path"`
 	UploadPath string `mapstructure:"UPLOAD_PATH" yaml:"upload_path"`
 
-	TemplatesPath string `mapstructure:"PROJECT_TEMPLATES_PATH" yaml:"templates_path"`
+	TemplatesPath string `mapstructure:"TEMPLATES_PATH" yaml:"templates_path"`
 	ModelsPath    string `mapstructure:"MODELS_PATH" yaml:"models_path"`
 }
 

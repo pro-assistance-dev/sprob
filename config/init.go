@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -54,7 +53,7 @@ func loadConfig(path string, name string) (config *Config, err error) {
 	}
 	err = viper.Unmarshal(&config)
 	config.DB.Name = config.Project.Name
-	config.Project.UploadPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "static")
+	// config.Project.UploadPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "static")
 	// config.Project.TemplatesPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "templates")
 	return config, err
 }
