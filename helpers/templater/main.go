@@ -19,6 +19,16 @@ type Templater struct {
 }
 
 func NewTemplater(config config.Project) *Templater {
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+	fmt.Println(config.TemplatesPath)
+
 	return &Templater{templatesPath: config.TemplatesPath}
 }
 

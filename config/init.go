@@ -55,6 +55,6 @@ func loadConfig(path string, name string) (config *Config, err error) {
 	err = viper.Unmarshal(&config)
 	config.DB.Name = config.Project.Name
 	config.Project.UploadPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "static")
-	config.Project.TemplatesPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "templates")
+	// config.Project.TemplatesPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "templates")
 	return config, err
 }
