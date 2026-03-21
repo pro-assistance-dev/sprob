@@ -39,6 +39,19 @@ func (i *Templater) ParseTemplate(data any, templates ...string) (string, error)
 	templatesForParse := []string{}
 	templates = append(templates, "_footer.html", "_header.html") // добавляем хэдер и футер к шаблонам
 	for _, t := range templates {
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
+		fmt.Println(i.templatesPath)
 		templatesForParse = append(templatesForParse, path.Join(i.templatesPath, t)) // к каждому шаблону приблавляем путь
 	}
 	t := template.Must(template.ParseFiles(templatesForParse...))
