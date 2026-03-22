@@ -14,7 +14,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/middleware"
 
 	"github.com/pro-assistance-dev/sprob/handlers/metabase"
-	"github.com/pro-assistance-dev/sprob/modules/buildings"
+	// "github.com/pro-assistance-dev/sprob/modules/buildings"
 	"github.com/pro-assistance-dev/sprob/modules/chats"
 	"github.com/pro-assistance-dev/sprob/modules/documents"
 	"github.com/pro-assistance-dev/sprob/modules/extracts"
@@ -87,7 +87,7 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	forms.InitRoutes(apiToken, h)
 	settings.InitRoutes(apiToken, h)
 	extracts.InitRoutes(apiToken, h)
-	buildings.InitRoutes(apiToken, h)
+	// buildings.InitRoutes(apiToken, h)
 	chats.InitRoutes(apiToken, h)
 	documents.InitRoutes(apiToken, h)
 
