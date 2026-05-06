@@ -38,8 +38,8 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	m := middleware.CreateMiddleware(h)
 	r.Use(m.CORSMiddleware())
 	r.Use(gin.Logger())
-
-	r.Static("/api/static", "./static/")
+	uploaderPath := h.Uploader.GetUploaderPath()
+	r.Static("/api/static", *uploaderPath)
 
 	apiToken := r.Group("/api")
 	apiToken.Use(m.InjectRequestInfo())
