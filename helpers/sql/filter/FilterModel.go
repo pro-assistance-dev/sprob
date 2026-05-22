@@ -98,7 +98,11 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 		return
 	}
 	if f.Type != JoinType {
-		query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
+		if len(f.Set) > 1 {
+			query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
+		} else {
+			query.Where(fmt.Sprintf("%s %s ?", f.getTableAndCol(), f.Operator), bun.In(f.Set))
+		}
 		return
 	}
 	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
