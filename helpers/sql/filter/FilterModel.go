@@ -151,7 +151,7 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	// joinTable := joinModel.GetTableName()
 
 	for _, joinIn := range f.JoinIn {
-		joinCondition := fmt.Sprintf("%s.%s in (?)", joinTable, joinModel.GetColName(joinIn))
+		joinCondition := fmt.Sprintf("%s.%s in ?", joinTable, joinModel.GetColName(joinIn))
 		query.JoinOn(joinCondition, bun.In(f.JoinSets))
 	}
 
