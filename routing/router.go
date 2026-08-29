@@ -39,7 +39,9 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	r.Use(m.CORSMiddleware())
 	r.Use(gin.Logger())
 	uploaderPath := h.Uploader.GetUploaderPath()
-	r.Static("/api/static", *uploaderPath)
+	if uploaderPath != nil {
+		r.Static("/api/static", *uploaderPath)
+	}
 
 	apiToken := r.Group("/api")
 	apiToken.Use(m.InjectRequestInfo())

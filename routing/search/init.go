@@ -8,6 +8,6 @@ import (
 
 // Init func
 func Init(r *gin.RouterGroup, h *handler.Handler) {
-	r.GET("/main", h.SearchMain)
-	r.GET("", h.Search)
+	r.GET("/main", h.Searc)
+	r.GET("", h.Searc)
 }
