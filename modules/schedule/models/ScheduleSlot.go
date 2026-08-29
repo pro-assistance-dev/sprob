@@ -20,6 +20,7 @@ type ScheduleSlot struct {
 	EndTime       string        `json:"endTime"`
 
 	ScheduleID uuid.NullUUID `bun:"type:uuid,notnull" json:"scheduleId"`
+	Schedule   *Schedule     `bun:"rel:belongs-to" json:"schedule"`
 	SessionID  uuid.NullUUID `bun:"type:uuid" json:"sessionId"`
 
 	Payload map[string]interface{} `bun:"type:jsonb,jsonb" json:"payload"`
