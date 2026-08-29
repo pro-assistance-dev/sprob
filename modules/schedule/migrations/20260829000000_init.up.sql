@@ -42,7 +42,7 @@ create table if not exists schedule_sessions (
     description varchar,
     start_time varchar not null,
     end_time varchar not null,
-    schedule_id uuid not null references schedules on update cascade on delete cascade,
+    schedule_id uuid not null references schedule_timetables on update cascade on delete cascade,
     created_at timestamp default CURRENT_TIMESTAMP not null,
     updated_at timestamp default CURRENT_TIMESTAMP not null
 );
@@ -55,7 +55,7 @@ create table if not exists schedule_slots (
     description varchar,
     start_time varchar not null,
     end_time varchar not null,
-    schedule_id uuid not null references schedules on update cascade on delete cascade,
+    schedule_id uuid not null references schedule_timetables on update cascade on delete cascade,
     session_id uuid references schedule_sessions on update cascade on delete set null,
     payload jsonb,
     created_at timestamp default CURRENT_TIMESTAMP not null,
