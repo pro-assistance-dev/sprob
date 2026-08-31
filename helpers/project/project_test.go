@@ -38,9 +38,10 @@ func TestProject(t *testing.T) {
 		assert.Equal(t, 3, len(SchemasLib), "When 3 struct are defined, len schemas should be 3")
 	})
 
-	t.Run("GetSchemas", func(t *testing.T) {
-		assert.NotNil(t, p.Schemas.GetSchema("contact"), "Find existing struct")
-		assert.Nil(t, p.Schemas.GetSchema("Contact"), "When find struct with PascalCase, return nil")
+t.Run("GetSchemas", func(t *testing.T) {
+		assert.NotNil(t, p.Schemas.GetSchema("contact"), "Find existing struct (lowerCamel)")
+		assert.NotNil(t, p.Schemas.GetSchema("Contact"), "PascalCase нормализуется в lowerCamel (Н11)")
+		assert.NotNil(t, p.Schemas.GetSchema("email-message"), "kebab-case нормализуется в lowerCamel (Н11)")
 		assert.Nil(t, p.Schemas.GetSchema("NotExistst"), "When struct not exist, return nil")
 	})
 

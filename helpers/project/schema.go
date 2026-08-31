@@ -98,7 +98,17 @@ func (item Schema) ConcatTableCol(colNameInCamelCase string) string {
 }
 
 func (items SchemasMap) GetSchema(schemaName string) *Schema {
-	return items[schemaName]
+	if s, ok := items[schemaName]; ok {
+		return s
+	}
+	// Н11 (portal/TASKS.md): клиент (sprof SortModel) шлёт kebab-case
+	// ('emergency-message'), ключи SchemasMap — lowerCamel ('emergencyMessage')
+	// → без нормализации FTSP-сортировка падала 500 (nil pointer в distinctOn).
+	camel := strcase.ToLowerCamel(schemaName)
+	if s, ok := items[camel]; ok {
+		return s
+	}
+	return nil
 }
 
 func (item Schema) GetTableName() string {
