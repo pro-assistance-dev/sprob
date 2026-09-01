@@ -60,7 +60,8 @@ func (r *Repository) Delete(c context.Context, id *string) (err error) {
 	return err
 }
 
-// ! TODO Стас посмотри, плз
+// Update — обновляет здание и синхронизирует этажи/входы (удаляет отсутствующие,
+// обновляет существующие, вставляет новые).
 func (r *Repository) Update(c context.Context, building *models.Building) (err error) {
 	_, err = r.db().NewUpdate().Model(building).Where("id = ?", building.ID).Exec(c)
 	if err != nil {
@@ -112,6 +113,9 @@ func (r *Repository) Update(c context.Context, building *models.Building) (err e
 		}
 		if !found {
 			_, err = r.db().NewDelete().Model(entrance).Where("id = ?", (*entrance)[j].ID).Exec(c)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	for _, entrances := range building.Entrances {

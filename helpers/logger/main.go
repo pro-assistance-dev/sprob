@@ -54,7 +54,7 @@ func setupOutput(l *logrus.Logger) {
 func LoggingMiddleware(logger *logrus.Logger) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		startTime := time.Now()
-		//query := map[string]string{}
+		// query := map[string]string{}
 		//err := ctx.Bind(query)
 		//if err != nil {
 		//	fmt.Println(err)
@@ -87,18 +87,19 @@ func LoggingMiddleware(logger *logrus.Logger) gin.HandlerFunc {
 			"clientIp":        clientIP,
 			"clientUserAgent": clientUserAgent,
 			"errors":          ctx.Errors.ByType(gin.ErrorTypePrivate).String(),
-			//"body":            query,
+			// "body":            query,
 			//"formBody": formBody,
 		})
 
 		if len(ctx.Errors) > 0 {
 			entry.Error(ctx.Errors.ByType(gin.ErrorTypePrivate).String())
 		} else {
-			if statusCode >= http.StatusInternalServerError {
+			switch {
+			case statusCode >= http.StatusInternalServerError:
 				entry.Error()
-			} else if statusCode >= http.StatusBadRequest {
+			case statusCode >= http.StatusBadRequest:
 				entry.Warn()
-			} else {
+			default:
 				entry.Info()
 			}
 		}

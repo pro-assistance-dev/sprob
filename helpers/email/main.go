@@ -89,7 +89,7 @@ func (e *Email) sendEmail() error {
 	// Собираем сообщение
 	var message strings.Builder
 	for k, v := range headers {
-		message.WriteString(fmt.Sprintf("%s: %s\r\n", k, v))
+		fmt.Fprintf(&message, "%s: %s\r\n", k, v)
 	}
 	message.WriteString("\r\n") // разделитель заголовков и тела
 
@@ -99,7 +99,9 @@ func (e *Email) sendEmail() error {
 	if err != nil {
 		return err
 	}
-	bodyEncoded.Close()
+	if err := bodyEncoded.Close(); err != nil {
+		return err
+	}
 
 	servername := fmt.Sprintf("%s:%s", e.config.Server, e.config.Port)
 	host, _, _ := net.SplitHostPort(servername)
@@ -112,13 +114,13 @@ func (e *Email) sendEmail() error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	c, err := smtp.NewClient(conn, host)
 	if err != nil {
 		return err
 	}
-	defer c.Close()
+	defer func() { _ = c.Close() }()
 
 	// Auth
 	if err = c.Auth(auth); err != nil {

@@ -99,7 +99,7 @@ func (m *Middleware) CORSMiddleware() gin.HandlerFunc {
 
 func (m *Middleware) CheckPermission() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//if !m.checkPermission(c) {
+		// if !m.checkPermission(c) {
 		//	c.AbortWithStatus(http.StatusForbidden)
 		//	return
 		//}

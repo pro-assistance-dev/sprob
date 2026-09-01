@@ -27,7 +27,7 @@ type LocalUploader struct {
 }
 
 func NewLocalUploader(path *string) *LocalUploader {
-	staticPath := filepath.Join(*path)
+	staticPath := *path
 	return &LocalUploader{
 		UploadPath: &staticPath,
 	}

@@ -82,8 +82,7 @@ func (broker *Broker) ServeHTTP(c *gin.Context) {
 			return
 		default:
 			event := <-messageChan
-			switch eventName {
-			case event.EventName:
+			if eventName == event.EventName {
 				payload, err := json.Marshal(event.Payload)
 				if err != nil {
 					_ = c.AbortWithError(http.StatusBadRequest, fmt.Errorf("wrong json"))

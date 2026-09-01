@@ -71,17 +71,20 @@ const (
 func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 	q := ""
 	if f.isUnary() {
-		if f.Type == BooleanType {
+		switch f.Type {
+		case BooleanType:
 			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), f.Operator, f.Boolean)
-		} else if f.Type == DateType {
+		case DateType:
 			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
-		} else if f.isLike() {
-			f.Value1 = util.NewUtil("null").TranslitToRu(f.Value1)
-			f.likeToString()
-			col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
-			q = fmt.Sprintf("%s %s lower('%s')", col, f.Operator, f.Value1)
-		} else {
-			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
+		default:
+			if f.isLike() {
+				f.Value1 = util.NewUtil("null").TranslitToRu(f.Value1)
+				f.likeToString()
+				col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
+				q = fmt.Sprintf("%s %s lower('%s')", col, f.Operator, f.Value1)
+			} else {
+				q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
+			}
 		}
 	}
 	if f.isBetween() {
@@ -171,8 +174,7 @@ func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	// }
 }
 
-//
-//func constructTextWhere(tbl *bun.SelectQuery, field string, operator string, options ...models.filter) *bun.SelectQuery {
+// func constructTextWhere(tbl *bun.SelectQuery, field string, operator string, options ...models.filter) *bun.SelectQuery {
 //	operators := map[string]string{
 //		"equals":      "%s = ?",
 //		"notEqual":    "%s <> ?",

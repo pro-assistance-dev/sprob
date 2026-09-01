@@ -23,7 +23,7 @@ func createMigrationSQL(migrator *migrate.Migrator, name string) error {
 		return err
 	}
 	nameInSnake := strcase.ToSnake(name)
-	mf, err := migrator.CreateSQLMigrations(context.TODO(), nameInSnake)
+	mf, err := migrator.CreateSQLMigrations(context.Background(), nameInSnake)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ END $$;`)
 }
 
 func initMigration(migrator *migrate.Migrator) {
-	err := migrator.Init(context.TODO())
+	err := migrator.Init(context.Background())
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -82,7 +82,7 @@ func initMigration(migrator *migrate.Migrator) {
 }
 
 func runMigration(migrator *migrate.Migrator) {
-	group, err := migrator.Migrate(context.TODO())
+	group, err := migrator.Migrate(context.Background())
 	if err != nil {
 		log.Fatalf("fail migrate: %s", err)
 	}

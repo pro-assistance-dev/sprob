@@ -26,7 +26,7 @@ type source struct {
 
 // Initiate new source file from input argument
 func (i *PDF) newSource(file IFile) Mergeable {
-	//if len(fileInputParts) > 1 {
+	// if len(fileInputParts) > 1 {
 	//	pages = parsePageNums(fileInputParts[1])
 	//}
 	inputSource := getMergeableFile(file)
@@ -45,15 +45,11 @@ func getMergeableFile(file IFile) Mergeable {
 		log.Fatal("Cannot read source file:", file.GetFullPath())
 	}
 
-	defer func() {
-		err = f.Close()
-		if err != nil {
-			log.Fatal("Cannot close source file:", file.GetFullPath())
-		}
-	}()
-
 	ext := filepath.Ext(file.GetOriginalName())
 	mime, err := getMimeType(f)
+	if cerr := f.Close(); cerr != nil {
+		log.Fatal("Cannot close source file:", file.GetFullPath())
+	}
 	if err != nil {
 		log.Fatal("Error in getting mime type of file:", file.GetOriginalName())
 	}

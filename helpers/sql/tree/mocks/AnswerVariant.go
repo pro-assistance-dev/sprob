@@ -22,7 +22,7 @@ type AnswerVariants []*AnswerVariant
 
 func (items AnswerVariants) GetRegisterPropertyOthersForDelete() []uuid.UUID {
 	itemsForGet := make([]uuid.UUID, 0)
-	//for i := range items {
+	// for i := range items {
 	//	itemsForGet = append(itemsForGet, items[i].RegisterPropertyOthersForDelete...)
 	//}
 	return itemsForGet

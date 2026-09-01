@@ -89,6 +89,8 @@ func (i *Project) InitSchemas() {
 	i.Schemas = make(SchemasMap, 0)
 
 	for _, path := range paths {
+		//nolint:staticcheck // SA1019: ParseDir deprecated (build tags) — здесь парсим СВОИ модели
+		// без build tags; миграция на go/packages изменит поведение схем-интроспекции (Т2).
 		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
 		if err != nil {
 			log.Fatal(err)
@@ -120,16 +122,10 @@ func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) map
 
 	for _, file := range pack.Files {
 		for _, node := range file.Decls {
-			switch node.(type) {
-			case *ast.GenDecl:
-				genDecl := node.(*ast.GenDecl)
+			if genDecl, ok := node.(*ast.GenDecl); ok {
 				for _, spec := range genDecl.Specs {
-					switch spec.(type) {
-					case *ast.TypeSpec:
-						typeSpec := spec.(*ast.TypeSpec)
-						switch typeSpec.Type.(type) {
-						case *ast.StructType:
-							structType := typeSpec.Type.(*ast.StructType)
+					if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+						if structType, ok := typeSpec.Type.(*ast.StructType); ok {
 							structs[typeSpec] = structType.Fields.List
 						}
 					}

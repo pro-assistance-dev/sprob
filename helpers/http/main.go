@@ -57,9 +57,9 @@ func (i *HTTP) ListenAndServe(handler http.Handler) {
 	log.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
+	err := srv.Shutdown(ctx)
+	cancel()
+	if err != nil {
 		log.Fatalln(err)
 	}
 }

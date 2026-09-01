@@ -14,6 +14,7 @@ import (
 var p = Project{Schemas: make(SchemasMap, 0)}
 
 func ProjectTestSetup() {
+	//nolint:staticcheck // SA1019: ParseDir deprecated — см. project.go (Т2)
 	modelsPackage, err := parser.ParseDir(token.NewFileSet(), "./mocks/", nil, parser.AllErrors)
 	if err != nil {
 		log.Fatal(err)

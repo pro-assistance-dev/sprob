@@ -149,7 +149,7 @@ func (item *FormFill) Include(variantID uuid.NullUUID) string {
 	return res
 }
 
-func (item *FormFill) GetData(Field *Field) interface{} {
+func (item *FormFill) GetData(field *Field) interface{} {
 	// var res interface{}
 	// res = No
 	// for _, FieldFill := range item.FieldFills {
@@ -220,9 +220,9 @@ func (item *FormFill) GetXlsxData(research *Form) ([]interface{}, error) {
 	return result, nil
 }
 
-func (item *FormFill) GetResultsMap(Fields Fields) map[string]interface{} {
+func (item *FormFill) GetResultsMap(fields Fields) map[string]interface{} {
 	variables := make(map[string]interface{})
-	for _, q := range Fields {
+	for _, q := range fields {
 		FieldFill := item.GetData(q)
 		variables[q.Code] = FieldFill
 	}

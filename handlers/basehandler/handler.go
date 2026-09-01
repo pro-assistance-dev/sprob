@@ -4,9 +4,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/iancoleman/strcase"
 	baseModels "github.com/pro-assistance-dev/sprob/models"
 )
+
+// validUUIDParam — валидация UUID-параметра: не-UUID → 404 (иначе Postgres
+// отдаёт 500 «invalid input syntax for type uuid», например /api/events/<slug>).
+func validUUIDParam(c *gin.Context) bool {
+	id := c.Param("id")
+	if _, err := uuid.Parse(id); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "item not found"})
+		return false
+	}
+	return true
+}
 
 func (h *Handler[T]) FTSP(c *gin.Context) {
 	data, err := h.S.GetAll(c.Request.Context())
@@ -30,6 +42,9 @@ func (h *Handler[T]) Create(c *gin.Context) {
 }
 
 func (h *Handler[T]) Get(c *gin.Context) {
+	if !validUUIDParam(c) {
+		return
+	}
 	item, err := h.S.Get(c.Request.Context(), c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
@@ -64,6 +79,9 @@ func (h *Handler[T]) GetAll(c *gin.Context) {
 }
 
 func (h *Handler[T]) Delete(c *gin.Context) {
+	if !validUUIDParam(c) {
+		return
+	}
 	err := h.S.Delete(c.Request.Context(), c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return

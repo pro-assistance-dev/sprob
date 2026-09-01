@@ -111,7 +111,7 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 }
 
 func updateDB(migrator *migrate.Migrator) {
-	group, err := migrator.Migrate(context.TODO())
+	group, err := migrator.Migrate(context.Background())
 	if err != nil {
 		log.Fatalf("fail migrate: %s", err)
 	}

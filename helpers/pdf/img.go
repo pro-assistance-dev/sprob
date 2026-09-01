@@ -87,7 +87,7 @@ func setSize(img *creator.Image, c *creator.Creator) {
 	//+ pageMargin[2] + pageMargin[3]
 
 	pageSize = creator.PageSize{w, h}
-	//} else {
+	// } else {
 	//	sizeHasSet = true
 	//	switch size {
 	//	case "A4":
@@ -119,8 +119,7 @@ func setSize(img *creator.Image, c *creator.Creator) {
 // Set appropriate encoding for JPEG and TIFF
 // MUST be called before changing image size
 func setEncoding(img *creator.Image, s source) {
-	switch s.mime {
-	case "image/jpeg":
+	if s.mime == "image/jpeg" {
 		encoder := core.NewDCTEncoder()
 		encoder.Quality = 100
 		// Encoder dimensions must match the raw image data dimensions.

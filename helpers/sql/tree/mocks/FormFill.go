@@ -42,7 +42,7 @@ func (items FormFills) GetLastResult() *FormFill {
 }
 
 func (item *FormFill) SetIDForChildren() {
-	//if len(item.RegisterPropertyToPatient) > 0 {
+	// if len(item.RegisterPropertyToPatient) > 0 {
 	//	for i := range item.RegisterPropertyToPatient {
 	//		item.RegisterPropertyToPatient[i].FormFillID = item.ID
 	//	}
@@ -52,7 +52,7 @@ func (item *FormFill) SetIDForChildren() {
 			item.FieldFills[i].FormFillID = item.ID
 		}
 	}
-	//if len(item.RegisterPropertyOthersToPatient) > 0 {
+	// if len(item.RegisterPropertyOthersToPatient) > 0 {
 	//	for i := range item.RegisterPropertyOthersToPatient {
 	//		item.RegisterPropertyOthersToPatient[i].FormFillID = item.ID
 	//	}
@@ -66,7 +66,7 @@ func (items FormFills) SetIDForChildren() {
 }
 
 func (items FormFills) SetDeleteIDForChildren() {
-	//for i := range items {
+	// for i := range items {
 	//	items[i].RegisterPropertyToPatientForDelete = append(items[i].RegisterPropertyToPatientForDelete, item.FieldFill[i].ID)
 	//}
 	//for i := range item.FieldFill {
@@ -79,7 +79,7 @@ func (items FormFills) GetRegisterPropertiesToPatients() FieldFills {
 	if len(items) == 0 {
 		return itemsForGet
 	}
-	//for i := range items {
+	// for i := range items {
 	//	itemsForGet = append(itemsForGet, items[i].RegisterPropertyToPatient...)
 	//}
 
@@ -99,7 +99,7 @@ func (items FormFills) GetRegisterPropertiesToPatientsForDelete() []uuid.UUID {
 	if len(items) == 0 {
 		return itemsForGet
 	}
-	//for i := range items {
+	// for i := range items {
 	//	itemsForGet = append(itemsForGet, items[i].RegisterPropertyToPatientForDelete...)
 	//}
 	return itemsForGet
@@ -110,7 +110,7 @@ func (items FormFills) GetRegisterPropertySetToPatient() []*FieldFill {
 	if len(items) == 0 {
 		return itemsForGet
 	}
-	//for i := range items {
+	// for i := range items {
 	//	itemsForGet = append(itemsForGet, items[i].FieldFill...)
 	//}
 	return itemsForGet
@@ -121,7 +121,7 @@ func (items FormFills) GetRegisterPropertySetToPatientForDelete() []uuid.UUID {
 	if len(items) == 0 {
 		return itemsForGet
 	}
-	//for i := range items {
+	// for i := range items {
 	//	itemsForGet = append(itemsForGet, items[i].RegisterPropertySetToPatientForDelete...)
 	//}
 	return itemsForGet
@@ -149,7 +149,7 @@ func (item *FormFill) Include(variantID uuid.NullUUID) string {
 	return res
 }
 
-func (item *FormFill) GetData(Field *Field) interface{} {
+func (item *FormFill) GetData(field *Field) interface{} {
 	// var res interface{}
 	// res = No
 	// for _, FieldFill := range item.FieldFills {
@@ -220,9 +220,9 @@ func (item *FormFill) GetXlsxData(research *Form) ([]interface{}, error) {
 	return result, nil
 }
 
-func (item *FormFill) GetResultsMap(Fields Fields) map[string]interface{} {
+func (item *FormFill) GetResultsMap(fields Fields) map[string]interface{} {
 	variables := make(map[string]interface{})
-	for _, q := range Fields {
+	for _, q := range fields {
 		FieldFill := item.GetData(q)
 		variables[q.Code] = FieldFill
 	}
