@@ -10,11 +10,11 @@ import (
 
 func (h *Handler) Download(c *gin.Context) {
 	id := c.Param("id")
-	item, err := S.Get(c.Request.Context(), id)
+	item, err := h.s.Get(c.Request.Context(), id)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	fullPath := F.GetFullPath(&item.FileSystemPath)
+	fullPath := h.f.GetFullPath(&item.FileSystemPath)
 	c.Header("Content-Description", "File Transfer")
 	c.Header("Download-File-Name", item.OriginalName)
 	c.File(*fullPath)
@@ -26,11 +26,11 @@ func (h *Handler) Create(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = F.Upload(c, &item, files)
+	err = h.f.Upload(c, &item, files)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.Upsert(c.Request.Context(), &item)
+	err = h.s.Upsert(c.Request.Context(), &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -43,7 +43,7 @@ func (h *Handler) Update(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.Upsert(c.Request.Context(), &item)
+	err = h.s.Upsert(c.Request.Context(), &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -51,7 +51,7 @@ func (h *Handler) Update(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
-	err := S.Delete(c.Request.Context(), c.Param("id"))
+	err := h.s.Delete(c.Request.Context(), c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

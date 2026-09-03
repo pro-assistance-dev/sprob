@@ -22,7 +22,7 @@ func (h *Handler) XLSX(c *gin.Context) {
 	h.Cards()
 
 	name := c.Param("name")
-	card := cards.Find(name)
+	card := h.cards.Find(name)
 	if card == nil {
 		h.helper.HTTP.HandleError(c, fmt.Errorf("card not found"))
 		return
@@ -73,7 +73,7 @@ func (h *Handler) Cards() {
 		return
 	}
 
-	err = json.Unmarshal(data.Body, &cards)
+	err = json.Unmarshal(data.Body, &h.cards)
 	if err != nil {
 		log.Println(err)
 		return

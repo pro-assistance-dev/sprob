@@ -16,15 +16,11 @@ import (
 )
 
 func InitRoutes(api *gin.RouterGroup, helper *helperPack.Helper) {
-	passports.Init(helper)
-	passportsRouter.Init(api.Group("/passports"), passports.H)
+	passportsRouter.Init(api.Group("/passports"), passports.Init(helper))
 
-	passportscans.Init(helper)
-	passportscansRouter.Init(api.Group("/passports-scans"), passportscans.H)
+	passportscansRouter.Init(api.Group("/passports-scans"), passportscans.Init(helper))
 
-	snilss.Init(helper)
-	snilssRouter.Init(api.Group("/snilss"), snilss.H)
+	snilssRouter.Init(api.Group("/snilss"), snilss.Init(helper))
 
-	inns.Init(helper)
-	innsRouter.Init(api.Group("/inns"), inns.H)
+	innsRouter.Init(api.Group("/inns"), inns.Init(helper))
 }

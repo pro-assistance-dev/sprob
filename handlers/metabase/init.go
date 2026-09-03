@@ -6,6 +6,7 @@ import (
 
 type Handler struct {
 	helper *helper.Helper
+	cards  Cards
 }
 
 var H *Handler
@@ -18,8 +19,6 @@ type Card struct {
 
 type Cards []*Card
 
-var cards = make(Cards, 0)
-
 func (c Cards) Find(name string) *Card {
 	for _, card := range c {
 		if card.Name == name {
@@ -29,6 +28,10 @@ func (c Cards) Find(name string) *Card {
 	return nil
 }
 
-func Init(h *helper.Helper) {
-	H = &Handler{helper: h}
+// Init — возвращает handler (Т7). Кэш карточек — поле экземпляра, а не пакетный
+// глобал; глобал H заполняется для совместимости.
+func Init(h *helper.Helper) *Handler {
+	handler := &Handler{helper: h, cards: make(Cards, 0)}
+	H = handler
+	return handler
 }

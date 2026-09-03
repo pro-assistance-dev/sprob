@@ -13,10 +13,13 @@ type IHandler interface {
 
 type Handler struct {
 	helper *helper.Helper
+	s      *Service
+	f      *FilesService
 }
 
 type Service struct {
 	helper *helper.Helper
+	r      *Repository
 }
 
 type Repository struct {
@@ -34,9 +37,15 @@ var (
 	F *FilesService
 )
 
-func Init(h *helper.Helper) {
-	H = &Handler{helper: h}
-	S = &Service{helper: h}
-	R = &Repository{helper: h}
-	F = &FilesService{helper: h}
+func Init(h *helper.Helper) *Handler {
+	r := &Repository{helper: h}
+	s := &Service{helper: h, r: r}
+	f := &FilesService{helper: h}
+	handler := &Handler{helper: h, s: s}
+	handler.f = f
+	H = handler
+	S = s
+	R = r
+	F = f
+	return handler
 }

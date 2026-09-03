@@ -9,7 +9,7 @@ import (
 )
 
 func (h *Handler) ConfirmEmail(c *gin.Context) {
-	err := S.ConfirmEmail(c.Request.Context(), c.Param("id"))
+	err := h.s.ConfirmEmail(c.Request.Context(), c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -17,7 +17,7 @@ func (h *Handler) ConfirmEmail(c *gin.Context) {
 }
 
 func (h *Handler) EmailIsConfirm(c *gin.Context) {
-	err := S.EmailIsConfirm(c.Request.Context(), c.Param("email"))
+	err := h.s.EmailIsConfirm(c.Request.Context(), c.Param("email"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -25,7 +25,7 @@ func (h *Handler) EmailIsConfirm(c *gin.Context) {
 }
 
 func (h *Handler) CheckUUID(c *gin.Context) {
-	err := S.CheckUUID(c.Request.Context(), c.Param("id"), c.Param("uuid"))
+	err := h.s.CheckUUID(c.Request.Context(), c.Param("id"), c.Param("uuid"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -38,7 +38,7 @@ func (h *Handler) RefreshPassword(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.UpdatePassword(c.Request.Context(), item.ID.UUID.String(), item.Password)
+	err = h.s.UpdatePassword(c.Request.Context(), item.ID.UUID.String(), item.Password)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

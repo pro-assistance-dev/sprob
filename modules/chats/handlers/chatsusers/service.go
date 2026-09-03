@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Service) Create(c context.Context, item *models.ChatUser[util.WithId]) error {
-	err := R.Create(c, item)
+	err := s.r.Create(c, item)
 	if err != nil {
 		return err
 	}
@@ -16,7 +16,7 @@ func (s *Service) Create(c context.Context, item *models.ChatUser[util.WithId]) 
 }
 
 func (s *Service) Get(c context.Context, id string) (*models.ChatUser[util.WithId], error) {
-	item, err := R.Get(c, id)
+	item, err := s.r.Get(c, id)
 	if err != nil {
 		return nil, err
 	}
@@ -24,11 +24,11 @@ func (s *Service) Get(c context.Context, id string) (*models.ChatUser[util.WithI
 }
 
 func (s *Service) GetAll(c context.Context) (models.ChatsUsersWithCount[util.WithId], error) {
-	return R.GetAll(c)
+	return s.r.GetAll(c)
 }
 
 func (s *Service) Update(c context.Context, item *models.ChatUser[util.WithId]) error {
-	err := R.Update(c, item)
+	err := s.r.Update(c, item)
 	if err != nil {
 		return err
 	}
@@ -36,5 +36,5 @@ func (s *Service) Update(c context.Context, item *models.ChatUser[util.WithId]) 
 }
 
 func (s *Service) Delete(c context.Context, id *string) error {
-	return R.Delete(c, id)
+	return s.r.Delete(c, id)
 }

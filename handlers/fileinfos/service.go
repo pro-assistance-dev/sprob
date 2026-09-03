@@ -11,18 +11,18 @@ func (s *Service) Create(c context.Context, item *models.FileInfo) error {
 	if item == nil {
 		return nil
 	}
-	return R.Create(c, item)
+	return s.r.Create(c, item)
 }
 
 func (s *Service) Get(c context.Context, id string) (*models.FileInfo, error) {
-	return R.Get(c, id)
+	return s.r.Get(c, id)
 }
 
 func (s *Service) Update(c context.Context, item *models.FileInfo) error {
 	if item == nil {
 		return nil
 	}
-	return R.Update(c, item)
+	return s.r.Update(c, item)
 }
 
 func (s *Service) Upsert(c context.Context, item *models.FileInfo) error {
@@ -30,23 +30,23 @@ func (s *Service) Upsert(c context.Context, item *models.FileInfo) error {
 		return nil
 	}
 	fmt.Println(item, item)
-	return R.Upsert(c, item)
+	return s.r.Upsert(c, item)
 }
 
 func (s *Service) CreateMany(c context.Context, items models.FileInfos) error {
 	if len(items) == 0 {
 		return nil
 	}
-	return R.CreateMany(c, items)
+	return s.r.CreateMany(c, items)
 }
 
 func (s *Service) UpsertMany(c context.Context, items models.FileInfos) error {
 	if len(items) == 0 {
 		return nil
 	}
-	return R.UpsertMany(c, items)
+	return s.r.UpsertMany(c, items)
 }
 
 func (s *Service) Delete(c context.Context, id string) error {
-	return R.Delete(c, id)
+	return s.r.Delete(c, id)
 }

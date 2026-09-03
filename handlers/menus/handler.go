@@ -14,7 +14,7 @@ func (h *Handler) Create(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.Create(c, &item)
+	err = h.s.Create(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -23,7 +23,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 func (h *Handler) FTSP(c *gin.Context) {
 	ctx := c.Request.Context()
-	data, err := S.GetAll(ctx)
+	data, err := h.s.GetAll(ctx)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -31,7 +31,7 @@ func (h *Handler) FTSP(c *gin.Context) {
 }
 
 func (h *Handler) GetAll(c *gin.Context) {
-	items, err := S.GetAll(c.Request.Context())
+	items, err := h.s.GetAll(c.Request.Context())
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -39,7 +39,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 }
 
 func (h *Handler) Get(c *gin.Context) {
-	item, err := S.Get(c, c.Param("id"))
+	item, err := h.s.Get(c, c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -47,7 +47,7 @@ func (h *Handler) Get(c *gin.Context) {
 }
 
 func (h *Handler) Delete(c *gin.Context) {
-	err := S.Delete(c, c.Param("id"))
+	err := h.s.Delete(c, c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -61,7 +61,7 @@ func (h *Handler) Update(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.Update(c, &item)
+	err = h.s.Update(c, &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

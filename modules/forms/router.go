@@ -22,24 +22,17 @@ import (
 )
 
 func InitRoutes(api *gin.RouterGroup, helper *helperPack.Helper) {
-	formsections.Init(helper)
-	formsectionsRouter.Init(api.Group("/form-sections"), formsections.H)
+	formsectionsRouter.Init(api.Group("/form-sections"), formsections.Init(helper))
 
-	forms.Init(helper)
-	formsRouter.Init(api.Group("/forms"), forms.H)
+	formsRouter.Init(api.Group("/forms"), forms.Init(helper))
 
-	fields.Init(helper)
-	fieldsRouter.Init(api.Group("/fields"), fields.H)
+	fieldsRouter.Init(api.Group("/fields"), fields.Init(helper))
 
-	fieldfills.Init(helper)
-	fieldfillsRouter.Init(api.Group("/field-fills"), fieldfills.H)
+	fieldfillsRouter.Init(api.Group("/field-fills"), fieldfills.Init(helper))
 
-	answervariants.Init(helper)
-	answervariantsRouter.Init(api.Group("/answer-variants"), answervariants.H)
+	answervariantsRouter.Init(api.Group("/answer-variants"), answervariants.Init(helper))
 
-	formfills.Init(helper)
-	formFillsRouter.Init(api.Group("/form-fills"), formfills.H)
+	formFillsRouter.Init(api.Group("/form-fills"), formfills.Init(helper))
 
-	selectedanswervariants.Init(helper)
-	selectedanswervariantsRouter.Init(api.Group("/selected-answer-variants"), selectedanswervariants.H)
+	selectedanswervariantsRouter.Init(api.Group("/selected-answer-variants"), selectedanswervariants.Init(helper))
 }

@@ -53,14 +53,11 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	// phones.Init(h)
 	// phonesRouter.Init(apiToken.Group("/phones"), phones.H)
 
-	humans.Init(h)
-	humansR.Init(apiToken.Group("/humans"), humans.H)
+	humansR.Init(apiToken.Group("/humans"), humans.Init(h))
 
-	ftsppresets.Init(h)
-	ftsppresetsRouter.Init(apiToken.Group("/ftsp-presets"), ftsppresets.H)
+	ftsppresetsRouter.Init(apiToken.Group("/ftsp-presets"), ftsppresets.Init(h))
 
-	schemas.Init(h)
-	schemasRouter.Init(apiToken.Group("/schemas"), schemas.H)
+	schemasRouter.Init(apiToken.Group("/schemas"), schemas.Init(h))
 
 	// emails.Init(h)
 	// emailsRouter.Init(apiToken.Group("/emails"), emails.H)
@@ -68,22 +65,17 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	// contacts.Init(h)
 	// contactsRouter.Init(apiToken.Group("/contacts"), contacts.H)
 
-	menus.Init(h)
-	menusRouter.Init(apiToken.Group("/menus"), menus.H)
+	menusRouter.Init(apiToken.Group("/menus"), menus.Init(h))
 
-	metabase.Init(h)
-	metabaseR.Init(apiToken.Group("/metabase"), metabase.H)
+	metabaseR.Init(apiToken.Group("/metabase"), metabase.Init(h))
 	// search.Init(h)
 	// searchRouter.Init(apiToken.Group("/search"), search.H)
 
-	fileinfos.Init(h)
-	fileinfosRouter.Init(apiToken.Group("/file-infos"), fileinfos.H)
+	fileinfosRouter.Init(apiToken.Group("/file-infos"), fileinfos.Init(h))
 
-	valuetypes.Init(h)
-	valuetypesRouter.Init(apiToken.Group("/value-types"), valuetypes.H)
+	valuetypesRouter.Init(apiToken.Group("/value-types"), valuetypes.Init(h))
 
-	usersaccounts.Init(h)
-	useraccountsRouter.Init(apiToken.Group("/users-accounts"), usersaccounts.H)
+	useraccountsRouter.Init(apiToken.Group("/users-accounts"), usersaccounts.Init(h))
 
 	forms.InitRoutes(apiToken, h)
 	settings.InitRoutes(apiToken, h)

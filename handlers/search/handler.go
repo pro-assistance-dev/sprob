@@ -14,7 +14,7 @@ func (h *Handler) Searc(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
-	err = S.Search(c.Request.Context(), &item)
+	err = h.s.Search(c.Request.Context(), &item)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

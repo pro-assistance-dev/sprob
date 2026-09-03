@@ -7,7 +7,7 @@ import (
 )
 
 func (s *Service) Create(c context.Context, item *models.Menu) error {
-	err := R.Create(c, item)
+	err := s.r.Create(c, item)
 	if err != nil {
 		return err
 	}
@@ -15,7 +15,7 @@ func (s *Service) Create(c context.Context, item *models.Menu) error {
 }
 
 func (s *Service) Update(c context.Context, item *models.Menu) error {
-	err := R.Update(c, item)
+	err := s.r.Update(c, item)
 	if err != nil {
 		return err
 	}
@@ -23,11 +23,11 @@ func (s *Service) Update(c context.Context, item *models.Menu) error {
 }
 
 func (s *Service) GetAll(c context.Context) (models.MenusWithCount, error) {
-	return R.GetAll(c)
+	return s.r.GetAll(c)
 }
 
 func (s *Service) Get(c context.Context, slug string) (*models.Menu, error) {
-	item, err := R.Get(c, slug)
+	item, err := s.r.Get(c, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -35,5 +35,5 @@ func (s *Service) Get(c context.Context, slug string) (*models.Menu, error) {
 }
 
 func (s *Service) Delete(c context.Context, id string) error {
-	return R.Delete(c, id)
+	return s.r.Delete(c, id)
 }

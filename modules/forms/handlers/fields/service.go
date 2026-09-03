@@ -9,11 +9,11 @@ import (
 )
 
 func (s *Service) Create(c context.Context, item *models.Field) error {
-	return R.Create(c, item)
+	return s.r.Create(c, item)
 }
 
 func (s *Service) GetAll(c context.Context) (models.FieldsWithCount, error) {
-	items, err := R.GetAll(c)
+	items, err := s.r.GetAll(c)
 	if err != nil {
 		return items, err
 	}
@@ -21,7 +21,7 @@ func (s *Service) GetAll(c context.Context) (models.FieldsWithCount, error) {
 }
 
 func (s *Service) Get(c context.Context, id string) (*models.Field, error) {
-	item, err := R.Get(c, id)
+	item, err := s.r.Get(c, id)
 	if err != nil {
 		return nil, err
 	}
@@ -29,15 +29,15 @@ func (s *Service) Get(c context.Context, id string) (*models.Field, error) {
 }
 
 func (s *Service) Update(c context.Context, item *models.Field) error {
-	return R.Update(c, item)
+	return s.r.Update(c, item)
 }
 
 func (s *Service) GetAnthropometryFields(c context.Context) (models.Fields, error) {
-	return R.GetAnthropometryFields(c)
+	return s.r.GetAnthropometryFields(c)
 }
 
 func (s *Service) Delete(c context.Context, id string) error {
-	return R.Delete(c, id)
+	return s.r.Delete(c, id)
 }
 
 func (s *Service) UpsertMany(c context.Context, items models.Fields) error {
@@ -45,7 +45,7 @@ func (s *Service) UpsertMany(c context.Context, items models.Fields) error {
 		return nil
 	}
 
-	err := R.upsertMany(c, items)
+	err := s.r.upsertMany(c, items)
 	if err != nil {
 		return err
 	}
@@ -66,5 +66,5 @@ func (s *Service) DeleteMany(c context.Context, idPool []uuid.UUID) error {
 	if len(idPool) == 0 {
 		return nil
 	}
-	return R.deleteMany(c, idPool)
+	return s.r.deleteMany(c, idPool)
 }

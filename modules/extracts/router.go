@@ -10,6 +10,5 @@ import (
 )
 
 func InitRoutes(api *gin.RouterGroup, helper *helperPack.Helper) {
-	extracts.Init(helper)
-	extractsRouter.Init(api.Group("/extracts"), extracts.H)
+	extractsRouter.Init(api.Group("/extracts"), extracts.Init(helper))
 }

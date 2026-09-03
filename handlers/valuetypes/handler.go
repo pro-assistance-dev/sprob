@@ -7,7 +7,7 @@ import (
 )
 
 func (h *Handler) GetAll(c *gin.Context) {
-	items, err := S.GetAll(c.Request.Context())
+	items, err := h.s.GetAll(c.Request.Context())
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
@@ -15,7 +15,7 @@ func (h *Handler) GetAll(c *gin.Context) {
 }
 
 func (h *Handler) Get(c *gin.Context) {
-	item, err := S.Get(c.Request.Context(), c.Param("id"))
+	item, err := h.s.Get(c.Request.Context(), c.Param("id"))
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

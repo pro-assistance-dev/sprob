@@ -10,6 +10,5 @@ import (
 )
 
 func InitRoutes(api *gin.RouterGroup, helper *helperPack.Helper) {
-	colorthemes.Init(helper)
-	colorthemesRouter.Init(api.Group("/color-themes"), colorthemes.H)
+	colorthemesRouter.Init(api.Group("/color-themes"), colorthemes.Init(helper))
 }

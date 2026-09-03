@@ -16,7 +16,7 @@ func (s *Service) Register(c context.Context, email string, password string, ite
 	item.Password = password
 	item.ItemID = itemID
 
-	existingUserAccount, _ := R.Get(c, "email", item.Email)
+	existingUserAccount, _ := s.r.Get(c, "email", item.Email)
 	if existingUserAccount.ID.Valid {
 		emailStruct := struct {
 			RestoreLink string
@@ -42,7 +42,7 @@ func (s *Service) Register(c context.Context, email string, password string, ite
 	if err != nil {
 		return nil, false, err
 	}
-	err = R.Create(c, item)
+	err = s.r.Create(c, item)
 	if err != nil {
 		return nil, false, err
 	}
@@ -79,7 +79,7 @@ func (s *Service) Login(c context.Context, authData *models.AuthData) (*models.U
 	if err != nil {
 		return nil, err
 	}
-	item, err := R.Get(c, authData.LoginBy, authData.Value)
+	item, err := s.r.Get(c, authData.LoginBy, authData.Value)
 	if (err != nil && err.Error() == sql.ErrNoRows.Error()) || !item.PasswordEqWithHashed(authData.Password) {
 		return nil, errors.New("неверный логин или пароль")
 	}
@@ -89,33 +89,33 @@ func (s *Service) Login(c context.Context, authData *models.AuthData) (*models.U
 	return item, err
 }
 
-func (h *Service) ConfirmEmail(c context.Context, id string) error {
-	return R.ConfirmEmail(c, id)
+func (s *Service) ConfirmEmail(c context.Context, id string) error {
+	return s.r.ConfirmEmail(c, id)
 }
 
-func (h *Service) EmailIsConfirm(c context.Context, email string) error {
-	item, err := R.EmailIsConfirm(c, email)
+func (s *Service) EmailIsConfirm(c context.Context, email string) error {
+	item, err := s.r.EmailIsConfirm(c, email)
 	if err == nil {
 		return nil
 	}
 	if item != nil && item.ID.Valid {
-		_ = h.SendConfirmEmailMail(item.ID.UUID.String(), email)
+		_ = s.SendConfirmEmailMail(item.ID.UUID.String(), email)
 	}
 	return err
 }
 
-func (h *Service) CheckUUID(c context.Context, id string, uid string) error {
-	userAccount, err := R.GetByUUID(c, uid)
+func (s *Service) CheckUUID(c context.Context, id string, uid string) error {
+	userAccount, err := s.r.GetByUUID(c, uid)
 	if userAccount == nil || err != nil {
 		return err
 	}
-	return R.UpdateUUID(c, id)
+	return s.r.UpdateUUID(c, id)
 }
 
-func (h *Service) UpdatePassword(c context.Context, id string, password string) error {
+func (s *Service) UpdatePassword(c context.Context, id string, password string) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	return R.UpdatePassword(c, id, string(hashedPassword))
+	return s.r.UpdatePassword(c, id, string(hashedPassword))
 }
