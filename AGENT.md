@@ -123,23 +123,23 @@ baseR.InitR[models.Event](api, baseR.WithHandler(custom.H), baseR.WithWS(ws), ba
 
 ## 🔧 helper.Helper — что внутри (helper/helper.go)
 
-| Поле | Назначение |
-|------|------------|
-| `DB` | Bun + pgdriver, пул, лог запросов (logrusbun), `Run`/`DoAction` для миграций |
-| `HTTP` | gin-обёртка: ListenAndServe, HandleError, JSON-ответы |
-| `Token` | JWT (HS256, `TOKEN_SECRET`/`TOKEN_ACCESS_MINUTES`/`TOKEN_REFRESH_HOURS`) |
-| `Broker` | SSE-брокер (`Subscribe`, `SendEvent`) — обновления в реальном времени |
-| `Email` | go-simple-mail (SMTP: user/password/server/port/auth) |
-| `Uploader` | локальный аплоадер (`UPLOAD_PATH`) |
-| `PDF` | генерация PDF |
-| `SQL` | построитель SQL + FTSP-инъекция (`InjectFTSP2`) |
-| `Templater` | шаблоны DOCX (`TEMPLATES_PATH`) |
-| `Validator` | валидация (validator/v10) |
-| `Cron` | robfig/cron/v3 — фоновые задачи (напр. datasync в hr) |
-| `Project` | схемы/проект (`InitSchemas`, `Name`, `Root`) |
-| `Social` | Instagram/YouTube/VK API-ключи |
-| `Metabase` | клиент Metabase (`METABASE_URL`/`METABASE_API_KEY`) |
-| `Logger` | Logrus + lfshook + file-rotatelogs (`loggerhelper/`) |
+| Поле        | Назначение                                                                   |
+| ----------- | ---------------------------------------------------------------------------- |
+| `DB`        | Bun + pgdriver, пул, лог запросов (logrusbun), `Run`/`DoAction` для миграций |
+| `HTTP`      | gin-обёртка: ListenAndServe, HandleError, JSON-ответы                        |
+| `Token`     | JWT (HS256, `TOKEN_SECRET`/`TOKEN_ACCESS_MINUTES`/`TOKEN_REFRESH_HOURS`)     |
+| `Broker`    | SSE-брокер (`Subscribe`, `SendEvent`) — обновления в реальном времени        |
+| `Email`     | go-simple-mail (SMTP: user/password/server/port/auth)                        |
+| `Uploader`  | локальный аплоадер (`UPLOAD_PATH`)                                           |
+| `PDF`       | генерация PDF                                                                |
+| `SQL`       | построитель SQL + FTSP-инъекция (`InjectFTSP2`)                              |
+| `Templater` | шаблоны DOCX (`TEMPLATES_PATH`)                                              |
+| `Validator` | валидация (validator/v10)                                                    |
+| `Cron`      | robfig/cron/v3 — фоновые задачи (напр. datasync в hr)                        |
+| `Project`   | схемы/проект (`InitSchemas`, `Name`, `Root`)                                 |
+| `Social`    | Instagram/YouTube/VK API-ключи                                               |
+| `Metabase`  | клиент Metabase (`METABASE_URL`/`METABASE_API_KEY`)                          |
+| `Logger`    | Logrus + lfshook + file-rotatelogs (`loggerhelper/`)                         |
 
 ## 🛡 middleware/ (порядок: `InjectRequestInfo` = claims + FTSP)
 
@@ -154,12 +154,11 @@ baseR.InitR[models.Event](api, baseR.WithHandler(custom.H), baseR.WithWS(ws), ba
 
 ## 🧩 modules/ — готовые под-приложения (у каждого своя миграция)
 
-| Модуль | Что даёт |
-|--------|----------|
-| `chats` | Чат: модели `Chat`/`ChatMessage`/`ChatMember`, миграции, WS-роутинг (использует pros: `/ws/connect/:chatId/:userId/...`) |
-| `buildings` | Здания/этажи/входы (используется ТОЛЬКО внутри sprob — `routing/router.go`; проекты не импортируют, см. `TECH_DEBT.md` Т5) |
-| `schedule` | **Универсальный календарь-расписание** (29.08.2026): модели `ScheduleDay`/`SchedulePlace`/`Schedule`/`ScheduleSession`/`ScheduleSlot` (таблицы `schedule_days`/`schedule_places`/**`schedule_timetables`**/`schedule_sessions`/`schedule_slots` — НЕ `schedules`, у portal/pros уже есть свои), миграция, авто-CRUD (`InitRoutes(api, h)` → `/schedule-days`, `/schedule-places`, `/schedule-timetables`, `/schedule-sessions`, `/schedule-slots`). Слоты имеют `payload jsonb` для доменных данных. Рассчитан на НОВЫЕ проекты (расписание врачей портала, конференции); фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои модели `schedules`/`perfoms` (pros) — коллизия роутов. |
-| `documents`, `forms`, `extracts`, `settings` | Документы, формы, выписки, настройки |
+| Модуль                                       | Что даёт                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `chats`                                      | Чат: модели `Chat`/`ChatMessage`/`ChatMember`, миграции, WS-роутинг (использует pros: `/ws/connect/:chatId/:userId/...`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `schedule`                                   | **Универсальный календарь-расписание** (29.08.2026): модели `ScheduleDay`/`SchedulePlace`/`Schedule`/`ScheduleSession`/`ScheduleSlot` (таблицы `schedule_days`/`schedule_places`/**`schedule_timetables`**/`schedule_sessions`/`schedule_slots` — НЕ `schedules`, у portal/pros уже есть свои), миграция, авто-CRUD (`InitRoutes(api, h)` → `/schedule-days`, `/schedule-places`, `/schedule-timetables`, `/schedule-sessions`, `/schedule-slots`). Слоты имеют `payload jsonb` для доменных данных. Рассчитан на НОВЫЕ проекты (расписание врачей портала, конференции); фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои модели `schedules`/`perfoms` (pros) — коллизия роутов. |
+| `documents`, `forms`, `extracts`, `settings` | Документы, формы, выписки, настройки                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ## 📁 Структура
 
@@ -173,7 +172,7 @@ sprob/
 ├── routing/           # Init (api/apiNoToken) + InitR (авто-CRUD)
 ├── models/            # общие Bun-модели
 ├── migrations/        # общие миграции (выполняются при каждом старте)
-├── modules/           # chats, buildings, schedule, documents, forms, extracts, settings
+├── modules/           # chats, schedule, documents, forms, extracts, settings
 └── cmd/scripts/       # golangci.sh (lint), update_assister.sh (релиз v1.0.x)
 ```
 

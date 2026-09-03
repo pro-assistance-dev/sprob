@@ -40,12 +40,22 @@ echo "==> go test ./... (без БД: helpers/http, helpers/project, config — 
 go test ./helpers/... ./config/... 2>&1 | grep -vE '^ok|no test files' || true
 
 # 3. Уникальность таймстампов миграций (все модули + корень)
+#    Сравниваются ЧИСЛОВЫЕ версии (первые 14 цифр имени), а не полные имена:
+#    у bun версия — числовой префикс, разные суффиксы имени не спасают от коллизии.
+#    Допустимая пара для одной версии — только `*.up.sql` + `*.down.sql` одной миграции.
 echo "==> Миграции: проверка уникальности версий"
-DUPS=$(find . -path '*/migrations/*.sql' -type f \
-  | sed -E 's#.*/([0-9]{14}_.*)(\.up|\.down)?\.sql#\1#' \
-  | sort | uniq -d)
+DUPS=$(find . -path '*/migrations/*.sql' -type f -printf '%f\n' \
+  | awk '{ f=$0; sub(/\.sql$/, "", f); v=substr(f,1,14); k=""; \
+           if (f ~ /\.up$/) k="up"; else if (f ~ /\.down$/) k="down"; print v, k }' \
+  | sort \
+  | awk '{ if ($1==v) { n++; if ($2=="up") up=1; else if ($2=="down") down=1 } \
+           else { check(); v=$1; n=1; up=0; down=0; \
+                  if ($2=="up") up=1; else if ($2=="down") down=1 } } \
+         END { check() } \
+         function check() { if (n>1 && !(n==2 && up==1 && down==1)) \
+           print v " x" n }')
 if [[ -n "$DUPS" ]]; then
-  echo "!! Коллизия таймстампов миграций:" >&2
+  echo "!! Коллизия таймстампов миграций (версия встречается >1 раза, пара up+down не легитимна):" >&2
   echo "$DUPS" | sed 's/^/    /' >&2
   exit 1
 fi
