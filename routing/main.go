@@ -4,6 +4,7 @@ import (
 	"reflect"
 
 	"github.com/pro-assistance-dev/sprob/handlers/basehandler"
+	"github.com/pro-assistance-dev/sprob/helper"
 
 	pluralize "github.com/gertd/go-pluralize"
 	"github.com/gin-gonic/gin"
@@ -21,9 +22,10 @@ type IHandler interface {
 }
 
 type RouterOpts struct {
-	ws  *gin.RouterGroup
-	key string
-	h   IHandler
+	ws     *gin.RouterGroup
+	key    string
+	h      IHandler
+	helper *helper.Helper
 }
 
 type option func(*RouterOpts)
@@ -37,6 +39,14 @@ func WithWS(ws *gin.RouterGroup) option {
 func WithHandler(h IHandler) option {
 	return func(opts *RouterOpts) {
 		opts.h = h
+	}
+}
+
+// WithHelper — явный helper для авто-CRUD (Т7): роуты монтируются на
+// конструкторах NewH[T](h) без глобала basehandler.Helper (тесты, изоляция).
+func WithHelper(h *helper.Helper) option {
+	return func(opts *RouterOpts) {
+		opts.helper = h
 	}
 }
 
@@ -55,8 +65,13 @@ func handleOpts[T basehandler.Relationable](opts ...option) RouterOpts {
 		routerOpts.key = getKey[T]()
 	}
 	if routerOpts.h == nil {
-		handler := basehandler.InitH[T]()
-		routerOpts.h = &handler
+		if routerOpts.helper != nil {
+			handler := basehandler.NewH[T](routerOpts.helper)
+			routerOpts.h = &handler
+		} else {
+			handler := basehandler.InitH[T]()
+			routerOpts.h = &handler
+		}
 	}
 	return routerOpts
 }

@@ -7,32 +7,34 @@ import (
 	"github.com/pro-assistance-dev/sprob/helpers/sql"
 )
 
+// FTSPStore — кэш FTSP-запросов по QID (Т7: экземпляр живёт в Middleware,
+// а не в пакетном глобале — состояние изолировано на middleware/тест).
 type FTSPStore struct {
+	lock  sync.RWMutex
 	store map[string]sql.FTSP
 }
 
-var lock = sync.RWMutex{}
-
-var ftspStore = FTSPStore{store: make(map[string]sql.FTSP)}
-
-func (item FTSPStore) SetFTSP(query *sql.FTSPQuery) {
-	id := uuid.NewString()
-	// query.FTSP.ID = id
-	query.QID = id
-
-	lock.Lock()
-	item.store[id] = query.FTSP
-	defer lock.Unlock()
+func newFTSPStore() FTSPStore {
+	return FTSPStore{store: make(map[string]sql.FTSP)}
 }
 
-func (item FTSPStore) GetFTSP(qid string) (sql.FTSP, bool) {
-	lock.Lock()
+func (item *FTSPStore) SetFTSP(query *sql.FTSPQuery) {
+	id := uuid.NewString()
+	query.QID = id
+
+	item.lock.Lock()
+	item.store[id] = query.FTSP
+	item.lock.Unlock()
+}
+
+func (item *FTSPStore) GetFTSP(qid string) (sql.FTSP, bool) {
+	item.lock.RLock()
 	ftsp, ok := item.store[qid]
-	defer lock.Unlock()
+	item.lock.RUnlock()
 	return ftsp, ok
 }
 
-func (item FTSPStore) GetOrCreateFTSP(query *sql.FTSPQuery) (sql.FTSP, bool) {
+func (item *FTSPStore) GetOrCreateFTSP(query *sql.FTSPQuery) (sql.FTSP, bool) {
 	if query.QID == "" {
 		item.SetFTSP(query)
 		return query.FTSP, true

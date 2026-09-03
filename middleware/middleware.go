@@ -11,10 +11,11 @@ import (
 
 type Middleware struct {
 	helper *helper.Helper
+	ftsp   FTSPStore
 }
 
 func CreateMiddleware(helper *helper.Helper) *Middleware {
-	return &Middleware{helper: helper}
+	return &Middleware{helper: helper, ftsp: newFTSPStore()}
 }
 
 func (m *Middleware) InjectFTSP() gin.HandlerFunc {
@@ -28,7 +29,7 @@ func (m *Middleware) InjectFTSP() gin.HandlerFunc {
 			return
 		}
 
-		ftsp, found := ftspStore.GetOrCreateFTSP(ftspQuery)
+		ftsp, found := m.ftsp.GetOrCreateFTSP(ftspQuery)
 
 		if !found {
 			c.JSON(http.StatusOK, nil)

@@ -5,6 +5,10 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// Helper — legacy-глобал (service locator): заполняется SetHelper при старте
+// приложения (routing/router.go потребителей) и используется Init*/InitR по
+// умолчанию. Новый код — конструкторы NewR/NewS/NewH с явным helper
+// (тесты и routing.WithHelper, Т7): глобал не требуется.
 var Helper *helper.Helper
 
 func SetHelper(h *helper.Helper) {
@@ -26,42 +30,46 @@ type Service[T Relationable] struct {
 }
 
 type Repository[T Relationable] struct {
-	// t        T
 	helper   *helper.Helper
 	relation func(*bun.SelectQuery) *bun.SelectQuery
 }
 
-func InitR[T Relationable]() Repository[T] {
-	r := Repository[T]{helper: Helper}
-	return r
+// NewR — repository с явным helper. Relation не задаётся (полный handler — NewH).
+func NewR[T Relationable](h *helper.Helper) Repository[T] {
+	return Repository[T]{helper: h}
 }
 
-// func rel[T Relationable](x T) func(*bun.SelectQuery) *bun.SelectQuery {
-// 	return func(q *bun.SelectQuery) *bun.SelectQuery {
-// 		return x.Relation(q)
-// 	}
-// }
+// NewS — service с явным helper и repository.
+func NewS[T Relationable](h *helper.Helper, r Repository[T]) Service[T] {
+	return Service[T]{helper: h, R: r}
+}
 
-func InitH[T Relationable]() Handler[T] {
-	handler := Handler[T]{helper: Helper}
-	r := InitR[T]()
+// NewH — полный handler (repository + relation + service) с явным helper.
+func NewH[T Relationable](h *helper.Helper) Handler[T] {
+	r := NewR[T](h)
 	t := Str[T]{}
 	r.relation = t.genericValue.Relation
-	handler.S = InitS(r)
-	return handler
+	return Handler[T]{helper: h, S: NewS[T](h, r)}
+}
+
+// InitR/InitS/InitH/Init — legacy-обёртки над New*: используют глобал Helper
+// (совместимость; новые вызовы — через New*/WithHelper).
+func InitR[T Relationable]() Repository[T] {
+	return NewR[T](Helper)
+}
+
+func InitS[T Relationable](r Repository[T]) Service[T] {
+	return NewS[T](Helper, r)
+}
+
+func InitH[T Relationable]() Handler[T] {
+	return NewH[T](Helper)
+}
+
+func Init[T Relationable]() Handler[T] {
+	return InitH[T]()
 }
 
 type Str[T Relationable] struct {
 	genericValue T
-}
-
-func InitS[T Relationable](r Repository[T]) Service[T] {
-	s := Service[T]{helper: Helper}
-	s.R = r
-	return s
-}
-
-func Init[T Relationable]() Handler[T] {
-	he := InitH[T]()
-	return he
 }

@@ -23,4 +23,23 @@
 - [ ] 1. Публиковать тег с описанием изменений (семантическая версия +
      CHANGELOG)
 
+## 🟠 Т7. Тестируемость: убрать глобалы-мосты (план 03.09)
+
+> Из анализа [`../archive/analysis-sprob-di-2026-09-03.md`](../archive/analysis-sprob-di-2026-09-03.md)
+> и [`../archive/analysis-sprob-testability-2026-09-03.md`](../archive/analysis-sprob-testability-2026-09-03.md):
+> DI-фреймворк не нужен; точечные правки. Каждый шаг аддитивен.
+
+- [ ] 1. **basehandler/routing**: конструкторы `NewR[T](h)`/`NewS[T](h, r)`/`NewH[T](h)`
+  - опция `routing.WithHelper(h)` — авто-CRUD монтируется без `basehandler.Helper`
+       (глобал остаётся default-ом для legacy `Init*`)
+- [ ] 2. **middleware**: пакетные кэши `ftspStore`/`queriesMap` — в поля `Middleware`
+     (изоляция FTSP-состояния на тест); `queries.go` — мёртвый, удалить
+- [ ] 3. **sprob/testkit** (по образцу `basehandler/repository_test.go`): `NewSQLiteHelper(t)`,
+     роут-харнесс, тестовый JWT — потом раскатка на клиенты (корневой О9)
+- [ ] 4. **handlers/\* sprob**: `Init(h)` возвращает `*Handler` (прецедент — portal auditlog),
+     глобалы `H/S/R` — на вылет в 2 этапа (2-й — со следующей major-версией)
+- [ ] 5. **Сервисы клиентов**: repository на границе service→repo как интерфейс/поле,
+     доменная логика — чистыми методами (канон для нового кода; задачи по сервисам —
+     в TECH_DEBT проектов)
+
 > CI-остаток golangci (Т2.3) ведётся в `rdkb/TECH_DEBT.md` Т8.2.
