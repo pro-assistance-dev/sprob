@@ -1,11 +1,11 @@
 # SPROB — Go-фреймворк для бэкендов (basehandler, baseR, helper, middleware)
 
-Общая библиотека-фреймворк для ВСЕХ бэкендов экосистемы: **rdkb (hr/map/food/leiter), portal, pros**.
+Общая библиотека-фреймворк для ВСЕХ бэкендов экосистемы: **rdkb (hr/map/food/leiter/incident), portal, pros, ferma**.
 Даёт «скелет» сервера: конфиг (viper), helper-сервисы, авто-CRUD + FTSP, миграции, логирование, JWT, почта, чаты.
 
 - Модуль: `github.com/pro-assistance-dev/sprob` (Go 1.23.4)
-- Версии в проектах: **все на `v1.0.245`** (rdkb hr/map/food/leiter, portal, pros; выровнено 2026-08-26).
-  Обновлять `go get`'ом в каждом проекте + запись в TASKS.md + таблица версий в корневом AGENT.md
+- Версии в проектах: **все на `v1.0.251`** (01.09; таблица — в корневом `AGENT.md` воркспейса).
+  Обновлять `go get`'ом в каждом проекте + запись в TASKS.md проекта + таблица версий.
 - Релиз новой версии: `make update` → `cmd/scripts/update_assister.sh`: автоинкремент `v1.0.x` + commit + tag + push
 
 ---
@@ -80,7 +80,7 @@ baseR.InitR[models.Event](api, baseR.WithHandler(custom.H), baseR.WithWS(ws), ba
 | Модуль | Что даёт |
 |--------|----------|
 | `chats` | Чат: модели `Chat`/`ChatMessage`/`ChatMember`, миграции, WS-роутинг (использует pros: `/ws/connect/:chatId/:userId/...`) |
-| `buildings` | Здания/этажи/входы (использует map) |
+| `buildings` | Здания/этажи/входы (используется ТОЛЬКО внутри sprob — `routing/router.go`; проекты не импортируют, см. `TECH_DEBT.md` Т5) |
 | `schedule` | **Универсальный календарь-расписание** (29.08.2026): модели `ScheduleDay`/`SchedulePlace`/`Schedule`/`ScheduleSession`/`ScheduleSlot` (таблицы `schedule_days`/`schedule_places`/**`schedule_timetables`**/`schedule_sessions`/`schedule_slots` — НЕ `schedules`, у portal/pros уже есть свои), миграция, авто-CRUD (`InitRoutes(api, h)` → `/schedule-days`, `/schedule-places`, `/schedule-timetables`, `/schedule-sessions`, `/schedule-slots`). Слоты имеют `payload jsonb` для доменных данных. Рассчитан на НОВЫЕ проекты (расписание врачей портала, конференции); фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои модели `schedules`/`perfoms` (pros) — коллизия роутов. |
 | `documents`, `forms`, `extracts`, `settings` | Документы, формы, выписки, настройки |
 
@@ -96,7 +96,7 @@ sprob/
 ├── routing/           # Init (api/apiNoToken) + InitR (авто-CRUD)
 ├── models/            # общие Bun-модели
 ├── migrations/        # общие миграции (выполняются при каждом старте)
-├── modules/           # chats, buildings, documents, forms, extracts, settings
+├── modules/           # chats, buildings, schedule, documents, forms, extracts, settings
 └── cmd/scripts/       # golangci.sh (lint), update_assister.sh (релиз v1.0.x)
 ```
 
