@@ -95,86 +95,81 @@ import (
     "github.com/pro-assistance-dev/sprob/config"
     "github.com/pro-assistance-dev/sprob/helper"
 )
-
 func main() {
-    c := config.Init()                      // viper: .env / local.yaml → Config
-    h := helper.NewHelper(c)                // все сервисы разом
+    c := config.Init()                       // viper: .env / local.yaml → Config
+    h := helper.NewHelper(c)                 // все сервисы разом
     helper.Run(migrations.Init(), routing.Init) // запуск: миграции → схемы → HTTP
 }
 ```
 
-- `helper.Run(migrations, routerInitFunc)` — флаги: `-mode=migrate -action=migrate|create|createSql|rollback` (проекты: `go run ./cmd/server/main.go -mode=migrate -action=migrate`).
-- При каждом старте применяет **собственные миграции sprob** (`migrations/`) + проектные (переданные первым аргументом).
-- `helper.Project.InitSchemas()` — генерирует таблицы из моделей (см. `helpers/project`, `cmd/server/project` в map).
+- `helper.Run(migrations, routerInitFunc)` — флаги `-mode=migrate -action=migrate|create|createSql|rollback`.
+- При старте применяет **свои миграции** + проектные (первый аргумент).
+- `helper.Project.InitSchemas()` — таблицы из моделей (`helpers/project`).
 
 ## 🔌 Авто-CRUD (routing + handlers/basehandler)
 
 ```go
-api, apiNoToken := baseR.Init(r, h)          // две группы: api (с auth) и apiNoToken
+api, apiNoToken := baseR.Init(r, h)          // две группы: api (auth) и apiNoToken
 api.Use(m.InjectFTSP())
-
-baseR.InitR[models.Event](api)               // GET ''/GET /:id/POST/PUT/DELETE + POST /ftsp + GET /options/:label/:value
+baseR.InitR[models.Event](api)                                 // CRUD + POST /ftsp + GET /options/:label/:value
 baseR.InitR[models.Event](api, baseR.WithHandler(custom.H), baseR.WithWS(ws), baseR.WithKey("events"))
 ```
 
-- Ключ роута — авто: `Pluralize(ИмяТипа) → kebab-case` (`Event` → `events`), переопределяется `WithKey`.
-- Опции: `WithWS(ws)` (добавляет WebSocket-группу), `WithHandler(h)` (кастомные ручки, интерфейс `IHandler`).
-- `handlers/basehandler/` — `InitH[T]()`: готовые Handler/Service/Repository на дженериках (`Relationable`).
+- Ключ роута — авто: `Pluralize → kebab-case` (`Event` → `events`), переопределяется `WithKey`.
+- Опции: `WithWS(ws)` (WebSocket-группа), `WithHandler(h)` (кастом, интерфейс `IHandler`).
+- `handlers/basehandler/` — `InitH[T]()`: Handler/Service/Repository на дженериках (`Relationable`).
+- v1.1.0 (03.09): конструкторы `NewH/NewS/NewR[T](h)`, `routing.WithHelper`, `Init(h)` → `*Handler`
+  (экземпляры на полях, без пакетных глобалов) + `testkit` (sqlite in-memory/`NewSQLiteHelper`, JWT) — авто-CRUD тестируем без БД.
 
 ## 🔧 helper.Helper — что внутри (helper/helper.go)
 
-| Поле        | Назначение                                                                   |
-| ----------- | ---------------------------------------------------------------------------- |
-| `DB`        | Bun + pgdriver, пул, лог запросов (logrusbun), `Run`/`DoAction` для миграций |
-| `HTTP`      | gin-обёртка: ListenAndServe, HandleError, JSON-ответы                        |
-| `Token`     | JWT (HS256, `TOKEN_SECRET`/`TOKEN_ACCESS_MINUTES`/`TOKEN_REFRESH_HOURS`)     |
-| `Broker`    | SSE-брокер (`Subscribe`, `SendEvent`) — обновления в реальном времени        |
-| `Email`     | go-simple-mail (SMTP: user/password/server/port/auth)                        |
-| `Uploader`  | локальный аплоадер (`UPLOAD_PATH`)                                           |
-| `PDF`       | генерация PDF                                                                |
-| `SQL`       | построитель SQL + FTSP-инъекция (`InjectFTSP2`)                              |
-| `Templater` | шаблоны DOCX (`TEMPLATES_PATH`)                                              |
-| `Validator` | валидация (validator/v10)                                                    |
-| `Cron`      | robfig/cron/v3 — фоновые задачи (напр. datasync в hr)                        |
-| `Project`   | схемы/проект (`InitSchemas`, `Name`, `Root`)                                 |
-| `Social`    | Instagram/YouTube/VK API-ключи                                               |
-| `Metabase`  | клиент Metabase (`METABASE_URL`/`METABASE_API_KEY`)                          |
-| `Logger`    | Logrus + lfshook + file-rotatelogs (`loggerhelper/`)                         |
+| Поле | Назначение |
+| --- | --- |
+| `DB` | Bun+pgdriver, пул, лог запросов; `Run`/`DoAction` для миграций |
+| `HTTP` | gin-обёртка: ListenAndServe, HandleError, JSON |
+| `Token` | JWT HS256 (`TOKEN_SECRET`/`_ACCESS_MINUTES`/`_REFRESH_HOURS`) |
+| `Broker` | SSE-брокер (`Subscribe`/`SendEvent`) — realtime-обновления |
+| `Email` | go-simple-mail (SMTP user/password/server/port/auth) |
+| `Uploader` / `PDF` / `Templater` | локальный аплоадер (`UPLOAD_PATH`) / PDF / DOCX-шаблоны (`TEMPLATES_PATH`) |
+| `SQL` | построитель + FTSP-инъекция (`InjectFTSP2`) |
+| `Validator` / `Cron` | validator/v10 / robfig/cron/v3 (фоновые задачи, напр. datasync hr) |
+| `Project` | схемы (`InitSchemas`, `Name`, `Root`) |
+| `Social` / `Metabase` / `Logger` | IG/YT/VK-ключи / Metabase-клиент / Logrus+rotatelogs (`loggerhelper/`) |
 
 ## 🛡 middleware/ (порядок: `InjectRequestInfo` = claims + FTSP)
 
-- `InjectFTSP` — парсит `{ftsp:{f,s,p,t}}` из form/query, кэширует по QID в памяти, инъекция в SQL-запрос (пагинация/фильтры/сортировки).
-- `InjectClaims` — `user_id`, `domain_ids` из JWT в контекст запроса (`Claim.FromContext(ctx)`).
+- `InjectFTSP` — парсит `{ftsp:{f,s,p,t}}`, кэш по QID, инъекция в SQL (пагинация/фильтры/сортировки).
+- `InjectClaims` — `user_id`, `domain_ids` из JWT в контекст (`Claim.FromContext(ctx)`).
 
 ## 🗄 models/ — общие сущности (таблицы создаёт сам sprob)
 
-`UserAccount` (auth: login/register/restore), `Human`, `Contact`, `Email`, `Phone`, `Website`, `PostAddress`, `Address`,
-`FileInfo` (файлы), `ValueType`, `Menu`/`SubMenu`, `FTSPQuery`, `FTSPPreset`, `SearchElement`/`SearchElementMeta`/`SearchModel`/`SearchResult`
-(глобальный поиск, `helpers/search`), `BaseModel`, `WithID`.
+`UserAccount` (auth: login/register/restore), `Human`, `Contact`, `Email`, `Phone`, `Website`,
+`PostAddress`, `Address`, `FileInfo`, `ValueType`, `Menu`/`SubMenu`, `FTSPQuery`/`FTSPPreset`,
+`SearchElement`/`SearchElementMeta`/`SearchModel`/`SearchResult` (глобальный поиск,
+`helpers/search`), `BaseModel`, `WithID`.
 
 ## 🧩 modules/ — готовые под-приложения (у каждого своя миграция)
 
-| Модуль                                       | Что даёт                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `chats`                                      | Чат: модели `Chat`/`ChatMessage`/`ChatMember`, миграции, WS-роутинг (использует pros: `/ws/connect/:chatId/:userId/...`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `schedule`                                   | **Универсальный календарь-расписание** (29.08.2026): модели `ScheduleDay`/`SchedulePlace`/`Schedule`/`ScheduleSession`/`ScheduleSlot` (таблицы `schedule_days`/`schedule_places`/**`schedule_timetables`**/`schedule_sessions`/`schedule_slots` — НЕ `schedules`, у portal/pros уже есть свои), миграция, авто-CRUD (`InitRoutes(api, h)` → `/schedule-days`, `/schedule-places`, `/schedule-timetables`, `/schedule-sessions`, `/schedule-slots`). Слоты имеют `payload jsonb` для доменных данных. Рассчитан на НОВЫЕ проекты (расписание врачей портала, конференции); фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои модели `schedules`/`perfoms` (pros) — коллизия роутов. |
-| `documents`, `forms`, `extracts`, `settings` | Документы, формы, выписки, настройки                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+- **`chats`** — чат: `Chat`/`ChatMessage`/`ChatMember`, миграции, WS-роутинг
+  (pros: `/ws/connect/:chatId/:userId/...`).
+- **`schedule`** — универсальный календарь-расписание (29.08.2026): `ScheduleDay`/`SchedulePlace`/
+  `Schedule`/`ScheduleSession`/`ScheduleSlot` (таблицы `schedule_days|places|timetables|sessions|
+  slots` — НЕ `schedules`), миграция, авто-CRUD `InitRoutes(api, h)` → `/schedule-days`,
+  `/schedule-places`, `/schedule-timetables`, `/schedule-sessions`, `/schedule-slots`;
+  слоты — `payload jsonb`. Рассчитан на НОВЫЕ проекты (врачи портала, конференции);
+  фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои
+  `schedules`/`perfoms` (pros) — коллизия роутов.
+- **`documents`, `forms`, `extracts`, `settings`** — документы, формы, выписки, настройки.
 
 ## 📁 Структура
 
-```
-sprob/
-├── config/            # viper-конфиг: .env (DB_*, TOKEN_*, SERVER_*, EMAIL_*, NAME, ROOT, UPLOAD_PATH, METABASE_*, INSTAGRAM_*, YOUTUBE_*, VK_*) + local.yaml
-├── helper/            # Helper-агрегатор + Run (запуск сервера/миграций)
-├── helpers/           # broker, cron, db, email, http, logger, metabase, pdf, project, search, social, sql, templater, token, uploader, util, validator
-├── middleware/        # InjectFTSP / InjectClaims / InjectRequestInfo
-├── handlers/          # auth, basehandler, contacts, emails, fileinfos, ftsppresets, humans, menus, metabase, phones, schemas, search, usersaccounts, valuetypes
-├── routing/           # Init (api/apiNoToken) + InitR (авто-CRUD)
-├── models/            # общие Bun-модели
-├── migrations/        # общие миграции (выполняются при каждом старте)
-├── modules/           # chats, schedule, documents, forms, extracts, settings
-└── cmd/scripts/       # golangci.sh (lint), update_assister.sh (релиз v1.0.x)
-```
+`config/` (viper: `.env` DB_/TOKEN_/SERVER_/EMAIL_/NAME/ROOT/UPLOAD_PATH/METABASE_/INSTAGRAM_/
+YOUTUBE_/VK_ + local.yaml), `helper/` (агрегатор + `Run`), `helpers/` (broker, cron, db, email,
+http, logger, metabase, pdf, project, search, social, sql, templater, token, uploader, util,
+validator), `middleware/`, `handlers/` (auth, basehandler, contacts, emails, fileinfos,
+ftsppresets, humans, menus, metabase, phones, schemas, search, usersaccounts, valuetypes),
+`routing/` (`Init`, `InitR`), `models/`, `migrations/`, `modules/`, `testkit/` (sqlite/JWT),
+`cmd/scripts/` (golangci.sh, update_assister.sh), `CHANGELOG.md`.
 
 ## 🚀 make
 
