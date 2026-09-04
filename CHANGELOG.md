@@ -3,6 +3,18 @@
 Семантическое версионирование: `v1.0.2xx` — фиксы/мелочи, `v1.1.x` — новые API/модули.
 Правила публикации — `scripts/bump.sh`; синхронизация серверов — по AGENT.md.
 
+## v1.3.0 (04.09.2026) — helpers/analytics (общие агрегаты дашбордов)
+
+> А5.3 (rdkb/TASKS.md): вынесено из rdkb map/hr `handlers/analytics` (код был идентичен),
+> чтобы дашборды/агрегаты были переиспользуемы во всех проектах больницы.
+
+- `helpers/analytics.Cache` — TTL-кэш агрегатов: `Get/Set/GetOrLoad/Reset`
+  (проект держит экземпляр, журналы запрашивает мимо кэша).
+- `helpers/analytics.LabelValue` + `SeriesRows(section, items)` / `SeriesValues(items)` —
+  серии для ответов дашбордов и плоских выгрузок.
+- map/hr переведены на пакет (локальные копии удалены).
+
+
 ## v1.2.0 (04.09.2026) — модуль access (матрица RACI + аудит + JWKS)
 
 > С4.1 (rdkb/TASKS.md): движок access вынесен из `rdkb/map/server/access` в общий модуль
