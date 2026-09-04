@@ -97,10 +97,10 @@ func TestVerifyValidKeycloakToken(t *testing.T) {
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{
-		"sub":               "user-1",
+		"sub":                "user-1",
 		"preferred_username": "admin",
-		"exp":               float64(time.Now().Add(time.Hour).Unix()),
-		"realm_access":      map[string]interface{}{"roles": []interface{}{"R00_ADMIN"}},
+		"exp":                float64(time.Now().Add(time.Hour).Unix()),
+		"realm_access":       map[string]interface{}{"roles": []interface{}{"R00_ADMIN"}},
 	}
 	tok := signToken(t, key, "", "kid1", "RS256", claims)
 
@@ -182,9 +182,9 @@ func TestVerifyTokenNoExpPublic(t *testing.T) {
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	claims := map[string]interface{}{
-		"sub":               "user-1",
+		"sub":                "user-1",
 		"preferred_username": "ivanov",
-		"exp":               float64(time.Now().Add(-time.Hour).Unix()), // уже истёк
+		"exp":                float64(time.Now().Add(-time.Hour).Unix()), // уже истёк
 		"resource_access": map[string]interface{}{
 			"map-app": map[string]interface{}{"roles": []interface{}{"r03_rem"}},
 		},
@@ -209,10 +209,10 @@ func TestVerifyMalformedTokens(t *testing.T) {
 	v := newVerifier(t, srv.URL)
 
 	cases := []string{
-		"",                            // пусто
-		"abc",                         // 1 сегмент
-		"a.b",                         // 2 сегмента (alg=none без подписи — раньше проходил)
-		"!!!.###.$$$",                 // не base64
+		"",                           // пусто
+		"abc",                        // 1 сегмент
+		"a.b",                        // 2 сегмента (alg=none без подписи — раньше проходил)
+		"!!!.###.$$$",                // не base64
 		"eyJhbGciOiJub25lIn0.e30.",   // alg=none, пустая подпись
 		"eyJhbGciOiJSUzI1NiJ9.e30.X", // битая подпись
 		"eyJhbGciOiJSUzM4NCJ9.e30.X", // неподдерживаемый alg (RS384)
@@ -442,9 +442,9 @@ func TestRolesFromRequestValidToken(t *testing.T) {
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	claims := map[string]interface{}{
-		"sub":               "user-1",
+		"sub":                "user-1",
 		"preferred_username": "ivanov",
-		"exp":               float64(time.Now().Add(time.Hour).Unix()),
+		"exp":                float64(time.Now().Add(time.Hour).Unix()),
 		"realm_access": map[string]interface{}{
 			"roles": []interface{}{"offline_access", "default-roles-rdkb"}, // служебные
 		},
@@ -583,8 +583,8 @@ func TestAccessControlValidTokenPasses(t *testing.T) {
 func noRoleToken(t *testing.T, key *rsa.PrivateKey, kid string) string {
 	t.Helper()
 	claims := map[string]interface{}{
-		"exp":  float64(time.Now().Add(time.Hour).Unix()),
-		"jti":  "no-identity",
+		"exp": float64(time.Now().Add(time.Hour).Unix()),
+		"jti": "no-identity",
 	}
 	return signToken(t, key, "", kid, "RS256", claims)
 }
@@ -746,8 +746,8 @@ func newEnforceRouter(t *testing.T, rows map[string]map[string]map[string]string
 // Матрица для тестов: у R01_HOZ есть W на rooms.name; на остальные поля — R/нет.
 var testMatrix = map[string]map[string]map[string]string{
 	"rooms": {
-		"name":     {"R01_HOZ": "W", "R00_ADMIN": "W"},
-		"area":     {"R00_ADMIN": "W"},
+		"name":       {"R01_HOZ": "W", "R00_ADMIN": "W"},
+		"area":       {"R00_ADMIN": "W"},
 		"actualName": {"R01_HOZ": "W", "R00_ADMIN": "W"},
 	},
 	"room-engineerings": {
@@ -853,10 +853,10 @@ func TestAccessControlMonitorPutChangedDenied200(t *testing.T) {
 // fieldChanged: сравнение значений (строки, числа, время в разных форматах).
 func TestFieldChanged(t *testing.T) {
 	row := map[string]interface{}{
-		"name":       "Кабинет 101",
-		"area":       float64(42),
-		"worker_id":  "abc",
-		"sout_date":  "2026-08-18 12:00:00+00:00",
+		"name":      "Кабинет 101",
+		"area":      float64(42),
+		"worker_id": "abc",
+		"sout_date": "2026-08-18 12:00:00+00:00",
 	}
 	cases := []struct {
 		name  string

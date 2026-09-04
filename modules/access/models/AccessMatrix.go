@@ -3,7 +3,7 @@ package models
 import "github.com/uptrace/bun"
 
 // AccessMatrix - строка матрицы доступа (Этап 2, RACI):
-// entity.field x role_code -> access ('' / R / W / M).
+// entity.field x role_code -> access (” / R / W / M).
 type AccessMatrix struct {
 	bun.BaseModel `bun:"access_matrix,alias:access_matrix"`
 	Relationable

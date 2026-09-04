@@ -3,6 +3,29 @@
 Семантическое версионирование: `v1.0.2xx` — фиксы/мелочи, `v1.1.x` — новые API/модули.
 Правила публикации — `scripts/bump.sh`; синхронизация серверов — по AGENT.md.
 
+## v1.2.0 (04.09.2026) — модуль access (матрица RACI + аудит + JWKS)
+
+> С4.1 (rdkb/TASKS.md): движок access вынесен из `rdkb/map/server/access` в общий модуль
+> `modules/access`, чтобы матрица доступа/журналы были во всех проектах больницы.
+> Реестр сущностей — ПРОЕКТНЫЙ (`access.Register`), данные FM-системы остались в map.
+
+### Новое: модуль `modules/access`
+
+- `models`: `Role`, `AccessMatrix`, `AuditLog`, `AuthLog` (таблицы `roles`, `access_matrix`,
+  `user_roles`, `audit_log`, `auth_log`); миграция модуля — схема `IF NOT EXISTS`
+  (`modules/access/migrations`, подключается через `accessM.Init()` в списке миграций).
+- Реестр: `Entity`/`FieldInfo` + `Register(list)`/`GetEntity`/`Entities` — движок общий,
+  состав охраняемых сущностей задаёт проект.
+- `NewMiddleware(h)` / `NewHandler(h, matrix)` — прежний API map: `AccessControl()`
+  (enforcement + маскирование ответа), `Audit()` (журнал корректуры), `Matrix()`,
+  `RolesFromRequest`/`UserCtx`/`VerifyTokenNoExp` (JWKS keycloak, HS256 fallback).
+- Конфиг env: `ACCESS_ENFORCE`, `JWT_VERIFY`, `JWT_VERIFY_FAIL_OPEN`, `JWT_JWKS_URL`,
+  `TOKEN_SECRET` (как в map); новые: `ACCESS_ADMIN_ROLE` (default `R00_ADMIN`),
+  `ACCESS_APP_CLIENT` (default `map-app`).
+- Аддитивно: map продолжает работать без изменений поведения (реестр регистрируется
+  при старте); поведенческие тесты middleware перенесены и зелёные.
+
+
 ## v1.1.0 (03.09.2026) — тестируемость: конструкторы, testkit, Init→*Handler
 
 > Из анализа `archive/analysis-sprob-di-2026-09-03.md` / `analysis-sprob-testability-2026-09-03.md`

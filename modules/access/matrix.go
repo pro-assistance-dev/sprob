@@ -13,9 +13,9 @@ import (
 
 // Access values.
 const (
-	AccessNone = ""
-	AccessRead = "R"
-	AccessWrite = "W"
+	AccessNone      = ""
+	AccessRead      = "R"
+	AccessWrite     = "W"
 	AccessMandatory = "M"
 )
 
@@ -107,7 +107,7 @@ func (m *MatrixStore) accessFor(entity, field, role string) string {
 	return m.matrix[entity][field][role]
 }
 
-// AccessFor возвращает доступ роли к полю сущности ('' / R / W / M).
+// AccessFor возвращает доступ роли к полю сущности (” / R / W / M).
 // Экспортирован для пакетов, которым нужен разбор матрицы (например, mytasks).
 func (m *MatrixStore) AccessFor(entity, field, role string) string {
 	return m.accessFor(entity, field, role)
