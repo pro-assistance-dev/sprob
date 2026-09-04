@@ -1,0 +1,26 @@
+# CI: go build/vet/test библиотеки sprob.
+# Добавлено 04.09.2026 (Т3-3 TASKS.md workspace) — по образцу ci.yml проектов
+# (rdkb/pros). Тесты включают testkit (sqlite in-memory через modernc — без CGO).
+name: CI
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+
+jobs:
+  test:
+    name: go build/vet/test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: build
+        run: go build ./...
+      - name: vet
+        run: go vet ./...
+      - name: test
+        run: go test ./...
