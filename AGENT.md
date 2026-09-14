@@ -3,10 +3,12 @@
 Общая библиотека-фреймворк для ВСЕХ бэкендов экосистемы: **rdkb (hr/map/food/leiter/incident), portal, pros, ferma**.
 Даёт «скелет» сервера: конфиг (viper), helper-сервисы, авто-CRUD + FTSP, миграции, логирование, JWT, почта, чаты.
 
-- Модуль: `github.com/pro-assistance-dev/sprob` (Go 1.23.4)
-- Версии в проектах: **все на `v1.0.251`** (01.09; таблица — в корневом `AGENT.md` воркспейса).
+- Модуль: `github.com/pro-assistance-dev/sprob` (Go 1.25)
+- Версии в проектах: **v1.3.0** в основной массе, **v1.4.0** — rdkb map/incident
+  (общий `codegen`); таблица — в корневом `AGENT.md` воркспейса.
   Обновлять `go get`'ом в каждом проекте + запись в TASKS.md проекта + таблица версий.
 - Релиз новой версии: `make update` → `cmd/scripts/update_assister.sh`: автоинкремент `v1.0.x` + commit + tag + push
+- Минор (`v1.x.0`) — новые API/пакеты (`docs` → CHANGELOG); патч (`v1.0.x`) — фиксы.
 
 ---
 
@@ -169,7 +171,25 @@ http, logger, metabase, pdf, project, search, social, sql, templater, token, upl
 validator), `middleware/`, `handlers/` (auth, basehandler, contacts, emails, fileinfos,
 ftsppresets, humans, menus, metabase, phones, schemas, search, usersaccounts, valuetypes),
 `routing/` (`Init`, `InitR`), `models/`, `migrations/`, `modules/`, `testkit/` (sqlite/JWT),
-`cmd/scripts/` (golangci.sh, update_assister.sh), `CHANGELOG.md`.
+**`codegen/` + `cmd/generate-ts/`** (генератор TS-классов из Go-моделей — общий для
+проектов, см. ниже), `cmd/scripts/` (golangci.sh, update_assister.sh), `CHANGELOG.md`.
+
+## 🧬 codegen — генератор TS-классов (v1.4.0+)
+
+Общий кодогенератор: строит TS-классы-«оболочки» из Go-моделей сервиса
+(поля по json/bun-тегам, связи, `GetClassName`). Используется проектами через
+`go run` из каталога сервера:
+
+```bash
+cd <service>/server && go run github.com/pro-assistance-dev/sprob/cmd/generate-ts \
+  -service <name> -models . -out ../client/src/classes/generated
+```
+
+- `codegen` — пакет разбора Go AST → `Schema`/`Field` (таблицы, связи, порядок полей).
+- `cmd/generate-ts` — CLI (`-service` заголовок, `-models` путь, `-out` каталог).
+- Проекты держат сгенерированное в git и проверяют синхронность гейтом
+  (`make check-ts`; в rdkb — CI-джоб `codegen`). Правка логики — **только в sprob**,
+  сервисы обновляют версию.
 
 ## 🚀 make
 
