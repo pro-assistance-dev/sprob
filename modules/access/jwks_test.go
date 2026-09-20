@@ -850,7 +850,58 @@ func TestAccessControlMonitorPutChangedDenied200(t *testing.T) {
 	}
 }
 
-// fieldChanged: сравнение значений (строки, числа, время в разных форматах).
+// TestFieldChangedArrays — массивы из БД (PG-литерал) и от клиента (JSON)
+// не считаются изменением, если совпадают по содержанию. Баг 20.09: пустой
+// text[] ("{}") против клиентского "[]" давал ложный 403 для роли без W на
+// колонку (rooms.formedFromCodes), из-за чего не сохранялся ни контур, ни
+// паспорт помещения.
+func TestFieldChangedArrays(t *testing.T) {
+	row := map[string]interface{}{
+		"formed_from_codes": "{}",
+		"tags":              "{a,b}",
+		"nums":              "{1,2}",
+	}
+	cases := []struct {
+		name  string
+		field string
+		val   interface{}
+		want  bool
+	}{
+		{"пустой массив: PG {} == JSON []", "formedFromCodes", []string{}, false},
+		{"непустой массив: PG {a,b} == JSON [a,b]", "tags", []string{"a", "b"}, false},
+		{"непустой массив: порядок не совпал", "tags", []string{"b", "a"}, true},
+		{"непустой массив: разное содержимое", "tags", []string{"a", "c"}, true},
+		{"числовой массив: PG {1,2} == JSON [1,2]", "nums", []float64{1, 2}, false},
+		{"nil против пустого PG-массива", "formedFromCodes", nil, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := fieldChanged(row, tc.field, tc.val); got != tc.want {
+				t.Fatalf("fieldChanged(%q, %v) = %v, want %v", tc.field, tc.val, got, tc.want)
+			}
+		})
+	}
+}
+
+// TestNormalizeValue — канонизация значений для сравнения.
+func TestNormalizeValue(t *testing.T) {
+	cases := map[string]string{
+		"":     "",
+		"null": "",
+		"[]":   "",
+		"{}":   "",
+		"  []  ": "",
+		"{a}":  `["a"]`,
+		"{1,2}": "[1,2]",
+		"abc":  "abc",
+	}
+	for in, want := range cases {
+		if got := normalizeValue(in); got != want {
+			t.Errorf("normalizeValue(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+// TestFieldChanged: сравнение значений (строки, числа, время в разных форматах).
 func TestFieldChanged(t *testing.T) {
 	row := map[string]interface{}{
 		"name":      "Кабинет 101",

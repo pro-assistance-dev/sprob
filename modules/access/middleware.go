@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -294,6 +295,11 @@ var fetchOldRowFn = func(m *Middleware, ctx context.Context, entity *Entity, id 
 // fieldChanged - изменилось ли значение поля относительно текущей строки БД.
 // json-имя поля -> snake_case колонка (для связей — суффикс _id). Временные
 // значения сравниваются по инстансу (клиент шлёт ISO, БД — timestamptz).
+//
+// Массивы: драйвер БД отдаёт text[] строкой-литералом PG ("{}", "{a,b}"),
+// а клиент шлёт JSON ("[]", "[\"a\",\"b\"]"). Без нормализации любое сохранение
+// сущности с непустой/пустой массивной колонкой у роли без W на неё давало
+// ложный 403 (fieldChanged видел изменение). См. TestFieldChangedArrays.
 func fieldChanged(oldRow map[string]interface{}, field string, newVal interface{}) bool {
 	col := strcase.ToSnake(field)
 	oldVal, ok := oldRow[col]
@@ -303,16 +309,99 @@ func fieldChanged(oldRow map[string]interface{}, field string, newVal interface{
 	if !ok {
 		return true // поля нет в текущей строке — считаем изменённым
 	}
-	oldStr, newStr := stringify(oldVal), stringify(newVal)
-	if oldStr == newStr {
+
+	// EQUAL: сначала нормализованные значения (массивы/пустые контейнеры),
+	// затем сравнение времени — оно не меняет смысл, только формат.
+	if normalizeValue(stringify(oldVal)) == normalizeValue(stringify(newVal)) {
 		return false
 	}
-	ot, oerr := parseTimeLoose(oldStr)
-	nt, nerr := parseTimeLoose(newStr)
+	ot, oerr := parseTimeLoose(stringify(oldVal))
+	nt, nerr := parseTimeLoose(stringify(newVal))
 	if oerr && nerr && ot.Equal(nt) {
 		return false
 	}
 	return true
+}
+
+// normalizeValue приводит значение к каноническому виду для сравнения:
+//   - PG array-литерал → JSON-массив ("{} → []", "{a,b} → [\"a\",\"b\"]");
+//   - пустые контейнеры (nil, "", "[]", "{}", "null") — один класс «пусто».
+func normalizeValue(s string) string {
+	s = strings.TrimSpace(s)
+	switch s {
+	case "", "null", "[]", "{}":
+		return ""
+	}
+	if arr, ok := pgArrayToJSON(s); ok {
+		return arr
+	}
+	return s
+}
+
+// pgArrayToJSON переводит литерал PG-массива в JSON-строку:
+// "{}" → "[]", "{a,b}" → "[\"a\",\"b\"]", "{1,2}" → "[1,2]".
+// Возвращает ok=false, если строка не похожа на PG-массив.
+func pgArrayToJSON(s string) (string, bool) {
+	if len(s) < 2 || s[0] != '{' || s[len(s)-1] != '}' {
+		return "", false
+	}
+	inner := strings.TrimSpace(s[1 : len(s)-1])
+	if inner == "" {
+		return "[]", true
+	}
+	parts := splitPGArray(inner)
+	vals := make([]interface{}, 0, len(parts))
+	for _, p := range parts {
+		p = strings.Trim(strings.TrimSpace(p), `"`)
+		if p == "NULL" {
+			vals = append(vals, nil)
+			continue
+		}
+		// Числовой элемент отдаём числом — так "{1,2}" совпадёт с JSON [1,2].
+		if f, err := strconv.ParseFloat(p, 64); err == nil {
+			vals = append(vals, f)
+			continue
+		}
+		vals = append(vals, p)
+	}
+	b, err := json.Marshal(vals)
+	if err != nil {
+		return "", false
+	}
+	return string(b), true
+}
+
+// splitPGArray режет содержимое PG-массива по запятым вне кавычек
+// (элементы вида "a,b" не разваливаются).
+func splitPGArray(s string) []string {
+	var (
+		out    []string
+		cur    strings.Builder
+		quoted bool
+		esc    bool
+	)
+	for _, r := range s {
+		switch {
+		case esc:
+			cur.WriteRune(r)
+			esc = false
+		case r == '\\':
+			cur.WriteRune(r)
+			esc = true
+		case r == '"':
+			quoted = !quoted
+			cur.WriteRune(r)
+		case r == ',' && !quoted:
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteRune(r)
+		}
+	}
+	if cur.Len() > 0 {
+		out = append(out, cur.String())
+	}
+	return out
 }
 
 // parseTimeLoose парсит время в форматах БД (timestamptz) и клиента (ISO).
