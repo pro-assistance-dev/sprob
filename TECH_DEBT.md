@@ -11,12 +11,25 @@
 
 ## 🟡 Т5. Мёртвый/неиспользуемый код
 
-- [ ] 1. `modules/extracts`, `modules/documents`, `modules/settings` — кто реально использует.
-     **Проверка 03.09**: ни один проект не импортирует (импорты только внутри sprob,
-     `routing/router.go`); во фронтах вызовов роутов нет. Модули инертно регистрируются через
-     `routing.Init` во всех проектах. Удаление — отдельное решение (роут-контракт, версия).
+- [x] 1. `modules/extracts`, `modules/documents`, `modules/settings` — кто реально использует.
+     **Проверка 03.09 + повторный аудит 06.09**: ни один проект не импортирует (импорты
+     только внутри sprob — `routing/router.go`); во фронтах вызовов роутов нет. Модули
+     инертно регистрируются через `routing.Init` во всех 8 серверах → публичные роуты:
+     `/api/extracts`; `/api/passports`, `/api/inns`, `/api/snilss`, `/api/passportscans`
+     (documents); `/api/color-themes` (settings). Таблицы в БД: `extracts`, `passports`,
+     `passport_scans`, `inns`, `snilss`, `color_themes`.
+     **Решение (06.09)**: ✅ удалить в **v2.0.0** (мажор) — ломается роут-контракт,
+     поэтому только в мажоре; до мажора не трогаем. Чеклист — пункт 2.
      `modules/buildings` (мёртвый, никем не использовался) и `scrap/` (мусор: PDF/out.json,
      ссылок нет) — **удалены 03.09** → архив
+- [ ] 2. **v2.0.0**: удалить `modules/extracts|documents|settings` — чеклист:
+     1) перед удалением — повторный grep проектов (go-импорты + вызовы роутов во фронтах)
+     и проверка прод-логов на HTTP к `/api/extracts|passports|inns|snilss|passportscans|color-themes`;
+     2) удалить пакеты из sprob + импорты в `routing/router.go` (роуты исчезнут сами);
+     3) запись в CHANGELOG (breaking);
+     4) таблицы в БД серверов (`extracts`/`passports`/`passport_scans`/`inns`/`snilss`/`color_themes`):
+     данные не наполнялись (использований нет) → drop проектной миграцией по касанию,
+     отдельное решение по серверам, удаление кода не блокирует
 
 ## 🟡 Т6. Процесс публикации и версии
 
