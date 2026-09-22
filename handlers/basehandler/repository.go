@@ -20,12 +20,35 @@ type LabelValue struct {
 	Value string `json:"value"`
 }
 
+// OptionOrderable — модель задаёт ПОРЯДОК вариантов в /options.
+//
+// Зачем: по умолчанию список сортируется по подписи (`Order(labelCol)`),
+// и это ломается там, где порядок задан данными: у корпусов есть
+// `item_order`, и «10-й корпус» встаёт вторым строкой (`Корпус 1, Корпус 10,
+// Корпус 2…`). Модель может вернуть колонку порядка (например `item_order`).
+type OptionOrderable interface {
+	OptionsOrderColumn() string
+}
+
 func (r *Repository[T]) Options(c context.Context, labelCol string, valueCol string) ([]*LabelValue, error) {
 	items := make([]*LabelValue, 0)
 
 	colExpr := fmt.Sprintf("%s as value, %s as label", valueCol, labelCol)
 
-	err := r.helper.DB.IDB(c).NewSelect().Model((*T)(nil)).ColumnExpr(colExpr).Order(labelCol).Scan(c, &items)
+	q := r.helper.DB.IDB(c).NewSelect().Model((*T)(nil)).ColumnExpr(colExpr)
+
+	// Порядок: колонка модели (если объявила) → подпись (как было).
+	if o, ok := any(*new(T)).(OptionOrderable); ok {
+		if col := o.OptionsOrderColumn(); col != "" {
+			q = q.Order(col)
+		} else {
+			q = q.Order(labelCol)
+		}
+	} else {
+		q = q.Order(labelCol)
+	}
+
+	err := q.Scan(c, &items)
 
 	return items, err
 }
