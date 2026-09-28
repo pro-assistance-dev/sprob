@@ -22,6 +22,28 @@ func (s *Service[T]) Options(c context.Context, labelCol string, valueCol string
 	return s.R.Options(c, labelCol, valueCol)
 }
 
+// OptionsSearch — опции с серверным поиском (К2, Т8); пустой query — как Options.
+func (s *Service[T]) OptionsSearch(
+	c context.Context,
+	labelCol string,
+	valueCol string,
+	query string,
+	limit int,
+) ([]*LabelValue, error) {
+	if labelCol == "" {
+		labelCol = "name"
+	}
+	if valueCol == "" {
+		valueCol = "id"
+	}
+	return s.R.OptionsSearch(c, labelCol, valueCol, query, limit)
+}
+
+// Searchable — поддерживает ли модель серверный поиск опций.
+func (s *Service[T]) Searchable() bool {
+	return len(s.R.SearchColumns()) > 0
+}
+
 func (s *Service[T]) Get(c context.Context, id string) (T, error) {
 	return s.R.Get(c, id)
 }

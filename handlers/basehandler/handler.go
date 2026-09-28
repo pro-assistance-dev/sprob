@@ -1,7 +1,9 @@
 package basehandler
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -55,7 +57,27 @@ func (h *Handler[T]) Get(c *gin.Context) {
 func (h *Handler[T]) Options(c *gin.Context) {
 	label := strcase.ToSnake(c.Param("label"))
 	value := strcase.ToSnake(c.Param("value"))
-	item, err := h.S.Options(c.Request.Context(), label, value)
+
+	// К2 (Т8): `?query=` включает серверный поиск (белый список полей — у модели).
+	// Без query поведение прежнее — полный справочник.
+	query := c.Query("query")
+	if query == "" {
+		item, err := h.S.Options(c.Request.Context(), label, value)
+		if h.helper.HTTP.HandleError(c, err) {
+			return
+		}
+		c.JSON(http.StatusOK, item)
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.Query("limit"))
+	item, err := h.S.OptionsSearch(c.Request.Context(), label, value, query, limit)
+	if errors.Is(err, ErrNotSearchable) {
+		// 400, а не 500: это ошибка запроса (клиент просит поиск там, где его нет),
+		// и клиент должен это знать явно, а не получить тихо полный список.
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
