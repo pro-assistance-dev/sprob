@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -55,22 +56,17 @@ func (i *FTSP) distinctOn(query *bun.SelectQuery) {
 
 func (i *SQL) InjectFTSP2(r *http.Request, f *FTSP) {
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, f))
-	fmt.Println(r)
 }
 
 func (i *SQL) InjectFTSP(c *gin.Context) error {
 	ftsp := &FTSPQuery{}
-	err := ftsp.FromForm(c)
-	fmt.Println("ftsp", ftsp)
-	if err != nil {
-		fmt.Println(err)
+	if err := ftsp.FromForm(c); err != nil {
 		return err
 	}
 	r := c.Request
 
 	*r = *r.WithContext(context.WithValue(r.Context(), ftspKey{}, ftsp.FTSP))
-	// c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ftspKey{}, ftsp.FTSP))
-	return err
+	return nil
 }
 
 func (i *SQL) ExtractFTSP(ctx context.Context) *FTSP {
@@ -85,8 +81,13 @@ func (i *FTSPQuery) FromForm(c *gin.Context) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal([]byte(form.Value["form"][0]), i)
-	if err != nil {
+	// ⚠️ Без проверки `form.Value["form"][0]` паниковал на запросе без поля
+	// `form` (индекс за границей среза) — клиенту уходил 500 вместо 400.
+	values := form.Value["form"]
+	if len(values) == 0 || values[0] == "" {
+		return errors.New("пустое поле `form` в запросе")
+	}
+	if err := json.Unmarshal([]byte(values[0]), i); err != nil {
 		return err
 	}
 	return nil

@@ -1,9 +1,8 @@
 package sorter
 
 import (
-	"fmt"
-
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/schema"
 )
 
 type Sorter struct {
@@ -18,8 +17,10 @@ func (i *Sorter) CreateOrder(query *bun.SelectQuery, defaultSort ...string) {
 			if sort == nil {
 				sort.Order = Asc
 			}
-			fmt.Println(sort.getTableAndCol())
-			query = query.OrderExpr(fmt.Sprintf("%s %s", sort.getTableAndCol(), sort.Order))
+			// ⚠️ Без fmt.Println (загрязнял прод-лог). Колонка — через `?`→`bun.Ident`
+			// (резолвлена схемой), порядок — из белого списка `orderFrag`, поэтому
+			// значение из запроса не может стать произвольным SQL-фрагментом.
+			query = query.OrderExpr("? ?", bun.Ident(sort.getTableAndCol()), schema.SafeQuery(orderFrag(sort.Order), nil))
 		}
 		return
 	}
@@ -35,11 +36,20 @@ func (items SortModels) CreateOrder(query *bun.SelectQuery, defaultSort ...strin
 			if sort == nil {
 				sort.Order = Asc
 			}
-			query = query.OrderExpr(fmt.Sprintf("%s %s", sort.getTableAndCol(), sort.Order))
+			query = query.OrderExpr("? ?", bun.Ident(sort.getTableAndCol()), schema.SafeQuery(orderFrag(sort.Order), nil))
 		}
 		return
 	}
 	for _, sort := range defaultSort {
 		query = query.Order(sort)
 	}
+}
+
+// orderFrag — только `asc`/`desc`; любое иное значение сводим к `asc`,
+// чтобы значение из запроса не могло стать произвольным SQL-фрагментом.
+func orderFrag(o Orders) string {
+	if o == Desc {
+		return string(Desc)
+	}
+	return string(Asc)
 }

@@ -1,12 +1,11 @@
 package paginator
 
 import (
-	"fmt"
-
 	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/filter"
 
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/schema"
 )
 
 type Cursor struct {
@@ -22,14 +21,17 @@ func (c *Cursor) createPagination(query *bun.SelectQuery) {
 	if c.Initial {
 		return
 	}
-	q := ""
+	// ⚠️ Значение (`c.Value` — из клиента) — ПАРАМЕТР, а не `'%s'` в строке.
+	// Колонка резолвится через схему модели → `bun.Ident`.
 	if len(c.TableName) > 0 {
-		q = fmt.Sprintf("%s %s '%s'", c.getTableAndCol(), c.Operator, c.Value)
-	} else {
-		schema := project.SchemasLib.GetSchema(c.Model)
-		q = fmt.Sprintf("%s %s '%s'", schema.GetColName(c.Column), c.Operator, c.Value)
+		query.Where("? ? ?", bun.Ident(c.getTableAndCol()), schema.SafeQuery(string(c.Operator), nil), c.Value)
+		return
 	}
-	query.Where(q)
+	schemaModel := project.SchemasLib.GetSchema(c.Model)
+	if schemaModel == nil {
+		return
+	}
+	query.Where("? ? ?", bun.Ident(schemaModel.GetColName(c.Column)), schema.SafeQuery(string(c.Operator), nil), c.Value)
 }
 
 func (c *Cursor) getTableAndCol() string {

@@ -8,6 +8,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/helpers/util"
 
 	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/schema"
 )
 
 // FilterModel model
@@ -68,32 +69,57 @@ const (
 	JoinType    DataType = "join"
 )
 
+// TranslitToRu — транслитерация латиницы в кириллицу для LIKE-поиска
+// (пользователь может набрать не в той раскладке). Вынесена в переменную,
+// чтобы тесты могли подменить без БД/утилит хелпера.
+var TranslitToRu = func(s string) string { return util.NewUtil("null").TranslitToRu(s) }
+
+// opFrag — фрагмент SQL для оператора сравнения.
+//
+// ⚠️ Оператор НЕЛЬЗЯ отдавать ни параметром, ни подстановкой строки:
+// `?` в качестве оператора даёт `col = ?` с ушедшим значением, а конкатенация —
+// инъекцию. Берём его через `schema.SafeQuery`: сюда попадают только значения
+// из нашего же `const`-набора `Operator`, то есть строка безопасна по построению.
+func opFrag(op Operator) schema.QueryWithArgs {
+	return schema.SafeQuery(string(op), nil)
+}
+
+// constructWhere добавляет условие фильтра ПАРАМЕТРАМИ (`?`), а не конкатенацией.
+//
+// ⚠️ Колонка подставляется как `bun.Ident` и только после резолва через схему
+// модели (`getTableAndCol`) — произвольное имя из запроса до SQL не дойдёт.
+// Значение — ВСЕГДА параметр: раньше `fmt.Sprintf("... '%s'", f.Value1)` давало
+// SQL-инъекцию через значение (апостроф ломал запрос), т.к. `Value1` приходит
+// от клиента.
 func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
-	q := ""
+	col := f.getTableAndCol()
+
 	if f.isUnary() {
 		switch f.Type {
 		case BooleanType:
-			q = fmt.Sprintf("%s %s %t", f.getTableAndCol(), f.Operator, f.Boolean)
+			query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Boolean)
 		case DateType:
-			q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
+			query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Value1)
 		default:
 			if f.isLike() {
-				f.Value1 = util.NewUtil("null").TranslitToRu(f.Value1)
+				f.Value1 = TranslitToRu(f.Value1)
 				f.likeToString()
-				col := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", f.getTableAndCol())
-				q = fmt.Sprintf("%s %s lower('%s')", col, f.Operator, f.Value1)
+				// Регистронезависимо и без пунктуации — это ВЫРАЖЕНИЕ колонки
+				// (не имя), поэтому `?` его не отквотит — подставляем через
+				// UnsafeIdent, но только по резолвленной схеме колонке.
+				expr := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", col)
+				query.Where("? ? lower(?)", schema.UnsafeIdent(expr), opFrag(f.Operator), f.Value1)
 			} else {
-				q = fmt.Sprintf("%s %s '%s'", f.getTableAndCol(), f.Operator, f.Value1)
+				query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Value1)
 			}
 		}
 	}
 	if f.isBetween() {
-		q = fmt.Sprintf("%s %s '%s' and '%s'", f.getTableAndCol(), f.Operator, f.Value1, f.Value2)
+		query.Where("? ? ? and ?", bun.Ident(col), opFrag(f.Operator), f.Value1, f.Value2)
 	}
 	if f.isNull() {
-		q = fmt.Sprintf("%s %s", f.getTableAndCol(), f.Operator)
+		query.Where("? ?", bun.Ident(col), opFrag(f.Operator))
 	}
-	query.Where(q)
 }
 
 func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
@@ -101,14 +127,16 @@ func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
 		return
 	}
 	if f.Type != JoinType {
-		query.Where(fmt.Sprintf("%s %s (?)", f.getTableAndCol(), f.Operator), bun.In(f.Set))
+		query.Where("? ? (?)", bun.Ident(f.getTableAndCol()), opFrag(f.Operator), bun.In(f.Set))
 		return
 	}
-	q := fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())
+	// ⚠️ Join-ветка: и таблица, и колонка резолвятся через схемы (имя в SQL),
+	// а значения (`Set`) уходят параметром.
 	if len(f.Set) > 1 {
-		q = fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in ?)", f.Table, f.getJoinCondition(), f.getTableAndCol())
+		query.Where("?", schema.UnsafeIdent(fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in ?)", f.Table, f.getJoinCondition(), f.getTableAndCol())), bun.In(f.Set))
+		return
 	}
-	query.Where(q, bun.In(f.Set))
+	query.Where("?", schema.UnsafeIdent(fmt.Sprintf("EXISTS (SELECT NULL from %s where %s and %s in (?))", f.Table, f.getJoinCondition(), f.getTableAndCol())), bun.In(f.Set))
 }
 
 func (f *FilterModel) constructJoin(query *bun.SelectQuery) {

@@ -1,7 +1,6 @@
 package tree
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gertd/go-pluralize"
@@ -33,9 +32,6 @@ func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 	if schema == nil {
 		return
 	}
-	// fieldsCols := schema.ConcatTableCols()
-	// query.Column(fieldsCols...)
-
 	fieldsSchemas := schema.GetFieldsWithSchema()
 
 	for _, relation := range fieldsSchemas {
@@ -47,7 +43,8 @@ func (i *TreeModel) CreateTree(query *bun.SelectQuery) {
 			newRelation = strings.Join([]string{i.relationPath, relation.NamePascal}, ".")
 		}
 
-		fmt.Println(newRelation)
+		// Глубина вложенности связей не ограничена — на циклических моделях
+		// это зациклит запрос. `Full` задуман как рычаг, но пока не реализован.
 		query.Relation(newRelation)
 
 		typeString := strcase.ToLowerCamel(pluralize.NewClient().Singular(relation.NameCamel))
