@@ -70,5 +70,13 @@ func StatusForError(err error) int {
 	if IsAuthError(err) {
 		return http.StatusUnauthorized
 	}
+	// Ошибки ЗАПРОСА (неверные имена полей/моделей в FTSP, пустое поле `form`)
+	// — это 400, а не 500: виноват клиент, и он должен получить внятный ответ,
+	// а не «ошибка на сервере». Интерфейс, а не конкретный тип: `httperr`
+	// не должен зависеть от `helpers/sql` (иначе цикл импортов).
+	var badRequest interface{ BadRequest() bool }
+	if errors.As(err, &badRequest) && badRequest.BadRequest() {
+		return http.StatusBadRequest
+	}
 	return http.StatusInternalServerError
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/filter"
-	"github.com/pro-assistance-dev/sprob/helpers/sql/filter/f"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/paginator"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/sorter"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/tree"
@@ -21,7 +20,6 @@ type FTSP struct {
 	Col   string               `json:"col"`
 	Value string               `json:"value"`
 	F     filter.FilterModels  `json:"f"`
-	F2    f.Models             `json:"f2"`
 	T     tree.TreeModel       `json:"t"`
 	S     sorter.SortModels    `json:"s"`
 	P     *paginator.Paginator `json:"p"`
@@ -34,7 +32,6 @@ func (i *FTSP) HandleQuery(query *bun.SelectQuery) {
 	i.distinctOn(query)
 	i.P.CreatePagination(query)
 	i.F.CreateFilter(query)
-	i.F2.Filter(query)
 	i.S.CreateOrder(query)
 	i.T.CreateTree(query)
 }
@@ -89,6 +86,84 @@ func (i *FTSPQuery) FromForm(c *gin.Context) error {
 	}
 	if err := json.Unmarshal([]byte(values[0]), i); err != nil {
 		return err
+	}
+	// Ф4.3: неизвестная модель/поле — 400 с текстом, а не паника в глубине SQL.
+	return i.FTSP.Validate()
+}
+
+// ErrUnknownField — клиент сослался на поле/модель, которых нет в схеме.
+type ErrUnknownField struct {
+	Model string
+	Field string
+}
+
+func (e ErrUnknownField) Error() string {
+	if e.Field == "" {
+		return "неизвестная модель: " + e.Model
+	}
+	return fmt.Sprintf("неизвестное поле %q у модели %q", e.Field, e.Model)
+}
+
+// BadRequest — маркер для `helpers/http.StatusForError`: это ошибка ЗАПРОСА
+// (клиент назвал несуществующее поле/модель), значит ответ — 400, не 500.
+func (e ErrUnknownField) BadRequest() bool { return true }
+
+// Validate проверяет, что все имена моделей и колонок из запроса РАЗРЕШАЮТСЯ
+// схемой проекта.
+//
+// ⚠️ ЗАЧЕМ (Ф4.3). Раньше неизвестное имя доезжало до `SchemasLib.GetSchema`
+// и падало там nil-pointer'ом (или в `GetColName` — на `FieldsMap[...] = nil`),
+// то есть клиент получал 500 «ошибка на сервере» вместо внятного 400. Это
+// затрудняло и отладку клиента, и разбор «фильтр молча не работает».
+//
+// `col`/`value` (прямой поиск) НЕ проверяем по схеме: они передаются как
+// значения, а не как имена колонок (см. `ftsp.FilterQuery`).
+func (i *FTSP) Validate() error {
+	for _, fm := range i.F {
+		if fm == nil {
+			continue
+		}
+		if fm.Model == "" {
+			return ErrUnknownField{Field: fm.Col}
+		}
+		schema := project.SchemasLib.GetSchema(fm.Model)
+		if schema == nil {
+			return ErrUnknownField{Model: fm.Model}
+		}
+		// Join-фильтры адресуются к колонке ПРИСОЕДИНЯЕМОЙ модели.
+		if fm.JoinTableModel != "" {
+			join := project.SchemasLib.GetSchema(fm.JoinTableModel)
+			if join == nil {
+				return ErrUnknownField{Model: fm.JoinTableModel}
+			}
+			if fm.Col != "" && join.GetField(fm.Col) == nil {
+				return ErrUnknownField{Model: fm.JoinTableModel, Field: fm.Col}
+			}
+			continue
+		}
+		if fm.Col != "" && schema.GetField(fm.Col) == nil {
+			return ErrUnknownField{Model: fm.Model, Field: fm.Col}
+		}
+	}
+	for _, sm := range i.S {
+		if sm == nil {
+			continue
+		}
+		schema := project.SchemasLib.GetSchema(sm.Model)
+		if schema == nil {
+			return ErrUnknownField{Model: sm.Model}
+		}
+		if sm.Col != "" && schema.GetField(sm.Col) == nil {
+			return ErrUnknownField{Model: sm.Model, Field: sm.Col}
+		}
+	}
+	if i.T.Model != "" && project.SchemasLib.GetSchema(i.T.Model) == nil {
+		return ErrUnknownField{Model: i.T.Model}
+	}
+	if i.P != nil && i.P.CursorMode && i.P.Cursor.Model != "" {
+		if project.SchemasLib.GetSchema(i.P.Cursor.Model) == nil {
+			return ErrUnknownField{Model: i.P.Cursor.Model}
+		}
 	}
 	return nil
 }
