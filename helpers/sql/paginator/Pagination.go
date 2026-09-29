@@ -5,7 +5,13 @@ import (
 )
 
 type Paginator struct {
-	Page        int    `json:"page"`
+	// Offset — смещение от начала списка (НЕ номер страницы).
+	//
+	// ⚠️ Поле называлось `Page`, но с клиента приходил именно offset
+	// (`offset = (page-1) * rowsPerPage`), а в курсорном режиме рядом лежит
+	// `Cursor.Value` — тоже позиция, а не страница. Имя «page» заставляло
+	// умножать его на rowsPerPage повторно (см. `Paginator.CreatePagination`).
+	Offset      int    `json:"offset"`
 	RowsPerPage int    `json:"rowsPerPage"`
 	CursorMode  bool   `json:"cursorMode"`
 	Cursor      Cursor `json:"cursor"`
@@ -19,7 +25,7 @@ func (i *Paginator) CreatePagination(query *bun.SelectQuery) {
 	if i.CursorMode {
 		i.Cursor.createPagination(query)
 	} else {
-		query = query.Offset(i.Page * i.RowsPerPage)
+		query = query.Offset(i.Offset)
 	}
 	query.Limit(i.RowsPerPage)
 }
