@@ -3,7 +3,6 @@ package routing
 import (
 	"github.com/pro-assistance-dev/sprob/handlers/auth"
 	"github.com/pro-assistance-dev/sprob/handlers/fileinfos"
-	"github.com/pro-assistance-dev/sprob/handlers/ftsppresets"
 	"github.com/pro-assistance-dev/sprob/handlers/menus"
 	"github.com/pro-assistance-dev/sprob/handlers/schemas"
 
@@ -22,7 +21,6 @@ import (
 
 	"github.com/pro-assistance-dev/sprob/handlers/humans"
 	fileinfosRouter "github.com/pro-assistance-dev/sprob/routing/fileinfos"
-	ftsppresetsRouter "github.com/pro-assistance-dev/sprob/routing/ftsppresets"
 	humansR "github.com/pro-assistance-dev/sprob/routing/humans"
 	menusRouter "github.com/pro-assistance-dev/sprob/routing/menus"
 	metabaseR "github.com/pro-assistance-dev/sprob/routing/metabase"
@@ -54,8 +52,6 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	// phonesRouter.Init(apiToken.Group("/phones"), phones.H)
 
 	humansR.Init(apiToken.Group("/humans"), humans.Init(h))
-
-	ftsppresetsRouter.Init(apiToken.Group("/ftsp-presets"), ftsppresets.Init(h))
 
 	schemasRouter.Init(apiToken.Group("/schemas"), schemas.Init(h))
 
