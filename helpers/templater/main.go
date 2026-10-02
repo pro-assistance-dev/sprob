@@ -46,12 +46,6 @@ func (i *Templater) ParseTemplate(data any, templates ...string) (string, error)
 	if err := t.Execute(buf, data); err != nil {
 		return "", err
 	}
-
-	// err := ioutil.WriteFile("./application-generate.html", []byte(buf.String()), 0644)
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	return buf.String(), nil
 }
 

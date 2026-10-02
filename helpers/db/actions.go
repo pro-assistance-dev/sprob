@@ -67,15 +67,6 @@ func initMigration(migrator *migrate.Migrator) {
 		fmt.Println(err)
 	}
 
-	// _, err = migrator.DB().Exec("alter sequence bun_migration_locks_id_seq owned by bun_migration_locks.id;")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// _, err = migrator.DB().Exec("alter sequence bun_migrations_id_seq owned by bun_migrations.id;")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
 	if err != nil {
 		fmt.Println(err)
 	}

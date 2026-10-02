@@ -8,7 +8,6 @@ import (
 	"github.com/pro-assistance-dev/sprob/config"
 	"github.com/pro-assistance-dev/sprob/helpers/db"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
-	// "github.com/pro-assistance-dev/sprob/helpers/sql/tree/mocks"
 )
 
 // Интеграционный smoke: нужны локальный test.env и Postgres.
@@ -36,7 +35,6 @@ func TestGetTableAndCols(t *testing.T) {
 	db := prepare(t)
 	t.Run("CreateTree", func(t *testing.T) {
 		selectQuery := db.DB.NewSelect()
-		// .Model(mocks.Form{})
 		tree.CreateTree(selectQuery)
 		fmt.Println(selectQuery)
 	})
