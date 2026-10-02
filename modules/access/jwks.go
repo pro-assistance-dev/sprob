@@ -282,7 +282,7 @@ func (v *TokenVerifier) fetch() (map[string]*rsa.PublicKey, error) {
 	if err != nil {
 		return nil, fmt.Errorf("jwks fetch: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("jwks fetch: status %d", resp.StatusCode)
 	}

@@ -113,8 +113,7 @@ func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) (ma
 				}
 				// Все типы пакета (структуры и алиасы слайсов) — для разрешения связей.
 				typeLookup[typeSpec.Name.Name] = typeSpec
-				switch tt := typeSpec.Type.(type) {
-				case *ast.StructType:
+				if tt, ok := typeSpec.Type.(*ast.StructType); ok {
 					structs[typeSpec] = tt.Fields.List
 				}
 			}

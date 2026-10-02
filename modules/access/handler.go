@@ -111,11 +111,11 @@ func (h *Handler) AuditLog(c *gin.Context) {
 	operation := c.Query("operation")
 	userName := c.Query("userName")
 	code := c.Query("code")
-	limit, _ := parseIntDefault(c.Query("limit"), 100)
+	limit := parseIntDefault(c.Query("limit"), 100)
 	if limit > 500 {
 		limit = 500
 	}
-	offset, _ := parseIntDefault(c.Query("offset"), 0)
+	offset := parseIntDefault(c.Query("offset"), 0)
 
 	q := h.helper.DB.IDB(c.Request.Context()).NewSelect().Model(&models.AuditLog{})
 	if entity != "" {
@@ -163,13 +163,13 @@ func (h *Handler) RolesList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"userId": uc.UserID, "userName": uc.UserName, "roles": uc.Roles})
 }
 
-func parseIntDefault(s string, def int) (int, bool) {
+func parseIntDefault(s string, def int) int {
 	if s == "" {
-		return def, false
+		return def
 	}
 	v, err := strconv.Atoi(s)
 	if err != nil {
-		return def, false
+		return def
 	}
-	return v, true
+	return v
 }

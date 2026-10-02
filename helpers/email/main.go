@@ -114,10 +114,7 @@ func messageID(from string) string {
 // buildHeaders — заголовки письма в детерминированном порядке (карта в Go
 // итерируется случайно, а порядок заголовков влияет на некоторые антиспамы).
 func (e *Email) buildHeaders() string {
-	to := make([]string, 0, len(e.request.To))
-	for _, t := range e.request.To {
-		to = append(to, t)
-	}
+	to := append([]string(nil), e.request.To...)
 	pairs := [][2]string{
 		{"From", formatAddress(displayName, e.config.From)},
 		{"To", strings.Join(to, ", ")},

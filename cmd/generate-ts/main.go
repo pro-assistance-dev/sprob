@@ -203,7 +203,7 @@ func renderClass(service string, s *codegen.Schema) string {
 		if c := strings.TrimSpace(f.Comment); c != "" {
 			fmt.Fprintf(&b, "  // %s\n", c)
 		}
-		line, usedAny := renderField(s, f)
+		line, usedAny := renderField(f)
 		usesAny = usesAny || usedAny
 		fmt.Fprintf(&b, "  %s\n", line)
 	}
@@ -224,7 +224,7 @@ func renderClass(service string, s *codegen.Schema) string {
 }
 
 // renderField — объявление одного поля в TS. Второй результат — использован ли any.
-func renderField(s *codegen.Schema, f *codegen.Field) (string, bool) {
+func renderField(f *codegen.Field) (string, bool) {
 	name := f.NameJSON
 	switch {
 	case f.IsSlice:
