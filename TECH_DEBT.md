@@ -21,6 +21,15 @@
 
 ## 🟡 Т5. Мёртвый/неиспользуемый код
 
+> ✅ **02.10** — зачистка по задаче «чисти код»: удалены мёртвый пакет
+> `helpers/sql/tree/mocks` (584 строки, использовался только закомментированным
+> импортом), прокомментированные легаси-блоки (`FilterModel` join-v1, `treemodel`
+> `parseJSONToTreeModel`, `SearchGroup`, `project/schema`, `templater`, `db/actions`,
+> `middleware.CheckPermission`), неиспользуемые параметры/результаты
+> (`renderField`, `parseIntDefault`), непроверенный `Body.Close` в `jwks`. `golangci`:
+> 8 → **3** (осталось: deprecated `parser.ParseDir` в `codegen` — нужен переход на
+> `x/tools/go/packages`; два тест-нита в `jwks_test.go` — `kid`-параметр и `QF1008`).
+
 - [x] 1. `modules/extracts`, `modules/documents`, `modules/settings` — кто реально использует.
      **Проверка 03.09 + повторный аудит 06.09**: ни один проект не импортирует (импорты
      только внутри sprob — `routing/router.go`); во фронтах вызовов роутов нет. Модули
