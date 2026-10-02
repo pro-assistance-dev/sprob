@@ -1,9 +1,9 @@
 package email
 
 import (
-	"bytes"
+	"crypto/rand"
 	"crypto/tls"
-	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"mime"
@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/pro-assistance-dev/sprob/config"
 )
@@ -45,7 +46,10 @@ type request struct {
 	Attachments map[string][]byte
 }
 
-// SetRequest struct
+// displayName — человекочитаемое имя отправителя. Голый адрес (тем более
+// punycode-домен) в From повышает спам-скор; имя делает письмо легитимнее.
+const displayName = "АНО «Просодействие»"
+
 func (e *Email) SendEmail(to []string, subject string, body string) error {
 	e.request = request{To: to, Subject: subject, Body: body}
 	return e.sendEmail()
@@ -65,7 +69,146 @@ func (e *Email) SendEmailWithAttachments(to []string, subject string, body strin
 	return e.sendEmail()
 }
 
-// SendEmail func
+// encodeHeader — RFC 2047 для заголовков с не-ASCII (тема письма с кириллицей,
+// имена получателей). Без кодирования кириллица уезжает в заголовке как есть и
+// ловится спам-фильтрами/превращается в кракозябры.
+func encodeHeader(s string) string {
+	if s == "" || isASCII(s) {
+		return s
+	}
+	return mime.QEncoding.Encode("utf-8", s)
+}
+
+func isASCII(s string) bool {
+	for _, r := range s {
+		if r > 127 {
+			return false
+		}
+	}
+	return true
+}
+
+// formatAddress — «Имя <addr>» с корректным кодированием имени; голый адрес
+// оставляем без изменений.
+func formatAddress(name, addr string) string {
+	if name == "" {
+		return addr
+	}
+	return fmt.Sprintf("%s <%s>", encodeHeader(name), addr)
+}
+
+// messageID — уникальный идентификатор письма. Отсутствие Message-ID —
+// заметный спам-признак, а без него часть получателей вообще схлопывает.
+func messageID(from string) string {
+	domain := "localhost"
+	if at := strings.LastIndex(from, "@"); at >= 0 && at < len(from)-1 {
+		domain = from[at+1:]
+	}
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("<%d@%s>", time.Now().UnixNano(), domain)
+	}
+	return fmt.Sprintf("<%s@%s>", hex.EncodeToString(b), domain)
+}
+
+// buildHeaders — заголовки письма в детерминированном порядке (карта в Go
+// итерируется случайно, а порядок заголовков влияет на некоторые антиспамы).
+func (e *Email) buildHeaders() string {
+	to := make([]string, 0, len(e.request.To))
+	for _, t := range e.request.To {
+		to = append(to, t)
+	}
+	pairs := [][2]string{
+		{"From", formatAddress(displayName, e.config.From)},
+		{"To", strings.Join(to, ", ")},
+		{"Subject", encodeHeader(e.request.Subject)},
+		{"Date", time.Now().Format(time.RFC1123Z)},
+		{"Message-ID", messageID(e.config.From)},
+		// List-Unsubscribe — обязателен для массовых рассылок (Gmail/Yandex):
+		// без него письмо почти гарантированно уходит в «Промоакции»/«Спам».
+		{"List-Unsubscribe", "<mailto:" + e.config.From + "?subject=unsubscribe>"},
+		{"List-Unsubscribe-Post", "List-Unsubscribe=One-Click"},
+		{"MIME-Version", "1.0"},
+		{"Content-Type", "text/html; charset=\"utf-8\""},
+		{"Content-Transfer-Encoding", "quoted-printable"},
+	}
+	var b strings.Builder
+	for _, p := range pairs {
+		fmt.Fprintf(&b, "%s: %s\r\n", p[0], p[1])
+	}
+	return b.String()
+}
+
+// writeBody — тело письма в quoted-printable.
+func (e *Email) writeBody(w *strings.Builder) error {
+	enc := quotedprintable.NewWriter(w)
+	if _, err := enc.Write([]byte(e.request.Body)); err != nil {
+		return err
+	}
+	return enc.Close()
+}
+
+// buildMessage — сырое письмо для SMTP: заголовки + тело (или multipart с
+// вложениями).
+func (e *Email) buildMessage() (string, error) {
+	var msg strings.Builder
+	msg.WriteString(e.buildHeaders())
+	if len(e.request.Attachments) == 0 {
+		msg.WriteString("\r\n")
+		if err := e.writeBody(&msg); err != nil {
+			return "", err
+		}
+		return msg.String(), nil
+	}
+
+	var body strings.Builder
+	if err := e.writeBody(&body); err != nil {
+		return "", err
+	}
+
+	var buf strings.Builder
+	buf.WriteString("From: " + formatAddress(displayName, e.config.From) + "\r\n")
+	buf.WriteString("To: " + strings.Join(e.request.To, ", ") + "\r\n")
+	buf.WriteString("Subject: " + encodeHeader(e.request.Subject) + "\r\n")
+	buf.WriteString("Date: " + time.Now().Format(time.RFC1123Z) + "\r\n")
+	buf.WriteString("Message-ID: " + messageID(e.config.From) + "\r\n")
+	buf.WriteString("MIME-Version: 1.0\r\n")
+
+	writer := multipart.NewWriter(&buf)
+	buf.WriteString("Content-Type: multipart/mixed; boundary=" + writer.Boundary() + "\r\n")
+	buf.WriteString("\r\n")
+
+	header := make(map[string][]string)
+	header["Content-Type"] = []string{"text/html; charset=utf-8"}
+	header["Content-Transfer-Encoding"] = []string{"quoted-printable"}
+	part, err := writer.CreatePart(header)
+	if err != nil {
+		return "", err
+	}
+	if _, err := part.Write([]byte(body.String())); err != nil {
+		return "", err
+	}
+
+	for name, data := range e.request.Attachments {
+		header := make(map[string][]string)
+		header["Content-Type"] = []string{mime.TypeByExtension(filepath.Ext(name))}
+		header["Content-Transfer-Encoding"] = []string{"base64"}
+		header["Content-Disposition"] = []string{"attachment; filename=\"" + name + "\""}
+		part, err := writer.CreatePart(header)
+		if err != nil {
+			return "", err
+		}
+		if _, err := part.Write(data); err != nil {
+			return "", err
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+// sendEmail func
 func (e *Email) sendEmail() error {
 	auth := smtp.PlainAuth(
 		"",
@@ -77,29 +220,8 @@ func (e *Email) sendEmail() error {
 		auth = LoginAuth(e.config.From, e.config.Password)
 	}
 
-	// Формируем правильные заголовки для HTML письма
-	headers := make(map[string]string)
-	headers["From"] = e.config.From
-	headers["To"] = strings.Join(e.request.To, ", ")
-	headers["Subject"] = e.request.Subject
-	headers["MIME-Version"] = "1.0"
-	headers["Content-Type"] = "text/html; charset=\"utf-8\""
-	headers["Content-Transfer-Encoding"] = "quoted-printable"
-
-	// Собираем сообщение
-	var message strings.Builder
-	for k, v := range headers {
-		fmt.Fprintf(&message, "%s: %s\r\n", k, v)
-	}
-	message.WriteString("\r\n") // разделитель заголовков и тела
-
-	// Кодируем тело в quoted-printable для корректной передачи
-	bodyEncoded := quotedprintable.NewWriter(&message)
-	_, err := bodyEncoded.Write([]byte(e.request.Body))
+	message, err := e.buildMessage()
 	if err != nil {
-		return err
-	}
-	if err := bodyEncoded.Close(); err != nil {
 		return err
 	}
 
@@ -141,120 +263,23 @@ func (e *Email) sendEmail() error {
 		return err
 	}
 
-	_, err = w.Write([]byte(message.String()))
-	if err != nil {
+	if _, err = w.Write([]byte(message)); err != nil {
 		return err
 	}
-	err = w.Close()
-	if err != nil {
+	if err = w.Close(); err != nil {
 		return err
 	}
-	err = c.Quit()
-	if err != nil {
+	if err = c.Quit(); err != nil {
 		return err
 	}
 
 	if e.config.WriteTestFile {
-		err = os.WriteFile("./application-generate_send.html", []byte(message.String()), 0o600)
-		if err != nil {
+		if err := os.WriteFile("./application-generate_send.html", []byte(message), 0o600); err != nil {
 			log.Printf("Error writing test file: %v", err)
 		}
 	}
 
 	return nil
-}
-
-func (m *request) ToBytes(from string) []byte {
-	buf := bytes.NewBuffer(nil)
-	withAttachments := len(m.Attachments) > 0
-	fmt.Fprintf(buf, "Subject: %s\n", m.Subject)
-	fmt.Fprintf(buf, "To: %s\n", strings.Join(m.To, ","))
-	fmt.Fprintf(buf, "From: %s\n", strings.Join([]string{from}, ","))
-	// if len(m.CC) > 0 {
-	// 	buf.WriteString(fmt.Sprintf("Cc: %s\n", strings.Join(m.CC, ",")))
-	// }
-	//
-	// if len(m.BCC) > 0 {
-	// 	buf.WriteString(fmt.Sprintf("Bcc: %s\n", strings.Join(m.BCC, ",")))
-	// }
-	//
-	buf.WriteString("MIME-Version: 1.0\n")
-	writer := multipart.NewWriter(buf)
-	boundary := writer.Boundary()
-	if withAttachments {
-		fmt.Fprintf(buf, "Content-Type: multipart/mixed; boundary=%s\n", boundary)
-		fmt.Fprintf(buf, "--%s\n", boundary)
-	} else {
-		buf.WriteString("Content-Type: text/plain; charset=utf-8\n")
-	}
-
-	fmt.Fprintf(buf, "\n\n--%s\n", boundary)
-	fmt.Fprintf(buf, "Content-Type: text/html; charset=\"utf-8\" boundary=%s\n", boundary)
-	buf.WriteString(m.Body)
-	fmt.Fprintf(buf, "\n--%s", boundary)
-
-	coder := base64.StdEncoding
-	if withAttachments {
-		for k, v := range m.Attachments {
-			buf.WriteString("\r\n\r\n--" + boundary + "\r\n")
-
-			ext := filepath.Ext(k)
-			mimetype := mime.TypeByExtension(ext)
-			if mimetype != "" {
-				mime := fmt.Sprintf("Content-Type: %s\r\n", mimetype)
-				buf.WriteString(mime)
-			} else {
-				buf.WriteString("Content-Type: application/octet-stream\r\n")
-			}
-			buf.WriteString("Content-Transfer-Encoding: base64\r\n")
-
-			buf.WriteString("Content-Disposition: attachment; filename=\"=?UTF-8?B?")
-			buf.WriteString(coder.EncodeToString([]byte(k)))
-			buf.WriteString("?=\"\r\n\r\n")
-
-			b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
-			base64.StdEncoding.Encode(b, v)
-
-			// write base64 content in lines of up to 76 chars
-			for i, l := 0, len(b); i < l; i++ {
-				buf.WriteByte(b[i])
-				if (i+1)%76 == 0 {
-					buf.WriteString("\r\n")
-				}
-			}
-
-			buf.WriteString("\r\n--" + boundary)
-		}
-		// for k, v := range m.Attachments {
-		// 	buf.WriteString(fmt.Sprintf("\n\n--%s\n", boundary))
-		//
-		// 	ext := filepath.Ext(k)
-		// 	mimetype := mime.TypeByExtension(ext)
-		// 	buf.WriteString(fmt.Sprintf("Content-Type: %s\n", mimetype))
-		// 	buf.WriteString("Content-Transfer-Encoding: base64\n")
-		// 	buf.WriteString(fmt.Sprintf("Content-Disposition: attachment; filename=%s\n", k))
-		//
-		// 	// b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
-		// 	// base64.StdEncoding.Encode(b, v)
-		// 	// buf.Write(b)
-		//
-		// 	b := make([]byte, base64.StdEncoding.EncodedLen(len(v)))
-		// 	base64.StdEncoding.Encode(b, v)
-		//
-		// 	// write base64 content in lines of up to 76 chars
-		// 	for i, l := 0, len(b); i < l; i++ {
-		// 		buf.WriteByte(b[i])
-		// 		if (i+1)%76 == 0 {
-		// 			buf.WriteString("\r\n")
-		// 		}
-		// 	}
-		// 	buf.WriteString(fmt.Sprintf("\n--%s", boundary))
-		// }
-
-		buf.WriteString("--")
-	}
-
-	return buf.Bytes()
 }
 
 func (r *request) AttachFile(src string) error {
