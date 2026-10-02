@@ -21,6 +21,20 @@ type AnswerVariant struct {
 
 type AnswerVariants []*AnswerVariant
 
+// SetIDForChildren проставляет варианту id поля.
+func (item *AnswerVariant) SetIDForChildren(fieldID uuid.NullUUID) {
+	if !item.ID.Valid {
+		item.ID = uuid.NullUUID{UUID: uuid.New(), Valid: true}
+	}
+	item.FieldID = fieldID
+}
+
+func (items AnswerVariants) SetIDForChildren(fieldID uuid.NullUUID) {
+	for i := range items {
+		items[i].SetIDForChildren(fieldID)
+	}
+}
+
 func (items AnswerVariants) GetRegisterPropertyOthersForDelete() []uuid.UUID {
 	itemsForGet := make([]uuid.UUID, 0)
 	//for i := range items {

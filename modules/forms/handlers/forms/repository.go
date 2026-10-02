@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/pro-assistance-dev/sprob/modules/forms/models"
 
 	"github.com/pro-assistance-dev/sprob/middleware"
@@ -12,8 +13,27 @@ import (
 )
 
 func (r *Repository) Create(c context.Context, item *models.Form) (err error) {
-	_, err = r.helper.DB.IDB(c).NewInsert().Model(item).Exec(c)
-	return err
+	// Bun v1.2 не каскадирует вложенные has-many при Insert — сохраняем дерево
+	// формы (секции → поля → варианты) вручную в одной транзакции.
+	item.SetIDForChildren()
+
+	tx, err := r.helper.DB.IDB(c).BeginTx(c, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	if _, err = tx.NewInsert().Model(item).Exec(c); err != nil {
+		return err
+	}
+	if err = r.insertChildren(c, tx, item); err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (r *Repository) GetAll(c context.Context) (items models.FormsWithCount, err error) {
@@ -91,7 +111,79 @@ func (r *Repository) Delete(c context.Context, id *string) (err error) {
 }
 
 func (r *Repository) Update(c context.Context, item *models.Form) (err error) {
-	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Where("id = ?", item.ID).Exec(c)
+	// Обновляем дерево формы целиком: сама форма + вложенные сущности.
+	item.SetIDForChildren()
+
+	tx, err := r.helper.DB.IDB(c).BeginTx(c, nil)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	if _, err = tx.NewUpdate().Model(item).Where("id = ?", item.ID).Exec(c); err != nil {
+		return err
+	}
+	// Старое дерево удаляем и пишем новое — простая и надёжная модель для
+	// конструктора (перестановка/удаление полей не отслеживается поэлементно).
+	if err = r.deleteChildren(c, tx, item.ID); err != nil {
+		return err
+	}
+	if err = r.insertChildren(c, tx, item); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// insertChildren сохраняет секции → поля → варианты ответов формы.
+func (r *Repository) insertChildren(c context.Context, tx bun.Tx, item *models.Form) error {
+	if len(item.FormSections) == 0 {
+		return nil
+	}
+	if _, err := tx.NewInsert().Model(&item.FormSections).Exec(c); err != nil {
+		return err
+	}
+	fields := make(models.Fields, 0)
+	for _, section := range item.FormSections {
+		for i := range section.Fields {
+			section.Fields[i].FormSectionID = section.ID
+		}
+		fields = append(fields, section.Fields...)
+	}
+	if len(fields) > 0 {
+		if _, err := tx.NewInsert().Model(&fields).Exec(c); err != nil {
+			return err
+		}
+	}
+	variants := make(models.AnswerVariants, 0)
+	for _, field := range fields {
+		for i := range field.AnswerVariants {
+			field.AnswerVariants[i].FieldID = field.ID
+		}
+		variants = append(variants, field.AnswerVariants...)
+	}
+	if len(variants) > 0 {
+		if _, err := tx.NewInsert().Model(&variants).Exec(c); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// deleteChildren удаляет дерево формы (варианты → поля → секции).
+func (r *Repository) deleteChildren(c context.Context, tx bun.Tx, formID uuid.NullUUID) error {
+	if _, err := tx.NewDelete().Model((*models.AnswerVariant)(nil)).
+		Where("field_id in (select id from fields where form_section_id in (select id from form_sections where form_id = ?))", formID).Exec(c); err != nil {
+		return err
+	}
+	if _, err := tx.NewDelete().Model((*models.Field)(nil)).
+		Where("form_section_id in (select id from form_sections where form_id = ?)", formID).Exec(c); err != nil {
+		return err
+	}
+	_, err := tx.NewDelete().Model((*models.FormSection)(nil)).Where("form_id = ?", formID).Exec(c)
 	return err
 }
 

@@ -23,3 +23,18 @@ type FormSectionsWithCount struct {
 	FormSections FormSections `json:"items"`
 	Count        int          `json:"count"`
 }
+
+// SetIDForChildren проставляет секции id формы и её полям — id секции.
+func (item *FormSection) SetIDForChildren(formID uuid.NullUUID) {
+	if !item.ID.Valid {
+		item.ID = uuid.NullUUID{UUID: uuid.New(), Valid: true}
+	}
+	item.FormID = formID
+	item.Fields.SetIDForChildren(item.ID)
+}
+
+func (items FormSections) SetIDForChildren(formID uuid.NullUUID) {
+	for i := range items {
+		items[i].SetIDForChildren(formID)
+	}
+}

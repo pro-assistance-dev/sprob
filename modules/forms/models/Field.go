@@ -44,3 +44,19 @@ type FieldsWithCount struct {
 	Fields Fields `json:"items"`
 	Count  int    `json:"count"`
 }
+
+// SetIDForChildren проставляет полю id секции и варианты детей/ответов.
+func (item *Field) SetIDForChildren(formSectionID uuid.NullUUID) {
+	if !item.ID.Valid {
+		item.ID = uuid.NullUUID{UUID: uuid.New(), Valid: true}
+	}
+	item.FormSectionID = formSectionID
+	item.AnswerVariants.SetIDForChildren(item.ID)
+	item.Children.SetIDForChildren(item.ID)
+}
+
+func (items Fields) SetIDForChildren(formSectionID uuid.NullUUID) {
+	for i := range items {
+		items[i].SetIDForChildren(formSectionID)
+	}
+}
