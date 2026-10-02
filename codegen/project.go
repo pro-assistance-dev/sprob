@@ -71,7 +71,7 @@ func (i *Project) InitSchemas() {
 	paths := findAllModelsPackages(i.ModelsPath)
 	i.Schemas = make(Schemas, 0)
 	for _, path := range paths {
-		modelsPackage, err := parser.ParseDir(token.NewFileSet(), path, nil, parser.AllErrors)
+		modelsPackage, err := parseDirPackages(path)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -88,19 +88,43 @@ func (i *Project) InitSchemas() {
 	SchemasLib = i.Schemas
 }
 
-func (i *Project) getStructsOfProject(modelsPackage map[string]*ast.Package) (map[*ast.TypeSpec][]*ast.Field, map[string]*ast.TypeSpec) { //nolint:all
+// parseDirPackages разбирает .go-файлы каталога, группируя их по имени пакета.
+// Замена устаревшего parser.ParseDir: те же файлы одного каталога, без рекурсии
+// и без учёта build-тегов (генератору моделей это и не нужно).
+func parseDirPackages(dir string) (map[string][]*ast.File, error) {
+	fset := token.NewFileSet()
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	packages := map[string][]*ast.File{}
+	for _, entry := range entries {
+		name := entry.Name()
+		if entry.IsDir() || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+			continue
+		}
+		file, err := parser.ParseFile(fset, filepath.Join(dir, name), nil, parser.AllErrors|parser.SkipObjectResolution)
+		if err != nil {
+			return nil, err
+		}
+		packages[file.Name.Name] = append(packages[file.Name.Name], file)
+	}
+	return packages, nil
+}
+
+func (i *Project) getStructsOfProject(modelsFiles map[string][]*ast.File) (map[*ast.TypeSpec][]*ast.Field, map[string]*ast.TypeSpec) { //nolint:all
 	structs := map[*ast.TypeSpec][]*ast.Field{}
 	typeLookup := map[string]*ast.TypeSpec{}
 
-	pack := modelsPackage["models"]
-	if pack == nil {
-		pack = modelsPackage["mocks"]
+	files := modelsFiles["models"]
+	if files == nil {
+		files = modelsFiles["mocks"]
 	}
-	if pack == nil {
+	if files == nil {
 		return nil, nil
 	}
 
-	for _, file := range pack.Files {
+	for _, file := range files {
 		for _, node := range file.Decls {
 			genDecl, ok := node.(*ast.GenDecl)
 			if !ok {

@@ -1,3 +1,21 @@
+## v1.4.5 (02.10.2026) — refactor: чистка кода (lint 8 → 0)
+
+> ЗАЧЕМ. Изначальная задача «чисти код»: в библиотеке накопились мёртвые пакеты,
+> закомментированные легаси-блоки и замечания линтера.
+
+- Удалён мёртвый пакет `helpers/sql/tree/mocks` (584 строки; ссылался только
+  закомментированный импорт в тесте).
+- Вырезаны закомментированные легаси-блоки: `FilterModel` (join-v1), `treemodel`
+  (`parseJSONToTreeModel`), `SearchGroup`, `helpers/project/schema`, `templater`,
+  `db/actions`, `middleware.CheckPermission`.
+- Убраны неиспользуемые параметры/результаты: `renderField(s, f)` → `renderField(f)`,
+  `parseIntDefault(...) (int, bool)` → `int`, тест-хелпер `newJWKSServer(t, kid, …)`
+  → `newJWKSServer(t, …)`; промотированные поля `key.PublicKey.N` → `key.N`.
+- Устаревший `parser.ParseDir`/`ast.Package` в `codegen` заменён на
+  `parser.ParseFile` + группировку файлов по имени пакета (Go 1.25).
+  Проверено на rdkb/map: генератор дал 56 TS-классов, diff к закоммиченным — пустой.
+- Итог: `golangci-lint run ./...` — **0 issues**; `go vet`/`go test ./...` — зелёные.
+
 ## v1.4.4 (02.10.2026) — fix(email): письма-рассылки больше не уходят в спам
 
 > ЗАЧЕМ. На pros часть писем последней рассылки попала в спам. Разбор

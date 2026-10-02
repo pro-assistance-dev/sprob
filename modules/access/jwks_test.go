@@ -61,11 +61,11 @@ func signToken(t *testing.T, key *rsa.PrivateKey, secret, kid, alg string, claim
 	return unsigned + "." + base64.RawURLEncoding.EncodeToString(sig)
 }
 
-// newJWKSServer поднимает httptest-сервер, отдающий JWKS с одним RSA-ключом.
-func newJWKSServer(t *testing.T, kid string, pub *rsa.PublicKey) *httptest.Server {
+// newJWKSServer поднимает httptest-сервер, отдающий JWKS с одним RSA-ключом (kid=kid1).
+func newJWKSServer(t *testing.T, pub *rsa.PublicKey) *httptest.Server {
 	t.Helper()
 	key := jwk{
-		Kid: kid, Kty: "RSA", Alg: "RS256", Use: "sig",
+		Kid: "kid1", Kty: "RSA", Alg: "RS256", Use: "sig",
 		N: base64.RawURLEncoding.EncodeToString(pub.N.Bytes()),
 		E: base64.RawURLEncoding.EncodeToString(big.NewInt(int64(pub.E)).Bytes()),
 	}
@@ -93,7 +93,7 @@ func TestVerifyValidKeycloakToken(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{
@@ -117,7 +117,7 @@ func TestVerifyFakeSignature(t *testing.T) {
 	// Ключ JWKS и ключ подписи — разные: подделанный токен обязан отклоняться.
 	realKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	fakeKey, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &realKey.PublicKey)
+	srv := newJWKSServer(t, &realKey.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{
@@ -136,7 +136,7 @@ func TestVerifyFakeSignature(t *testing.T) {
 
 func TestVerifyExpiredToken(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{
@@ -164,7 +164,7 @@ func TestVerifyNoExpFakeSignature(t *testing.T) {
 	// Подпись фейковая — VerifyNoExp обязан отклонить (identity не доверяем).
 	fakeKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	realKey, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &realKey.PublicKey)
+	srv := newJWKSServer(t, &realKey.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{"sub": "attacker", "exp": float64(time.Now().Add(-time.Hour).Unix())}
@@ -178,7 +178,7 @@ func TestVerifyNoExpFakeSignature(t *testing.T) {
 func TestVerifyTokenNoExpPublic(t *testing.T) {
 	// Публичная обёртка VerifyTokenNoExp возвращает UserCtx с identity из claims.
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	claims := map[string]interface{}{
@@ -205,7 +205,7 @@ func TestVerifyTokenNoExpPublic(t *testing.T) {
 
 func TestVerifyMalformedTokens(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	cases := []string{
@@ -226,7 +226,7 @@ func TestVerifyMalformedTokens(t *testing.T) {
 
 func TestVerifyUnknownKid(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	v := newVerifier(t, srv.URL)
 
 	claims := map[string]interface{}{"exp": float64(time.Now().Add(time.Hour).Unix())}
@@ -269,8 +269,8 @@ func TestVerifyStaleCacheOnRefreshFailure(t *testing.T) {
 		}
 		_ = json.NewEncoder(w).Encode(jwksResponse{Keys: []jwk{
 			{Kid: "kid1", Kty: "RSA", Alg: "RS256", Use: "sig",
-				N: base64.RawURLEncoding.EncodeToString(key.PublicKey.N.Bytes()),
-				E: base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.PublicKey.E)).Bytes())},
+				N: base64.RawURLEncoding.EncodeToString(key.N.Bytes()),
+				E: base64.RawURLEncoding.EncodeToString(big.NewInt(int64(key.E)).Bytes())},
 		}})
 	}))
 	t.Cleanup(srv.Close)
@@ -412,7 +412,7 @@ func TestRolesFromRequestNoToken(t *testing.T) {
 func TestRolesFromRequestInvalidToken(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
 	realKey, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &realKey.PublicKey)
+	srv := newJWKSServer(t, &realKey.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	// Фейковый токен с ролью R00_ADMIN — как в описании Б1.
@@ -438,7 +438,7 @@ func TestRolesFromRequestInvalidToken(t *testing.T) {
 
 func TestRolesFromRequestValidToken(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	claims := map[string]interface{}{
@@ -472,7 +472,7 @@ func TestRolesFromRequestValidToken(t *testing.T) {
 
 func TestRolesFromRequestAuthorizationHeader(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	claims := map[string]interface{}{
@@ -497,7 +497,7 @@ func TestRolesFromRequestAuthorizationHeader(t *testing.T) {
 func TestAccessControlInvalidToken401(t *testing.T) {
 	fakeKey, _ := rsa.GenerateKey(rand.Reader, 2048)
 	realKey, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &realKey.PublicKey)
+	srv := newJWKSServer(t, &realKey.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	gin.SetMode(gin.TestMode)
@@ -549,7 +549,7 @@ func TestAccessControlNoTokenAnonymous(t *testing.T) {
 
 func TestAccessControlValidTokenPasses(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	gin.SetMode(gin.TestMode)
@@ -591,7 +591,7 @@ func noRoleToken(t *testing.T, key *rsa.PrivateKey, kid string) string {
 
 func TestAccessControlEnforceReadForbidden(t *testing.T) {
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	gin.SetMode(gin.TestMode)
@@ -613,7 +613,7 @@ func TestAccessControlEnforceReadForbidden(t *testing.T) {
 func TestAccessControlMonitorLogsWould403(t *testing.T) {
 	t.Setenv("ACCESS_ENFORCE", "monitor")
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	gin.SetMode(gin.TestMode)
@@ -635,7 +635,7 @@ func TestAccessControlMonitorLogsWould403(t *testing.T) {
 func TestAccessControlEnforceTrueForbidden(t *testing.T) {
 	t.Setenv("ACCESS_ENFORCE", "true")
 	key, _ := rsa.GenerateKey(rand.Reader, 2048)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 
 	gin.SetMode(gin.TestMode)
@@ -730,7 +730,7 @@ func mustRSAKey(t *testing.T) *rsa.PrivateKey {
 func newEnforceRouter(t *testing.T, rows map[string]map[string]map[string]string) *gin.Engine {
 	t.Helper()
 	key := mustRSAKey(t)
-	srv := newJWKSServer(t, "kid1", &key.PublicKey)
+	srv := newJWKSServer(t, &key.PublicKey)
 	withDefaultVerifier(t, newVerifier(t, srv.URL))
 	gin.SetMode(gin.TestMode)
 	mw := NewMiddleware(nil)

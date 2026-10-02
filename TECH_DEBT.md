@@ -26,9 +26,10 @@
 > импортом), прокомментированные легаси-блоки (`FilterModel` join-v1, `treemodel`
 > `parseJSONToTreeModel`, `SearchGroup`, `project/schema`, `templater`, `db/actions`,
 > `middleware.CheckPermission`), неиспользуемые параметры/результаты
-> (`renderField`, `parseIntDefault`), непроверенный `Body.Close` в `jwks`. `golangci`:
-> 8 → **3** (осталось: deprecated `parser.ParseDir` в `codegen` — нужен переход на
-> `x/tools/go/packages`; два тест-нита в `jwks_test.go` — `kid`-параметр и `QF1008`).
+> (`renderField`, `parseIntDefault`, тест-хелпер `newJWKSServer`). Устаревший
+> `parser.ParseDir`/`ast.Package` в `codegen` заменён на `parser.ParseFile` +
+> группировку по пакету (генератор TS проверен на rdkb/map: 56 классов, diff
+> к закоммиченным — пустой). **`golangci-lint`: 8 → 0** (`.golangci.yaml` чист).
 
 - [x] 1. `modules/extracts`, `modules/documents`, `modules/settings` — кто реально использует.
      **Проверка 03.09 + повторный аудит 06.09**: ни один проект не импортирует (импорты
