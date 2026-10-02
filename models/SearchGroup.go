@@ -38,7 +38,6 @@ func (item *SearchGroup) BuildRoutes() {
 
 func (item *SearchGroup) ParseMap(re map[string]interface{}) {
 	for _, hit := range re["hits"].(map[string]interface{})["hits"].([]interface{}) {
-		// index := hit.(map[string]interface{})["_index"]
 		searchElement := SearchElement{}
 		searchElement.Value = hit.(map[string]interface{})["_id"].(string)
 		searchElement.Label = hit.(map[string]interface{})["_source"].(map[string]interface{})["name"].(string)
