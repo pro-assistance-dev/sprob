@@ -70,7 +70,10 @@ func (i *SQL) ExtractFTSP(ctx context.Context) *FTSP {
 	if i, ok := ctx.Value(ftspKey{}).(*FTSP); ok {
 		return i
 	}
-	return nil
+	// nil-safe: без FTSP-мидлвара (маршрут зарегистрирован раньше `Use(InjectFTSP)`)
+	// возвращаем пустой FTSP, а не nil — иначе `*ExtractFTSP(ctx)` паникует
+	// (nil dereference → 500 вместо пустого ответа).
+	return &FTSP{}
 }
 
 func (i *FTSPQuery) FromForm(c *gin.Context) error {
