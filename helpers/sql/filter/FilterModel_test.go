@@ -182,6 +182,48 @@ func TestConstructWhere_LikeQuotesDottedColumn(t *testing.T) {
 	}
 }
 
+// OR-группа: фильтры с ОДИНАКОВЫМ `Group` объединяются через OR (поиск
+// «ФИО ИЛИ код» одним полем), а разные группы/без группы — через AND.
+func TestCreateFilter_OrGroup(t *testing.T) {
+	items := FilterModels{
+		{
+			Model: "room", Col: "name", Type: StringType, Operator: Like,
+			Value1: "иван", Group: 1,
+		},
+		{
+			Model: "room", Col: "roomId", Type: StringType, Operator: Like,
+			Value1: "С0002", Group: 1,
+		},
+	}
+
+	query := renderQuery(t, func(sel *bun.SelectQuery) { items.CreateFilter(sel) })
+
+	// Оба условия — в ОДНОЙ скобке, соединены OR.
+	if !strings.Contains(query, " OR ") {
+		t.Fatalf("условия одной группы не соединены OR: %s", query)
+	}
+	if !strings.Contains(query, "(") || !strings.Contains(query, ")") {
+		t.Fatalf("OR-группа не обёрнута в скобки: %s", query)
+	}
+	// Оба значения в запросе (с подставленными `%`).
+	if !strings.Contains(query, "%иван%") || !strings.Contains(query, "%С0002%") {
+		t.Fatalf("значения группы потеряны: %s", query)
+	}
+	// Одиночный фильтр добавляется отдельным условием (AND в SQL — через
+	// сопоставление фрагментов; проверяем, что его колонка в запросе есть).
+	items = append(items, &FilterModel{
+		Model: "room", Col: "name", Type: StringType, Operator: Eq, Value1: "AAA",
+	})
+	query = renderQuery(t, func(sel *bun.SelectQuery) { items.CreateFilter(sel) })
+	if !strings.Contains(query, "'AAA'") {
+		t.Fatalf("одиночный фильтр потерян при наличии группы: %s", query)
+	}
+	// Оператор — КЛЮЧЕВОЕ СЛОВО, а не строка-литерал (`'like'` — ошибка).
+	if strings.Contains(query, "'like'") || strings.Contains(query, "'='") {
+		t.Fatalf("оператор ушёл как строковый литерал: %s", query)
+	}
+}
+
 // Колонка по-прежнему берётся ИЗ СХЕМЫ (имя поля модели → колонка БД).
 func TestConstructWhere_ColumnResolvedFromSchema(t *testing.T) {
 	f := &FilterModel{

@@ -28,6 +28,12 @@ type FilterModel struct { //nolint:golint
 	Set     []string `json:"set"`
 	Boolean bool     `json:"boolean"`
 
+	// Group — метка OR-группы. Фильтры с ОДИНАКОВЫМ ненулевым `Group`
+	// объединяются через `OR` (внутри группы), а между группами и остальными
+	// (без группы) — через `AND`. Нужно для «поиска одним полем по нескольким
+	// колонкам» (ФИО ИЛИ код). `0` (дефолт) — OR-группы нет.
+	Group int `json:"group,omitempty"`
+
 	JoinTable      string `json:"joinTable"`
 	JoinTableModel string `json:"joinTableModel"`
 	JoinTableFK    string `json:"joinTableFK"`
@@ -84,22 +90,28 @@ func opFrag(op Operator) schema.QueryWithArgs {
 	return schema.SafeQuery(string(op), nil)
 }
 
-// constructWhere добавляет условие фильтра ПАРАМЕТРАМИ (`?`), а не конкатенацией.
+// whereFragment возвращает SQL-условие фильтра (или `ok=false`, если условий нет).
 //
 // ⚠️ Колонка подставляется как `bun.Ident` и только после резолва через схему
 // модели (`getTableAndCol`) — произвольное имя из запроса до SQL не дойдёт.
-// Значение — ВСЕГДА параметр: раньше `fmt.Sprintf("... '%s'", f.Value1)` давало
-// SQL-инъекцию через значение (апостроф ломал запрос), т.к. `Value1` приходит
-// от клиента.
-func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
+// Значение — ВСЕГДА параметр: конкатенация значения давада SQL-инъекцию
+// (апостроф ломал запрос), т.к. `Value1` приходит от клиента.
+//
+// ⚠️ Фрагмент возвращается (а не пишется прямо в query): так одиночный фильтр
+// можно применить через `Where`, а фильтры одной OR-группы — через `WhereGroup`.
+func (f *FilterModel) whereFragment() (schema.QueryWithArgs, bool) {
 	col := f.getTableAndCol()
 
 	if f.isUnary() {
 		switch f.Type {
 		case BooleanType:
-			query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Boolean)
+			return schema.QueryWithArgs{
+				Query: "? ? ?", Args: []interface{}{bun.Ident(col), opFrag(f.Operator), f.Boolean},
+			}, true
 		case DateType:
-			query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Value1)
+			return schema.QueryWithArgs{
+				Query: "? ? ?", Args: []interface{}{bun.Ident(col), opFrag(f.Operator), f.Value1},
+			}, true
 		default:
 			if f.isLike() {
 				f.Value1 = TranslitToRu(f.Value1)
@@ -109,24 +121,36 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 				// ⚠️ Колонку передаём ОТДЕЛЬНЫМ `?` с `bun.Ident`, а не вклеиваем
 				// в строку выражения: bun разбирает точку (`table.col`) только в
 				// самом `Ident`, а внутри произвольного выражения видит её в
-				// тексте и ломает идентификатор — `UnsafeIdent("…(news.title…)…")`
-				// давал `"…(news"."title…)…"` → Postgres: `missing FROM-clause
-				// entry for table "lower(regexp_replace(news"` (42P01).
-				query.Where(
-					"lower(regexp_replace(?, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) ? lower(?)",
-					bun.Ident(col), opFrag(f.Operator), f.Value1,
-				)
-			} else {
-				query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Value1)
+				// тексте и ломает идентификатор (42P01).
+				return schema.QueryWithArgs{
+					Query: "lower(regexp_replace(?, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) ? lower(?)",
+					Args:  []interface{}{bun.Ident(col), opFrag(f.Operator), f.Value1},
+				}, true
 			}
+			return schema.QueryWithArgs{
+				Query: "? ? ?", Args: []interface{}{bun.Ident(col), opFrag(f.Operator), f.Value1},
+			}, true
 		}
 	}
 	if f.isBetween() {
-		query.Where("? ? ? and ?", bun.Ident(col), opFrag(f.Operator), f.Value1, f.Value2)
+		return schema.QueryWithArgs{
+			Query: "? ? ? AND ?", Args: []interface{}{bun.Ident(col), opFrag(f.Operator), f.Value1, f.Value2},
+		}, true
 	}
 	if f.isNull() {
-		query.Where("? ?", bun.Ident(col), opFrag(f.Operator))
+		return schema.QueryWithArgs{
+			Query: "? ?", Args: []interface{}{bun.Ident(col), opFrag(f.Operator)},
+		}, true
 	}
+	return schema.QueryWithArgs{}, false
+}
+
+func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
+	frag, ok := f.whereFragment()
+	if !ok {
+		return
+	}
+	query.Where(frag.Query, frag.Args...)
 }
 
 func (f *FilterModel) constructWhereIn(query *bun.SelectQuery) {
