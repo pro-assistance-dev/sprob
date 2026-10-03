@@ -150,6 +150,38 @@ func TestConstructWhereIn_SetIsParameter(t *testing.T) {
 	}
 }
 
+// Регрессия 42P01: LIKE-фильтр строил `lower(regexp_replace(news.title, ...))`
+// и отдавал выражение через `schema.UnsafeIdent`. Bun видит ТОЧКУ внутри
+// выражения и разбирает его как `таблица.колонка` — в SQL уезжает алиас
+// `lower(regexp_replace(news`, и Postgres отвечает:
+//   missing FROM-clause entry for table "lower(regexp_replace(news" (42P01).
+//
+// Ловится по наличию КАВЫЧЕК вокруг таблицы и колонки (`"rooms"."name"`),
+// а не по «сырому» `rooms.name` без кавычек.
+func TestConstructWhere_LikeQuotesDottedColumn(t *testing.T) {
+	f := &FilterModel{
+		Model:    "room",
+		Col:      "name",
+		Type:     StringType,
+		Operator: Like,
+		Value1:   "а",
+	}
+
+	query := buildQuery(t, f)
+
+	if !strings.Contains(query, "regexp_replace(") {
+		t.Fatalf("LIKE-фильтр не использует regexp_replace: %s", query)
+	}
+	// Колонка обязана быть ОТКВОЧЕНА как идентификатор — иначе bun примет
+	// точку внутри функции за разделитель таблица.колонка.
+	if !strings.Contains(query, `"rooms"."name"`) {
+		t.Fatalf("колонка внутри regexp_replace не отвочена: %s", query)
+	}
+	if strings.Contains(query, "regexp_replace(rooms.name") {
+		t.Fatalf("колонка ушла в выражение без кавычек (42P01): %s", query)
+	}
+}
+
 // Колонка по-прежнему берётся ИЗ СХЕМЫ (имя поля модели → колонка БД).
 func TestConstructWhere_ColumnResolvedFromSchema(t *testing.T) {
 	f := &FilterModel{

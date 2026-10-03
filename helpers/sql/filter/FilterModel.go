@@ -104,11 +104,18 @@ func (f *FilterModel) constructWhere(query *bun.SelectQuery) {
 			if f.isLike() {
 				f.Value1 = TranslitToRu(f.Value1)
 				f.likeToString()
-				// Регистронезависимо и без пунктуации — это ВЫРАЖЕНИЕ колонки
-				// (не имя), поэтому `?` его не отквотит — подставляем через
-				// UnsafeIdent, но только по резолвленной схеме колонке.
-				expr := fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", col)
-				query.Where("? ? lower(?)", schema.UnsafeIdent(expr), opFrag(f.Operator), f.Value1)
+				// Регистронезависимо и без пунктуации.
+				//
+				// ⚠️ Колонку передаём ОТДЕЛЬНЫМ `?` с `bun.Ident`, а не вклеиваем
+				// в строку выражения: bun разбирает точку (`table.col`) только в
+				// самом `Ident`, а внутри произвольного выражения видит её в
+				// тексте и ломает идентификатор — `UnsafeIdent("…(news.title…)…")`
+				// давал `"…(news"."title…)…"` → Postgres: `missing FROM-clause
+				// entry for table "lower(regexp_replace(news"` (42P01).
+				query.Where(
+					"lower(regexp_replace(?, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) ? lower(?)",
+					bun.Ident(col), opFrag(f.Operator), f.Value1,
+				)
 			} else {
 				query.Where("? ? ?", bun.Ident(col), opFrag(f.Operator), f.Value1)
 			}

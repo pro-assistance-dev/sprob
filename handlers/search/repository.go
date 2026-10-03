@@ -30,18 +30,28 @@ func (r *Repository) GetGroups(c context.Context, groupID string) (models.Search
 }
 
 func (r *Repository) Search(c context.Context, searchModel *models.SearchModel) error {
-	querySelect := fmt.Sprintf("SELECT %s.%s as value, substring(%s for 40) as label", searchModel.SearchGroup.Table, searchModel.SearchGroup.ValueColumn, searchModel.SearchGroup.LabelColumn)
-	queryFrom := fmt.Sprintf("FROM %s", searchModel.SearchGroup.Table)
-	join := ""
+	g := searchModel.SearchGroup
 
-	condition := fmt.Sprintf("where replace(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9. ]', '', 'g'), ' ' , '') ILIKE %s", searchModel.SearchGroup.SearchColumn, "'%"+searchModel.Query+"%'")
-	conditionTranslitToRu := fmt.Sprintf("or replace(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9. ]', '', 'g'), ' ', '') ILIKE %s", searchModel.SearchGroup.SearchColumn, "'%"+r.helper.Util.TranslitToRu(searchModel.Query)+"%'")
-	conditionTranslitToEng := fmt.Sprintf("or replace(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9. ]', '', 'g'), ' ', '') ILIKE %s", searchModel.SearchGroup.SearchColumn, "'%"+r.helper.Util.TranslitToEng(searchModel.Query)+"%'")
+	// ⚠️ ЗНАЧЕНИЯ ПОИСКА — ПАРАМЕТРАМИ (`?`), не конкатенацией: `Query` приходит
+	// от клиента, и склейка его в строку давала SQL-инъекцию (апостроф ломал
+	// запрос). Колонки/таблица берутся из конфигурации группы поиска (не из
+	// тела запроса) — оставляем как идентификаторы.
+	searchExpr := fmt.Sprintf(
+		"replace(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9. ]', '', 'g'), ' ', '')",
+		g.SearchColumn,
+	)
 
-	queryOrder := fmt.Sprintf("ORDER BY %s", searchModel.SearchGroup.LabelColumn)
-	query := fmt.Sprintf("%s %s %s %s %s %s %s", querySelect, queryFrom, join, condition, conditionTranslitToRu, conditionTranslitToEng, queryOrder)
+	query := fmt.Sprintf(
+		"SELECT %s.%s as value, substring(%s for 40) as label FROM %s WHERE %s ILIKE ? OR %s ILIKE ? OR %s ILIKE ? ORDER BY %s",
+		g.Table, g.ValueColumn, g.LabelColumn, g.Table, searchExpr, searchExpr, searchExpr, g.LabelColumn,
+	)
 
-	rows, err := r.helper.DB.IDB(c).QueryContext(c, query)
+	rows, err := r.helper.DB.IDB(c).QueryContext(
+		c, query,
+		"%"+searchModel.Query+"%",
+		"%"+r.helper.Util.TranslitToRu(searchModel.Query)+"%",
+		"%"+r.helper.Util.TranslitToEng(searchModel.Query)+"%",
+	)
 	if err != nil {
 		return err
 	}

@@ -1,3 +1,26 @@
+## v1.4.8 (03.10.2026) — fix(sql): LIKE-фильтр ломался на колонке с таблицей (42P01)
+
+> ЗАЧЕМ. В hr «поиск по ФИО», в portal «поиск по названию новости» отдавали
+> 500: `missing FROM-clause entry for table "lower(regexp_replace(news"`
+> (SQLSTATE=42P01).
+
+- `filter.FilterModel.constructWhere` собирал выражение
+  `lower(regexp_replace(<table>.<col>, ...))` и отдавал его через
+  `schema.UnsafeIdent`. Bun видит ТОЧКУ внутри выражения и разбирает его как
+  `таблица.колонка` — в SQL уезжал алиас `lower(regexp_replace(news`, Postgres
+  отвечал 42P01.
+- Теперь колонка передаётся ОТДЕЛЬНЫМ `?` с `bun.Ident`: точка попадает только
+  в `Ident`, где bun корректно квотит `"news"."title"`.
+- Тест-регрессия: `TestConstructWhere_LikeQuotesDottedColumn` (падает на старом
+  коде, проходит на новом).
+
+## v1.4.8 — fix(search): SQL-инъекция через строку поиска
+
+- `handlers/search.Repository.Search` склеивал `searchModel.Query` (ввод
+  пользователя) прямо в SQL (`'%' + Query + '%'`) — апостроф ломал запрос, а
+  подстановка могла выполнить произвольный SQL. Значения поиска теперь уходят
+  ПАРАМЕТРАМИ (`?`), как в остальных фильтрах.
+
 ## v1.4.5 (02.10.2026) — refactor: чистка кода (lint 8 → 0)
 
 > ЗАЧЕМ. Изначальная задача «чисти код»: в библиотеке накопились мёртвые пакеты,
