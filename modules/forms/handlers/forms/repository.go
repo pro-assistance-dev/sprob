@@ -51,6 +51,9 @@ func (r *Repository) GetAll(c context.Context) (items models.FormsWithCount, err
 		Relation("FormSections.Fields.ValueType").
 		Relation("FormSections.Fields.AnswerVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Order("answer_variants.item_order")
+		}).
+		Relation("FormSections.Fields.FieldRules", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("field_rules.item_order")
 		})
 	// Relation("Fields.FieldExamples").
 	// Relation("Fields.ValueType")
@@ -81,6 +84,9 @@ func (r *Repository) Get(c context.Context, id string) (*models.Form, error) {
 		Relation("FormSections.Fields.ValueType").
 		Relation("FormSections.Fields.AnswerVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Order("answer_variants.item_order")
+		}).
+		Relation("FormSections.Fields.FieldRules", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("field_rules.item_order")
 		}).
 		// Relation("Fields.FieldExamples").
 		// Relation("Fields.FieldVariants", func(q *bun.SelectQuery) *bun.SelectQuery {
@@ -170,11 +176,27 @@ func (r *Repository) insertChildren(c context.Context, tx bun.Tx, item *models.F
 			return err
 		}
 	}
+	rules := make(models.FieldRules, 0)
+	for _, field := range fields {
+		for i := range field.FieldRules {
+			field.FieldRules[i].FieldID = field.ID
+		}
+		rules = append(rules, field.FieldRules...)
+	}
+	if len(rules) > 0 {
+		if _, err := tx.NewInsert().Model(&rules).Exec(c); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-// deleteChildren удаляет дерево формы (варианты → поля → секции).
+// deleteChildren удаляет дерево формы (правила → варианты → поля → секции).
 func (r *Repository) deleteChildren(c context.Context, tx bun.Tx, formID uuid.NullUUID) error {
+	if _, err := tx.NewDelete().Model((*models.FieldRule)(nil)).
+		Where("field_id in (select id from fields where form_section_id in (select id from form_sections where form_id = ?))", formID).Exec(c); err != nil {
+		return err
+	}
 	if _, err := tx.NewDelete().Model((*models.AnswerVariant)(nil)).
 		Where("field_id in (select id from fields where form_section_id in (select id from form_sections where form_id = ?))", formID).Exec(c); err != nil {
 		return err

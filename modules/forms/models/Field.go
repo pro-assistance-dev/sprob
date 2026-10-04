@@ -32,6 +32,10 @@ type Field struct {
 	// MaskTokensForDelete []uuid.UUID `bun:"-" json:"maskTokensForDelete"`
 	AnswerVariants AnswerVariants `bun:"rel:has-many" json:"answerVariants"`
 
+	// FieldRules — условия показа вопроса («если, то»): вопрос виден, только
+	// когда выполнены ВСЕ правила (AND). Пусто — вопрос показывается всегда.
+	FieldRules FieldRules `bun:"rel:has-many" json:"fieldRules"`
+
 	Children Fields `bun:"rel:has-many,join:id=parent_id" json:"children"`
 
 	ParentID uuid.NullUUID `bun:"type:uuid" json:"parentId"`
@@ -45,13 +49,14 @@ type FieldsWithCount struct {
 	Count  int    `json:"count"`
 }
 
-// SetIDForChildren проставляет полю id секции и варианты детей/ответов.
+// SetIDForChildren проставляет полю id секции и варианты детей/ответов/правил.
 func (item *Field) SetIDForChildren(formSectionID uuid.NullUUID) {
 	if !item.ID.Valid {
 		item.ID = uuid.NullUUID{UUID: uuid.New(), Valid: true}
 	}
 	item.FormSectionID = formSectionID
 	item.AnswerVariants.SetIDForChildren(item.ID)
+	item.FieldRules.SetIDForChildren(item.ID)
 	item.Children.SetIDForChildren(item.ID)
 }
 

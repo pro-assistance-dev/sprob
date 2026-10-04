@@ -1,3 +1,17 @@
+## v1.5.0 (04.10.2026) — feat(forms): условия показа вопросов (field_rules)
+
+> ЗАЧЕМ. В конструкторе форм (survey) нужны ветвления: «покажи вопрос Б,
+> только если на вопрос А ответили X». Раньше дерево формы такого не знало.
+
+- Модель `forms/models.FieldRule`: `field_id` (показываемый вопрос),
+  `depends_on_field_id`/`depends_on_field_code` (вопрос-условие), `operator`
+  (`equals`/`notEquals`/`contains`/`notContains`/`answered`/`notAnswered`/
+  `greater`/`less`), `value`. Несколько правил поля — AND.
+- `Field.FieldRules` (has-many) + `SetIDForChildren` проставляет id правилам.
+- Сохранение/удаление дерева формы включает `field_rules`
+  (`insertChildren`/`deleteChildren`); `GetAll`/`Get` грузят правила.
+- Миграция `20261004120000_field_rules`.
+
 ## v1.4.9 (03.10.2026) — feat(sql): OR-группы в FTSP-фильтрах
 
 > ЗАЧЕМ. Нужно «поиск одним полем по нескольким колонкам» (ФИО ИЛИ код
