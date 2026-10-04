@@ -5,10 +5,19 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// Статусы формы (черновик/опубликована).
+const (
+	StatusDraft     = "draft"
+	StatusPublished = "published"
+)
+
 type Form struct {
 	bun.BaseModel `bun:"forms,alias:forms" rus:"Форма"`
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id" `
 	Name          string        `json:"name" rus:"Название"`
+
+	// Status: draft | published. Опубликованная форма доступна для публикации наружу.
+	Status string `json:"status"`
 
 	FormSections FormSections `bun:"rel:has-many" json:"formSections"`
 
