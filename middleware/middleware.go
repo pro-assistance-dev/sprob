@@ -26,6 +26,10 @@ func (m *Middleware) InjectFTSP() gin.HandlerFunc {
 		ftspQuery := &sql.FTSPQuery{}
 		err := ftspQuery.FromForm(c)
 		if m.helper.HTTP.HandleError(c, err) {
+			// ⚠️ Без Abort запрос идёт дальше, хендлер пишет ВТОРОЕ тело
+			// («Headers were already written»): клиент получает слейку 500-текста
+			// и данных — невалидный ответ.
+			c.Abort()
 			return
 		}
 

@@ -1,3 +1,14 @@
+## v1.5.2 (04.10.2026) — fix(ftsp): JSON-тело и Abort мидлвара
+
+> ЗАЧЕМ. `POST /api/<entity>/ftsp` с JSON-телом отвечал 500
+> «request Content-Type isn't multipart/form-data» (напр. survey `/notification-logs/ftsp`).
+
+- `FTSPQuery.FromForm` принимает **application/json** (тело напрямую), не только
+  multipart с полем `form`.
+- Мидлвар `InjectFTSP` вызывает `c.Abort()` при ошибке — раньше без него хендлер
+  писал ВТОРОЕ тело («Headers were already written»), и ответ был невалидной
+  слейкой 500-текста и данных.
+
 ## v1.5.1 (04.10.2026) — feat(forms): статус формы (черновик/опубликована)
 
 > ЗАЧЕМ. Форме нужен собственный статус — черновик или опубликована

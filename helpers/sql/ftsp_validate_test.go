@@ -3,8 +3,11 @@ package sql
 import (
 	"errors"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
+	"github.com/gin-gonic/gin"
 	httperr "github.com/pro-assistance-dev/sprob/helpers/http"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
 	"github.com/pro-assistance-dev/sprob/helpers/sql/filter"
@@ -149,5 +152,34 @@ func TestErrUnknownField_StatusIsBadRequest(t *testing.T) {
 func TestStatusForError_OtherStays500(t *testing.T) {
 	if status := httperr.StatusForError(errors.New("что-то сломалось")); status != http.StatusInternalServerError {
 		t.Fatalf("обычная ошибка должна остаться 500, получили %d", status)
+	}
+}
+
+// FromForm принимает JSON-тело, а не только multipart. Раньше JSON давал
+// «request Content-Type isn't multipart/form-data» → 500.
+func TestFTSPQuery_FromFormJSON(t *testing.T) {
+	testSchemas()
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	var got FTSPQuery
+	router.POST("/ftsp", func(c *gin.Context) {
+		if err := got.FromForm(c); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, nil)
+	})
+
+	body := `{"qid":"x","ftsp":{"s":[{"model":"room","col":"name"}]}}`
+	req := httptest.NewRequest(http.MethodPost, "/ftsp", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("JSON-запрос должен приниматься, код %d: %s", w.Code, w.Body.String())
+	}
+	if got.QID != "x" || len(got.FTSP.S) != 1 {
+		t.Fatalf("тело не разобрано: %+v", got)
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance-dev/sprob/helpers/project"
@@ -77,6 +78,16 @@ func (i *SQL) ExtractFTSP(ctx context.Context) *FTSP {
 }
 
 func (i *FTSPQuery) FromForm(c *gin.Context) error {
+	// JSON-тело: принимаем напрямую (как `GetForm`). Multipart: JSON лежит
+	// в поле `form`. Раньше был только multipart — JSON-запрос давал
+	// «request Content-Type isn't multipart/form-data».
+	if strings.HasPrefix(c.ContentType(), "application/json") {
+		if err := json.NewDecoder(c.Request.Body).Decode(i); err != nil {
+			return err
+		}
+		return i.FTSP.Validate()
+	}
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
