@@ -1,3 +1,14 @@
+## v1.5.3 (06.10.2026) — fix(helper): старт на ЧИСТОЙ БД + Debug SQL-логи выключены
+
+> ЗАЧЕМ. Новый сервис — новая БД — сервис уходил в restart-loop и не поднимался.
+
+- `helper.Run` → `updateDB` вызывает `migrator.Init()` перед `Migrate()`: bun не
+  создаёт `bun_migrations` сам, и `Migrate()` падал 42P01 «relation bun_migrations
+  does not exist» на пустой БД (ручной `-mode=migrate` это скрывал — его путь
+  зовёт `initMigration`).
+- SQL-хук в `helper.Run` писал КАЖДЫЙ запрос (`QueryLevel: DebugLevel`) —
+  источник раздутых логов и ENOSPC. Переведён на `InfoLevel` (ошибки — ErrorLevel).
+
 ## v1.5.2 (04.10.2026) — fix(ftsp): JSON-тело и Abort мидлвара
 
 > ЗАЧЕМ. `POST /api/<entity>/ftsp` с JSON-телом отвечал 500

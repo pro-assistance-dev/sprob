@@ -93,7 +93,9 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 		return Migrate
 	}
 
-	i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.DebugLevel}))
+	// QueryLevel: InfoLevel — на Debug каждая SQL-операция пишется в лог
+	// (ENOSPC на 77G-диске сервера). Ошибки всё равно логируются (ErrorLevel).
+	i.DB.DB.AddQueryHook(logrusbun.NewQueryHook(logrusbun.QueryHookOptions{Logger: i.Logger, ErrorLevel: logrus.ErrorLevel, QueryLevel: logrus.InfoLevel}))
 
 	migrator := migrate.NewMigrator(i.DB.DB, coreMigrations.Init())
 	updateDB(migrator)
@@ -111,6 +113,12 @@ func (i *Helper) Run(migrations []*migrate.Migrations, routerInitFunc func(*gin.
 }
 
 func updateDB(migrator *migrate.Migrator) {
+	// Init() создаёт таблицу bun_migrations; без него Migrate() падает 42P01
+	// на ЧИСТОЙ БД (сервис уходит в restart-loop до ручного `-mode=migrate`).
+	if err := migrator.Init(context.Background()); err != nil {
+		log.Fatalf("fail init migrations table: %s", err)
+	}
+
 	group, err := migrator.Migrate(context.Background())
 	if err != nil {
 		log.Fatalf("fail migrate: %s", err)
