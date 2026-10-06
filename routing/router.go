@@ -18,6 +18,8 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/extracts"
 	"github.com/pro-assistance-dev/sprob/modules/forms"
 	"github.com/pro-assistance-dev/sprob/modules/settings"
+	"github.com/pro-assistance-dev/sprob/modules/survey"
+	surveyModels "github.com/pro-assistance-dev/sprob/modules/survey/models"
 
 	"github.com/pro-assistance-dev/sprob/handlers/humans"
 	fileinfosRouter "github.com/pro-assistance-dev/sprob/routing/fileinfos"
@@ -78,6 +80,21 @@ func Init(r *gin.Engine, h *helper.Helper) (*gin.RouterGroup, *gin.RouterGroup) 
 	extracts.InitRoutes(apiToken, h)
 	chats.InitRoutes(apiToken, h)
 	documents.InitRoutes(apiToken, h)
+
+	// Модуль survey (опросник): CRUD+FTSP доменных моделей здесь (импорт
+	// sprob/routing из модуля дал бы цикл), публичный рантайм и свои ручки — внутри.
+	survey.InitRoutes(apiToken, apiNoToken, h)
+	InitR[surveyModels.Publication](apiToken)
+	InitR[surveyModels.SurveyParam](apiToken)
+	InitR[surveyModels.Response](apiToken)
+	InitR[surveyModels.Invite](apiToken)
+	InitR[surveyModels.Notification](apiToken)
+	InitR[surveyModels.NotificationRule](apiToken)
+	InitR[surveyModels.NotificationLog](apiToken)
+	InitR[surveyModels.Theme](apiToken)
+	InitR[surveyModels.Webhook](apiToken)
+	InitR[surveyModels.WebhookRule](apiToken)
+	InitR[surveyModels.WebhookLog](apiToken)
 
 	return apiToken, apiNoToken
 }
