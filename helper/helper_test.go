@@ -1,41 +1,40 @@
 package helper
 
-// func pusto(_ http.Handler, _ *Helper) {
-// 	fmt.Println("pusto")
-// }
-//
-// func Test_Run(t *testing.T) {
-// 	conf, err := config.LoadTestConfig()
-// 	if err != nil {
-// 		t.Errorf("Ошибка: %s", err)
-// 	}
-// 	hl := NewHelper(*conf)
-// 	m := migrate.NewMigrations()
-// 	router := gin.New()
-// 	router.Use(gin.Recovery())
-//
-// 	t.Run("run", func(t *testing.T) {
-// 		res := hl.Run(m, router, pusto)
-// 		if Run != res {
-// 			t.Errorf("ожидается: %s, результат: %d", Run, res)
-// 		}
-// 	})
-// 	t.Run("dump", func(t *testing.T) {
-// 		res := hl.Run(m, router, pusto)
-// 		if Dump != res {
-// 			t.Errorf("ожидается: %s, результат: %d", Dump, res)
-// 		}
-// 	})
-// 	t.Run("migration", func(t *testing.T) {
-// 		res := hl.Run(m, router, pusto)
-// 		if Migrate != res {
-// 			t.Errorf("ожидается: %s, результат: %d", Migrate, res)
-// 		}
-// 	})
-// 	t.Run("listen", func(t *testing.T) {
-// 		res := hl.Run(m, router)
-// 		if Listen != res {
-// 			t.Errorf("ожидается: %s, результат: %d", Listen, res)
-// 		}
-// 	})
-// }
+import (
+	"context"
+	dbsql "database/sql"
+	"testing"
+
+	coreMigrations "github.com/pro-assistance-dev/sprob/migrations"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/sqlitedialect"
+	"github.com/uptrace/bun/migrate"
+
+	_ "modernc.org/sqlite"
+)
+
+// updateDB обязан ЗАВОДИТЬ таблицу bun_migrations сам: bun.Migrate() её читает,
+// но не создаёт — на чистой БД это давало 42P01 и restart-loop сервиса.
+func TestUpdateDB_CreatesMigrationsTableOnFreshDB(t *testing.T) {
+	sqldb, err := dbsql.Open("sqlite", "file:updateDB-test?mode=memory&cache=shared")
+	if err != nil {
+		t.Fatalf("open sqlite: %v", err)
+	}
+	sqldb.SetMaxOpenConns(1)
+	t.Cleanup(func() { _ = sqldb.Close() })
+
+	db := bun.NewDB(sqldb, sqlitedialect.New())
+	migrator := migrate.NewMigrator(db, coreMigrations.Init())
+
+	updateDB(migrator)
+
+	var name string
+	err = db.NewRaw("select name from sqlite_master where type='table' and name='bun_migrations'").
+		Scan(context.Background(), &name)
+	if err != nil {
+		t.Fatalf("bun_migrations не создана: %v", err)
+	}
+	if name != "bun_migrations" {
+		t.Fatalf("ожидалась bun_migrations, получено %q", name)
+	}
+}
