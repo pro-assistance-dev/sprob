@@ -8,6 +8,8 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/public"
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/reports"
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/webhooks"
+	"github.com/pro-assistance-dev/sprob/modules/survey/models"
+	baseR "github.com/pro-assistance-dev/sprob/routing"
 
 	invitesR "github.com/pro-assistance-dev/sprob/modules/survey/routing/invites"
 	notificationsR "github.com/pro-assistance-dev/sprob/modules/survey/routing/notifications"
@@ -18,14 +20,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// InitRoutes собирает СОБСТВЕННЫЕ роуты модуля survey (публичный рантайм,
-// аналитика, уведомления, приглашения, вебхуки).
+// InitRoutes собирает роуты ОПРОСНИКА: CRUD+FTSP доменных моделей
+// (публикации/параметры/ответы/темы/уведомления/вебхуки), свои ручки
+// (аналитика/уведомления/приглашения/вебхуки) и публичный рантайм.
 //
-// ⚠️ CRUD+FTSP самих доменных моделей (Publication/SurveyParam/Response/Theme/…)
-// регистрирует вызывающий через baseR.InitR — здесь НЕ дублируем: импорт
-// `sprob/routing` из модуля даёт циклический импорт (routing → survey → routing).
+// Подключение в проекте:
 //
-// api — группа с JWT (админский контур), apiNoToken — без JWT (респонденты).
+//	// migrations/main.go
+//	res = append(res, forms.Init(), surveyM.Init())
+//
+//	// routing/router.go
+//	survey.InitRoutes(api, apiNoToken, h)
+//
+// ⚠️ Модуль НЕ подключается глобально в sprob/routing: домен опционален,
+// иначе все сервисы получили бы чужые роуты (/publications, /themes, ...).
+// api — группа с JWT (админка), apiNoToken — без JWT (респонденты).
 func InitRoutes(api, apiNoToken *gin.RouterGroup, h *helper.Helper) {
 	m := middleware.CreateMiddleware(h)
 
@@ -35,6 +44,8 @@ func InitRoutes(api, apiNoToken *gin.RouterGroup, h *helper.Helper) {
 
 	api.Use(m.InjectFTSP())
 
+	// Публикации форм (ссылка, окно приёма, анонимность, лимит) — CRUD + FTSP.
+	baseR.InitR[models.Publication](api)
 	// Аналитика/выгрузка по публикации: /api/publications/:id/summary|export|responses.
 	reportsR.Init(api.Group("/publications"), reports.Init(h))
 	// Уведомления публикации («кому и при каких условиях»): /api/publications/:id/notifications.
@@ -43,4 +54,21 @@ func InitRoutes(api, apiNoToken *gin.RouterGroup, h *helper.Helper) {
 	invitesR.Init(api.Group("/publications"), invites.Init(h))
 	// Вебхуки публикации (внешние интеграции): /api/publications/:id/webhooks.
 	webhooksR.Init(api.Group("/publications"), webhooks.Init(h))
+	// Параметры анкеты (URL → метаданные/префилл) — CRUD + FTSP.
+	baseR.InitR[models.SurveyParam](api)
+	// Ответы на публикации (обёртка над form_fills) — CRUD + FTSP.
+	baseR.InitR[models.Response](api)
+	// Приглашения (персональные ссылки для неанонимных публикаций) — CRUD + FTSP.
+	baseR.InitR[models.Invite](api)
+	// Уведомления (кому и при каких условиях слать email после ответа) — CRUD + FTSP.
+	baseR.InitR[models.Notification](api)
+	baseR.InitR[models.NotificationRule](api)
+	// Журнал отправок уведомлений (только чтение в UI) — CRUD + FTSP.
+	baseR.InitR[models.NotificationLog](api)
+	// Темы оформления формы (CRUD + FTSP).
+	baseR.InitR[models.Theme](api)
+	// Вебхуки после ответа (внешние интеграции) — CRUD + FTSP + журнал.
+	baseR.InitR[models.Webhook](api)
+	baseR.InitR[models.WebhookRule](api)
+	baseR.InitR[models.WebhookLog](api)
 }
