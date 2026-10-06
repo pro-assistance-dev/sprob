@@ -3,6 +3,8 @@ package logger
 import (
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,9 +16,28 @@ import (
 
 func NewLogger() *logrus.Logger {
 	l := logrus.New()
-	l.SetLevel(logrus.DebugLevel)
+	l.SetLevel(logLevel())
 	setupOutput(l)
 	return l
+}
+
+// logLevel: DEBUG по умолчанию раздувает лог (каждая SQL-операция) до ~65 МБ/ч
+// на сервис — это и был ENOSPC 05.10. Уровень задаётся LOG_LEVEL (по умолчанию info).
+func logLevel() logrus.Level {
+	level, err := logrus.ParseLevel(os.Getenv("LOG_LEVEL"))
+	if err != nil {
+		return logrus.InfoLevel
+	}
+	return level
+}
+
+// logMaxAge: окно хранения логов (дни), переопределяется LOG_MAX_AGE_DAYS.
+func logMaxAge() time.Duration {
+	days, err := strconv.Atoi(os.Getenv("LOG_MAX_AGE_DAYS"))
+	if err != nil || days <= 0 {
+		days = 3
+	}
+	return time.Hour * 24 * time.Duration(days)
 }
 
 func setupOutput(l *logrus.Logger) {
@@ -24,7 +45,7 @@ func setupOutput(l *logrus.Logger) {
 	l.SetOutput(io.Discard) // Send all logs to nowhere by default
 
 	tForm := "%Y-%m-%d_%H:%M"
-	ageOpt := rotatelogs.WithMaxAge(time.Hour * 24 * 7)
+	ageOpt := rotatelogs.WithMaxAge(logMaxAge())
 	rotateTimeOpt := rotatelogs.WithRotationTime(time.Hour)
 
 	infoPath := path + "/info/"
