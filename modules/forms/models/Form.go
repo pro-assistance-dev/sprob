@@ -19,6 +19,9 @@ type Form struct {
 	// Status: draft | published. Опубликованная форма доступна для публикации наружу.
 	Status string `json:"status"`
 
+	// ImageURL — картинка-шапка формы (путь /api/static/... из file_infos).
+	ImageURL string `json:"imageUrl"`
+
 	FormSections FormSections `bun:"rel:has-many" json:"formSections"`
 
 	Order uint `bun:"item_order" json:"order"`

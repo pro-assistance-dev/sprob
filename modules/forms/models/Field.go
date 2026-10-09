@@ -16,6 +16,9 @@ type Field struct {
 	Order    uint   `bun:"item_order" json:"order"`
 	Comment  string `json:"comment"`
 	Required bool   `json:"required"`
+
+	// ImageURL — картинка к вопросу (путь /api/static/... из file_infos).
+	ImageURL string `json:"imageUrl"`
 	// RequiredForCancel bool   `json:"requiredForCancel"`
 	// Mask              string `json:"mask"`
 
