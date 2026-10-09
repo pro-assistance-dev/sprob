@@ -61,6 +61,7 @@ func New(h *helper.Helper, opts ...Option) *Notifier {
 			models.ChannelEmail:    channels.NewEmail(h.Email),
 			models.ChannelTelegram: channels.NewTelegram(),
 			models.ChannelWebhook:  channels.NewWebhook(),
+			models.ChannelInApp:    channels.NewInApp(h.DB.DB),
 		},
 	}
 	for _, o := range opts {

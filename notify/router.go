@@ -3,7 +3,9 @@ package notify
 import (
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/middleware"
+	"github.com/pro-assistance-dev/sprob/notify/handlers/inbox"
 	"github.com/pro-assistance-dev/sprob/notify/handlers/rules"
+	inboxR "github.com/pro-assistance-dev/sprob/notify/routing/inbox"
 	rulesR "github.com/pro-assistance-dev/sprob/notify/routing/rules"
 
 	"github.com/gin-gonic/gin"
@@ -18,4 +20,6 @@ import (
 func InitRoutes(api *gin.RouterGroup, h *helper.Helper) {
 	api.Use(middleware.CreateMiddleware(h).InjectFTSP())
 	rulesR.Init(api.Group("/notify-rules"), rules.Init(h))
+	// In-app «входящие» текущего пользователя (колокольчик/бейдж в клиенте).
+	inboxR.Init(api.Group("/notify-inbox"), inbox.Init(h))
 }
