@@ -14,7 +14,8 @@ import (
 const templateFilePrefix = "@file:"
 
 // renderFile — рендер шаблона-файла с общими _header/_footer (как в проектах).
-func renderFile(relPath string, data map[string]any) (string, error) {
+// `root` — корень данных шаблона (обычно богатый объект события).
+func renderFile(relPath string, root any) (string, error) {
 	dir := strings.TrimSpace(os.Getenv("TEMPLATES_PATH"))
 	if dir == "" {
 		dir = "/app/templates"
@@ -33,7 +34,7 @@ func renderFile(relPath string, data map[string]any) (string, error) {
 	}
 	var buf bytes.Buffer
 	// Разные шаблоны в наборе — исполняем именно тот, что запросили.
-	if err := t.ExecuteTemplate(&buf, filepath.Base(full), data); err != nil {
+	if err := t.ExecuteTemplate(&buf, filepath.Base(full), root); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

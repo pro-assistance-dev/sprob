@@ -185,7 +185,13 @@ func render(rule *models.Rule, event Event) (string, string) {
 	var body string
 	if strings.HasPrefix(rule.Body, templateFilePrefix) {
 		path := strings.TrimSpace(strings.TrimPrefix(rule.Body, templateFilePrefix))
-		if rendered, err := renderFile(path, data); err == nil {
+		// Файловые шаблоны проекта написаны под КОНКРЕТНЫЙ объект (`{{.Email}}`,
+		// `{{.Number}}`) — им отдаём богатый Data как корень; нет Data — плоский jsonback.
+		root := any(data)
+		if event.Data != nil {
+			root = event.Data
+		}
+		if rendered, err := renderFile(path, root); err == nil {
 			body = rendered
 		} else {
 			log.Printf("[notify] шаблон-файл %q: %v", path, err)
