@@ -7,6 +7,7 @@ import (
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/notifications"
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/public"
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/reports"
+	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/targets"
 	"github.com/pro-assistance-dev/sprob/modules/survey/handlers/webhooks"
 	"github.com/pro-assistance-dev/sprob/modules/survey/models"
 	baseR "github.com/pro-assistance-dev/sprob/routing"
@@ -15,6 +16,7 @@ import (
 	notificationsR "github.com/pro-assistance-dev/sprob/modules/survey/routing/notifications"
 	publicR "github.com/pro-assistance-dev/sprob/modules/survey/routing/public"
 	reportsR "github.com/pro-assistance-dev/sprob/modules/survey/routing/reports"
+	targetsR "github.com/pro-assistance-dev/sprob/modules/survey/routing/targets"
 	webhooksR "github.com/pro-assistance-dev/sprob/modules/survey/routing/webhooks"
 
 	"github.com/gin-gonic/gin"
@@ -48,6 +50,9 @@ func InitRoutes(api, apiNoToken *gin.RouterGroup, h *helper.Helper) {
 	baseR.InitR[models.Publication](api)
 	// Аналитика/выгрузка по публикации: /api/publications/:id/summary|export|responses.
 	reportsR.Init(api.Group("/publications"), reports.Init(h))
+	// Привязка публикаций к сущностям экосистемы (событие/работник/…):
+	// /api/publications/by-target/:type/:id, /api/publications/for-target.
+	targetsR.Init(api.Group("/publications"), targets.Init(h))
 	// Уведомления публикации («кому и при каких условиях»): /api/publications/:id/notifications.
 	notificationsR.Init(api.Group("/publications"), notifications.Init(h))
 	// Рассылка приглашений (персональные ссылки по email): /api/publications/:id/invites/send.

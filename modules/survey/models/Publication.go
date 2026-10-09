@@ -46,6 +46,13 @@ type Publication struct {
 	// Brandbook — бренд публичного рантайма (rdkb/portal/pros/ferma): встраивание
 	// в другие проекты без форка кода (бренд-нейтральный рантайм).
 	Brandbook string `json:"brandbook"`
+
+	// TargetType/TargetID — полиморфная привязка публикации к сущности экосистемы
+	// (portal: "event", rdkb: "worker"/"incident", …). Модуль не знает про
+	// конкретные модели проектов — связь обезличенная: тип + id. Пусто — публикация
+	// «сама по себе». Через неё: из события достаём его формы и наоборот.
+	TargetType string        `json:"targetType"`
+	TargetID   uuid.NullUUID `bun:"type:uuid" json:"targetId"`
 	// Theme — тема оформления формы при заполнении (токены навешивает рантайм).
 	Theme   *Theme        `bun:"rel:belongs-to" json:"theme"`
 	ThemeID uuid.NullUUID `bun:"type:uuid" json:"themeId"`
