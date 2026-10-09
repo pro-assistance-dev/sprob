@@ -51,6 +51,21 @@ type Helper struct {
 	Project   *project.Project
 	Logger    *logrus.Logger
 	Metabase  *metabase.Client
+	// Notify — приёмник событий для уведомлений (интерфейс, чтобы не плодить
+	// импорт-цикл helper↔notify). Задаётся потребителем: `h.NotifyNotify(notify.New(h))`.
+	Notify EventPublisher
+}
+
+// EventPublisher — минимальный контракт приёмника событий уведомлений. Его
+// реализует `notify.Notifier`; helper/baseR держат интерфейс, а не конкретный тип
+// (иначе импорт-цикл notify→helper).
+type EventPublisher interface {
+	PublishNotify(entity, action, itemID, actorID string, payload map[string]any)
+}
+
+// SetNotify назначает приёмник событий уведомлений (nil безопасен — события игнорируются).
+func (i *Helper) SetNotify(p EventPublisher) {
+	i.Notify = p
 }
 
 func NewHelper(c config.Config) *Helper {

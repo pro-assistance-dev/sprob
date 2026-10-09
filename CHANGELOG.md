@@ -1,3 +1,24 @@
+## v1.8.0 (09.10.2026) — feat(notify): общая событийная система уведомлений (email + telegram)
+
+> ЗАЧЕМ. Уведомления «при создании/изменении/удалении — письмо/telegram ряду
+> получателей» разъезжались по проектам (ferma — email-outbox + telegram,
+> survey — свои доменные уведомления). Сделано ОДНО ядро в библиотеке.
+
+- **`sprob/notify`** — событийная шина: `Event{Entity, Action, Payload}` +
+  `Notifier.Publish`. Правила живут в БД (`notify_rules`/`notify_targets`/
+  `notify_conds`), матчатся по `event` («order.created», `order.*`, `*.*`) и
+  условиям (AND, операторы как у форм).
+- **Каналы** за общим интерфейсом `channels.Channel`: `email` (helper.Email),
+  `telegram` (Bot API, chat_id из адреса/`TELEGRAM_NOTIFY_CHAT_ID`/по @username).
+  Ненастроенный канал — тихий skip (dev без токена).
+- **Outbox** (`notify_outbox`) с ретраями/backoff (1→16 мин, 6 попыток) +
+  журнал `notify_logs`; отправка — воркером (не блокирует запрос).
+- **Шаблоны**: `{{.entity}}`, `{{.action}}`, `{{.status}}`, … — из снапшота события.
+- Авто-эмиссия событий из авто-CRUD (`baseR`): `helper.EventPublisher` +
+  `basehandler` шлёт `created/updated/deleted` для любой модели без ручных хуков.
+- Монтируется ПОТРЕБИТЕЛЕМ: миграции `notify/migrations.Init()`,
+  `h.SetNotify(notify.New(h))`, `notify.InitRoutes(api, h)`.
+
 ## v1.7.0 (09.10.2026) — feat(forms): изображения (шапка формы и картинка вопроса)
 
 > ЗАЧЕМ. Опроснику нужны картинки: шапка (логотип/баннер) и иллюстрация

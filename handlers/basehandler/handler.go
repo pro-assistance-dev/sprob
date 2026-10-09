@@ -40,6 +40,7 @@ func (h *Handler[T]) Create(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
+	h.emitNotify("created", itemID(item), eventPayload(item))
 	c.JSON(http.StatusOK, item)
 }
 
@@ -104,10 +105,12 @@ func (h *Handler[T]) Delete(c *gin.Context) {
 	if !validUUIDParam(c) {
 		return
 	}
-	err := h.S.Delete(c.Request.Context(), c.Param("id"))
+	id := c.Param("id")
+	err := h.S.Delete(c.Request.Context(), id)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
+	h.emitNotify("deleted", id, nil)
 	c.JSON(http.StatusOK, gin.H{})
 }
 
@@ -121,6 +124,7 @@ func (h *Handler[T]) Update(c *gin.Context) {
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}
+	h.emitNotify("updated", itemID(item), eventPayload(item))
 	c.JSON(http.StatusOK, item)
 }
 
