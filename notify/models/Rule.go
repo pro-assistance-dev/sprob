@@ -52,9 +52,10 @@ type Rule struct {
 	// Специфика канала: webhook — URL+Secret; telegram — переопределение бота.
 	Meta Meta `bun:"meta,type:jsonb" json:"meta"`
 
+	Rule  *Rule         `bun:"rel:belongs-to" json:"rule"`
 	Order int `bun:"item_order" json:"order"`
 
-	CreatedAt time.Time `bun:"created_at" json:"createdAt"`
+	CreatedAt time.Time `bun:"created_at,notnull,default:now()" json:"createdAt"`
 
 	Targets Targets `bun:"rel:has-many,join:id=rule_id" json:"targets"`
 	Filter  Conds   `bun:"rel:has-many,join:id=rule_id" json:"filter"`
@@ -172,7 +173,7 @@ type Log struct {
 	Status    string `json:"status"` // sent | failed
 	Error     string `bun:"type:text" json:"error"`
 
-	CreatedAt time.Time `bun:"created_at" json:"createdAt"`
+	CreatedAt time.Time `bun:"created_at,notnull,default:now()" json:"createdAt"`
 }
 
 type Logs []*Log

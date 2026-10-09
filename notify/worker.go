@@ -22,6 +22,9 @@ func (n *Notifier) worker() {
 
 // ProcessDue — отправить пачку сообщений, у которых наступил next_attempt_at.
 // Экспортирован для ручного запуска (тесты, кнопка «повторить»).
+//
+// Каждое выбранное сообщение СРАЗУ CLAIM'ится (next_attempt_at отодвигается),
+// иначе два тика/инстанса могли бы выбрать одну строку и отправить дважды.
 func (n *Notifier) ProcessDue(ctx context.Context) {
 	items := make(models.OutboxItems, 0)
 	err := n.db.NewSelect().
@@ -37,8 +40,28 @@ func (n *Notifier) ProcessDue(ctx context.Context) {
 		return
 	}
 	for _, item := range items {
+		if !n.claim(ctx, item) {
+			continue // строку уже забрал другой тик/инстанс
+		}
 		n.deliver(ctx, item)
 	}
+}
+
+// claim — атомарно «забирает» сообщение, отодвигая next_attempt_at. Возвращает
+// false, если строку успел забрать кто-то другой (0 обновлённых).
+func (n *Notifier) claim(ctx context.Context, item *models.Outbox) bool {
+	res, err := n.db.NewUpdate().Model((*models.Outbox)(nil)).
+		Set("next_attempt_at = ?", time.Now().Add(time.Hour)).
+		Where("id = ?", item.ID).
+		Where("sent_at IS NULL").
+		Where("next_attempt_at <= ?", time.Now()).
+		Exec(ctx)
+	if err != nil {
+		log.Printf("[notify] outbox claim: %v", err)
+		return false
+	}
+	n2, err := res.RowsAffected()
+	return err == nil && n2 == 1
 }
 
 // deliver — одна попытка доставки; обновляет счётчик/ошибку/время следующей попытки.

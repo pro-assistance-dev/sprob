@@ -40,14 +40,17 @@ func (h *Handler[T]) emitNotify(action, itemID string, payload map[string]any) {
 	h.helper.Notify.PublishNotify(EventKey[T](), action, itemID, "", payload)
 }
 
-// eventPayload — плоский снапшот сущности для события: имя, код/статус и id,
-// если поля есть. Без рефлексии по всем полям — правила обычно фильтруют по
-// name/status, этого достаточно; расширяется позже (модель сама может дать снапшот).
+// eventPayload — плоский снапшот сущности для события: id, имя, код/статус и т.п.
+// Без рефлексии по всем полям — правила обычно фильтруют по name/status; при
+// необходимости сущность может дать свой снапшот (отдельный интерфейс).
 func eventPayload(item any) map[string]any {
 	out := map[string]any{}
 	v := reflect.Indirect(reflect.ValueOf(item))
 	if !v.IsValid() || v.Kind() != reflect.Struct {
 		return out
+	}
+	if id := itemID(item); id != "" {
+		out["id"] = id
 	}
 	for _, field := range []string{"Name", "Title", "Code", "Status"} {
 		f := v.FieldByName(field)
