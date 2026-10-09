@@ -1,6 +1,9 @@
 package notify
 
 import (
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/pro-assistance-dev/sprob/notify/models"
@@ -60,7 +63,7 @@ func TestRulePasses(t *testing.T) {
 }
 
 func TestExecTemplate(t *testing.T) {
-	data := map[string]string{"entity": "order", "action": "created", "status": "new"}
+	data := map[string]any{"entity": "order", "action": "created", "status": "new"}
 	if got := execTemplate("{{.entity}}.{{.action}}", data); got != "order.created" {
 		t.Errorf("шаблон = %q", got)
 	}
@@ -70,6 +73,40 @@ func TestExecTemplate(t *testing.T) {
 	// Битый шаблон не роняет отправку — отдаём как есть.
 	if got := execTemplate("{{.broken", data); got != "{{.broken" {
 		t.Errorf("битый шаблон = %q", got)
+	}
+}
+
+func TestRenderRichData(t *testing.T) {
+	event := Event{
+		Entity:  "orders",
+		Action:  "created",
+		Payload: map[string]any{"status": "new"},
+		Data:    map[string]any{"Number": "42"},
+	}
+	d := renderData(event)
+	if d["status"] != "new" {
+		t.Errorf("status = %v", d["status"])
+	}
+	if got := execTemplate("Заказ {{.data.Number}}", d); got != "Заказ 42" {
+		t.Errorf("data-шаблон = %q", got)
+	}
+}
+
+func TestRenderFileTemplate(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("TEMPLATES_PATH", dir)
+	if err := os.WriteFile(filepath.Join(dir, "_header.html"), []byte("H|"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "body.gohtml"), []byte(`{{template "_header.html" .}}{{.status}}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	out, err := renderFile("body.gohtml", map[string]any{"status": "new"})
+	if err != nil {
+		t.Fatalf("renderFile: %v", err)
+	}
+	if !strings.Contains(out, "H|") || !strings.Contains(out, "new") {
+		t.Errorf("renderFile = %q", out)
 	}
 }
 

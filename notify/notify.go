@@ -60,6 +60,7 @@ func New(h *helper.Helper, opts ...Option) *Notifier {
 		channels: map[string]channels.Channel{
 			models.ChannelEmail:    channels.NewEmail(h.Email),
 			models.ChannelTelegram: channels.NewTelegram(),
+			models.ChannelWebhook:  channels.NewWebhook(),
 		},
 	}
 	for _, o := range opts {
@@ -171,13 +172,38 @@ func (n *Notifier) resolveTargets(ctx context.Context, rule *models.Rule) []stri
 }
 
 // render — рендер subject/body по снапшоту события ({{.Entity}}, {{.Action}},
-// {{.status}}, … — плоские ключи payload).
+// {{.status}}, … — плоские ключи payload; {{.data.Field}} — богатый объект).
+// Body со значением «@file:<path>» грузится из шаблона-файла (TEMPLATES_PATH),
+// чтобы правила могли переиспользовать существующие gohtml-шаблоны.
 func render(rule *models.Rule, event Event) (string, string) {
-	data := event.flat()
-	return execTemplate(rule.Subject, data), execTemplate(rule.Body, data)
+	data := renderData(event)
+	var body string
+	if strings.HasPrefix(rule.Body, templateFilePrefix) {
+		path := strings.TrimSpace(strings.TrimPrefix(rule.Body, templateFilePrefix))
+		if rendered, err := renderFile(path, data); err == nil {
+			body = rendered
+		} else {
+			log.Printf("[notify] шаблон-файл %q: %v", path, err)
+		}
+	} else {
+		body = execTemplate(rule.Body, data)
+	}
+	return execTemplate(rule.Subject, data), body
 }
 
-func execTemplate(tpl string, data map[string]string) string {
+// renderData — контекст шаблона: плоский снапшот + богатый объект под ключом `data`.
+func renderData(event Event) map[string]any {
+	out := make(map[string]any, len(event.Payload)+5)
+	for k, v := range event.flat() {
+		out[k] = v
+	}
+	if event.Data != nil {
+		out["data"] = event.Data
+	}
+	return out
+}
+
+func execTemplate(tpl string, data map[string]any) string {
 	if strings.TrimSpace(tpl) == "" {
 		return ""
 	}

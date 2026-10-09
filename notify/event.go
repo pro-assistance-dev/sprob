@@ -23,6 +23,9 @@ type Event struct {
 	ItemID string
 	// Payload — плоский снапшот полей сущности (name, status, сумма, …).
 	Payload map[string]any
+	// Data — необязательный богатый объект для шаблонов правил (полный заказ,
+	// отзыв, …). Доступен в шаблоне как `{{.data.Field}}`; nil — не используется.
+	Data any
 	// At — момент события.
 	At time.Time
 }

@@ -16,3 +16,17 @@ func (n *Notifier) PublishNotify(entity, action, itemID, actorID string, payload
 		Payload: payload,
 	})
 }
+
+// PublishData — публикация с богатым объектом для шаблонов (`{{.data.Field}}`).
+func (n *Notifier) PublishData(entity, action, itemID string, payload map[string]any, data any) {
+	if n == nil {
+		return
+	}
+	n.Publish(context.Background(), Event{
+		Entity:  entity,
+		Action:  action,
+		ItemID:  itemID,
+		Payload: payload,
+		Data:    data,
+	})
+}

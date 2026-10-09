@@ -1,3 +1,15 @@
+## v1.9.0 (09.10.2026) — feat(notify): webhook-канал, богатые шаблоны, богатый payload
+
+> ЗАЧЕМ. Чтобы перевести на общее ядро доменные письма проектов (ferma):
+> нужны HTML-шаблоны из файлов и полный объект сущности, а не только снапшот.
+
+- **Канал `webhook`** — POST JSON события на URL + HMAC-SHA256 (`X-Signature`,
+  секрет из `Rule.Meta["secret"]`); перенесено из вебхуков опросника.
+- **`Event.Data`** — богатый объект для шаблонов (`{{.data.Field}}`), в дополнение
+  к плоскому снапшоту (`{{.status}}`). `Notifier.PublishData(...)`.
+- **Шаблоны из файлов**: `Rule.Body = "@file:email/order_new.gohtml"` рендерится из
+  `TEMPLATES_PATH` с общими `_header.html`/`_footer.html`.
+
 ## v1.8.1 (09.10.2026) — fix(notify): id в снапшоте события, created_at, атомарный claim
 
 - Снапшот события (`basehandler.eventPayload`) включает `id` — шаблоны
