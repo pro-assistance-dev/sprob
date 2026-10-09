@@ -3,8 +3,9 @@ package notify
 import "context"
 
 // PublishNotify — реализация `helper.EventPublisher`: удобная форма публикации
-// события из кода (без сборки Event руками). Payload — плоский снапшот сущности.
-func (n *Notifier) PublishNotify(entity, action, itemID, actorID string, payload map[string]any) {
+// события из кода (без сборки Event руками). Payload — плоский снапшот сущности,
+// `data` — необязательный богатый объект для шаблонов (`{{.data.Field}}`).
+func (n *Notifier) PublishNotify(entity, action, itemID, actorID string, payload map[string]any, data any) {
 	if n == nil {
 		return
 	}
@@ -14,6 +15,7 @@ func (n *Notifier) PublishNotify(entity, action, itemID, actorID string, payload
 		ItemID:  itemID,
 		ActorID: actorID,
 		Payload: payload,
+		Data:    data,
 	})
 }
 

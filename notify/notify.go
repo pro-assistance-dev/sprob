@@ -123,7 +123,7 @@ func (n *Notifier) activeRules(ctx context.Context, event Event) (models.Rules, 
 // enqueueRule — кладёт сообщения для одного правила в outbox (по адресу на получателя).
 func (n *Notifier) enqueueRule(ctx context.Context, rule *models.Rule, event Event) {
 	subject, body := render(rule, event)
-	addresses := n.resolveTargets(ctx, rule)
+	addresses := n.resolveTargets(ctx, rule, event)
 	if len(addresses) == 0 {
 		return
 	}
@@ -147,9 +147,10 @@ func (n *Notifier) enqueueRule(ctx context.Context, rule *models.Rule, event Eve
 }
 
 // resolveTargets — адреса доставки правила: явные email/telegram/webhook берём
-// как есть, user/role — через Resolver.
-func (n *Notifier) resolveTargets(ctx context.Context, rule *models.Rule) []string {
+// как есть, user/role — через Resolver, field — из payload события (динамический адрес).
+func (n *Notifier) resolveTargets(ctx context.Context, rule *models.Rule, event Event) []string {
 	out := make([]string, 0, len(rule.Targets))
+	flat := event.flat()
 	for _, target := range rule.Targets {
 		value := strings.TrimSpace(target.Value)
 		if value == "" {
@@ -158,6 +159,10 @@ func (n *Notifier) resolveTargets(ctx context.Context, rule *models.Rule) []stri
 		switch target.Type {
 		case models.TargetEmail, models.TargetTelegram, models.TargetWebhook:
 			out = append(out, value)
+		case models.TargetField:
+			if v := strings.TrimSpace(flat[value]); v != "" {
+				out = append(out, v)
+			}
 		case models.TargetUser, models.TargetRole:
 			if n.resolver == nil {
 				log.Printf("[notify] правило %q: получатель %s:%s, но Resolver не задан", rule.Name, target.Type, value)

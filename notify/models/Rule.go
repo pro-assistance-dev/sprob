@@ -30,6 +30,10 @@ const (
 	TargetUser     = "user"
 	TargetRole     = "role"
 	TargetWebhook  = "webhook"
+	// TargetField — получатель берётся из поля СОБЫТИЯ (Payload): например,
+	// `type=field, value=email` → адрес из `Payload["email"]` (email подписчика,
+	// клиента заказа). Позволяет правилу слать на адрес, известный только в момент события.
+	TargetField = "field"
 )
 
 // Rule — правило уведомления: ЧТО (event) → КУДА (channel) → КОМУ (targets).

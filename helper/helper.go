@@ -58,9 +58,10 @@ type Helper struct {
 
 // EventPublisher — минимальный контракт приёмника событий уведомлений. Его
 // реализует `notify.Notifier`; helper/baseR держат интерфейс, а не конкретный тип
-// (иначе импорт-цикл notify→helper).
+// (иначе импорт-цикл notify→helper). `data` — необязательный богатый объект для
+// шаблонов (`{{.data.Field}}`); nil для авто-CRUD.
 type EventPublisher interface {
-	PublishNotify(entity, action, itemID, actorID string, payload map[string]any)
+	PublishNotify(entity, action, itemID, actorID string, payload map[string]any, data any)
 }
 
 // SetNotify назначает приёмник событий уведомлений (nil безопасен — события игнорируются).

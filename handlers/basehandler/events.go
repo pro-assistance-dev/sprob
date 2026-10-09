@@ -37,7 +37,7 @@ func (h *Handler[T]) emitNotify(action, itemID string, payload map[string]any) {
 	if h.helper == nil || h.helper.Notify == nil {
 		return
 	}
-	h.helper.Notify.PublishNotify(EventKey[T](), action, itemID, "", payload)
+	h.helper.Notify.PublishNotify(EventKey[T](), action, itemID, "", payload, nil)
 }
 
 // eventPayload — плоский снапшот сущности для события: id, имя, код/статус и т.п.
