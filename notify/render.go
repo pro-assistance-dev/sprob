@@ -13,7 +13,9 @@ import (
 // переиспользовали существующие gohtml-шаблоны проекта.
 const templateFilePrefix = "@file:"
 
-// renderFile — рендер шаблона-файла с общими _header/_footer (как в проектах).
+// renderFile — рендер шаблона-файла. Для HTML-шаблонов (`.gohtml`) к набору
+// добавляются общие `_header.html`/`_footer.html` (если есть рядом с TEMPLATES_PATH);
+// прочие (телеграм-текст и т.п.) рендерятся в одиночку.
 // `root` — корень данных шаблона (обычно богатый объект события).
 func renderFile(relPath string, root any) (string, error) {
 	dir := strings.TrimSpace(os.Getenv("TEMPLATES_PATH"))
@@ -22,10 +24,12 @@ func renderFile(relPath string, root any) (string, error) {
 	}
 	full := filepath.Join(dir, relPath)
 	files := []string{full}
-	for _, shared := range []string{"_header.html", "_footer.html"} {
-		p := filepath.Join(dir, shared)
-		if _, err := os.Stat(p); err == nil {
-			files = append(files, p)
+	if strings.HasSuffix(relPath, ".gohtml") {
+		for _, shared := range []string{"_header.html", "_footer.html"} {
+			p := filepath.Join(dir, shared)
+			if _, err := os.Stat(p); err == nil {
+				files = append(files, p)
+			}
 		}
 	}
 	t, err := template.New(filepath.Base(full)).Option("missingkey=zero").ParseFiles(files...)
