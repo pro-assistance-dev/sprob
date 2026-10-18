@@ -4,8 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/middleware"
-	"github.com/pro-assistance-dev/sprob/modules/links/handlers/links"
+	linkshc "github.com/pro-assistance-dev/sprob/modules/links/handlers/links"
 	"github.com/pro-assistance-dev/sprob/modules/links/models"
+	qr "github.com/pro-assistance-dev/sprob/modules/links/qr"
 	baseR "github.com/pro-assistance-dev/sprob/routing"
 )
 
@@ -24,8 +25,10 @@ import (
 //
 // ⚠️ В sprob/routing глобально НЕ подключается: домен опционален, иначе чужие
 // сервисы получили бы /links и публичный /r/*.
-func InitRoutes(r *gin.Engine, api, apiNoToken *gin.RouterGroup, h *helper.Helper, opts ...links.Option) *links.Handler {
-	handler := links.New(h, opts...)
+//
+// Резолвер цели передаётся через `linkshc.WithResolver` (пакет handlers/links).
+func InitRoutes(r *gin.Engine, api, apiNoToken *gin.RouterGroup, h *helper.Helper, opts ...linkshc.Option) *linkshc.Handler {
+	handler := linkshc.New(h, opts...)
 
 	// Публичная обёртка — до всяких мидлвар с токеном.
 	r.GET("/r/:code", handler.Redirect)
@@ -33,17 +36,32 @@ func InitRoutes(r *gin.Engine, api, apiNoToken *gin.RouterGroup, h *helper.Helpe
 	m := middleware.CreateMiddleware(h)
 	api.Use(m.InjectFTSP())
 
-	baseR.InitR[models.Link](api)
+	// ⚠️ ПУТЬ АДМИНКИ — /api/link-registry, а не /api/links: авто-CRUD baseR
+	// регистрирует /links (множественное от Link) и, будучи зарегистрирован
+	// раньше, ПЕРЕХВАТЫВАЛ POST /links — писал строку своим обработчиком, и у
+	// модели с полем `code` в БД оказывался ПУСТОЙ код (получалось //r/).
+	// Регистрирую свои ручки ДО baseR и на отдельном префиксе.
+	// ⚠️ POST "" здесь НЕ регистрируем: baseR ниже сам вешает Create (gin паникует
+	// на повторный путь). Модель должна нести `bun:",scanonly"`-нейтральный код —
+	// см. Create в handler: код задаётся на уровне SQL, идемпотентность — Ensure.
+	group := api.Group("/link-registry")
+	group.POST("/batch", handler.BatchEnsure)
+	registry := baseR.InitR[models.Link](api, baseR.WithKey("link-registry"))
+	// Идемпотентное создание/поиск по цели и служебные ручки реестра.
+	registry.POST("/ensure", handler.CreateLink)
+	registry.GET("/:id/qr", handler.QrCode)
+	registry.GET("/:id/hits", handler.Hints)
 	baseR.InitR[models.LinkDomain](api)
 	baseR.InitR[models.LinkHit](api)
-
-	group := api.Group("/links")
-	group.POST("/batch", handler.BatchEnsure)
-	group.GET("/:id/qr", handler.QrCode)
-	group.GET("/:id/hits", handler.Hints)
 
 	api.PUT("/link-domains/default", handler.SwitchDomain)
 	api.DELETE("/link-hits", handler.PurgeHitsHandler)
 
 	return handler
+}
+
+// WithResolver — прокси к опции обработчика: потребитель не импортирует
+// внутренний пакет handlers/links ради одной настройки.
+func WithResolver(r qr.Resolver) linkshc.Option {
+	return linkshc.WithResolver(r)
 }

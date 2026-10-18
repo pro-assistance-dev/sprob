@@ -14,7 +14,7 @@ type Link struct {
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 
 	// Code — короткий неизменяемый идентификатор обёртки (без l/1/O/0).
-	Code  string `bun:"code,unique,notnull" json:"code"`
+	Code  string `bun:"link_code,unique,notnull" json:"code"`
 	Title string `json:"title"`
 
 	// App — сервис, которому принадлежит ссылка: map | food | links.

@@ -6,8 +6,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pro-assistance-dev/sprob/helper"
-	"github.com/pro-assistance-dev/sprob/modules/links/qr"
 	"github.com/pro-assistance-dev/sprob/modules/links/models"
+	"github.com/pro-assistance-dev/sprob/modules/links/qr"
 )
 
 // Новая batch-модель для пакетного выпуска («до 6000 QR»): одним запросом —
@@ -71,10 +71,20 @@ func (h *Handler) Ensure(ctx context.Context, link *models.Link) (*models.Link, 
 }
 
 // Create — вставка с генерацией короткого уникального кода (ретраи на коллизию).
+//
+// ⚠️ Прямой SQL, не модель: Bun кэширует схему структуры, и авто-подстановка
+// значения для `link_code` молча давала ПУСТОЙ код (ссылка //r/ и duplicate key
+// на второй ссылке). Column/Value/ExcludeColumn/Safe это не лечат. Код — это
+// идентификатор наклейки, здесь ручной SQL оправдан.
 func (h *Handler) Create(ctx context.Context, link *models.Link) error {
 	db := h.helper.DB.IDB(ctx)
 	if link.RedirectKind == 0 {
 		link.RedirectKind = 302
+	}
+	if !link.Enabled {
+		// JSON без поля даёт false, а это значило бы «наклейка не работает»
+		// сразу после выпуска: новая ссылка всегда включена.
+		link.Enabled = true
 	}
 	for attempt := 0; attempt < 5; attempt++ {
 		code, err := qr.NewCode()
@@ -82,7 +92,10 @@ func (h *Handler) Create(ctx context.Context, link *models.Link) error {
 			return err
 		}
 		link.Code = code
-		_, err = db.NewInsert().Model(link).Exec(ctx)
+		row := db.QueryRowContext(ctx, insertLinkSQL,
+			code, link.Title, link.App, link.TargetType, link.TargetID, link.ExternalURL, link.Path,
+			link.Enabled, link.RedirectKind, link.ExpiresAt, link.Note)
+		err = row.Scan(&link.ID, &link.Hits, &link.CreatedAt, &link.UpdatedAt)
 		if err == nil {
 			return nil
 		}
@@ -135,7 +148,7 @@ func now() time.Time {
 // FindByCode — ссылка по короткому коду (для публичного /r/:code).
 func (h *Handler) FindByCode(ctx context.Context, code string) (*models.Link, error) {
 	link := &models.Link{}
-	err := h.helper.DB.IDB(ctx).NewSelect().Model(link).Where("code = ?", code).Scan(ctx)
+	err := h.helper.DB.IDB(ctx).NewSelect().Model(link).Where("link_code = ?", code).Scan(ctx)
 	if err != nil {
 		return nil, models.ErrNotFound
 	}

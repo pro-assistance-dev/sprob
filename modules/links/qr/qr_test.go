@@ -35,8 +35,8 @@ func TestNewCode_Format(t *testing.T) {
 
 func TestStaticResolver(t *testing.T) {
 	r := StaticResolver{Rules: map[string]string{
-		"map/room":   "https://map.rdkb-mos.ru/buildings?roomId={id}",
-		"food/diet":  "https://food.rdkb-mos.ru/diets/{id}",
+		"map/room":    "https://map.rdkb-mos.ru/buildings?roomId={id}",
+		"food/diet":   "https://food.rdkb-mos.ru/diets/{id}",
 		"food/survey": "https://survey.rdkb-mos.ru/f?diet={id}",
 	}}
 	cases := []struct {

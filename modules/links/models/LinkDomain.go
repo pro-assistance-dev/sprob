@@ -42,7 +42,7 @@ type LinkHit struct {
 	ID            uuid.NullUUID `bun:"id,pk,type:uuid,default:uuid_generate_v4()" json:"id"`
 
 	LinkID    uuid.NullUUID `bun:"link_id,type:uuid" json:"linkId"`
-	Code      string        `bun:"code" json:"code"`
+	Code      string        `bun:"link_code" json:"code"`
 	IP        string        `bun:"ip" json:"ip"`
 	UserAgent string        `bun:"user_agent" json:"userAgent"`
 	Referer   string        `bun:"referer" json:"referer"`

@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/pro-assistance-dev/sprob/modules/links/models"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -72,4 +74,24 @@ func (h *Handler) PurgeHitsHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"deleted": n})
+}
+
+// CreateLink — POST /api/link-registry: создаёт ссылку (код генерирует сервер).
+// Идемпотентно по (app, targetType, targetId): повтор вернёт существующую —
+// массовая печать не должна плодить дубли наклеек с разными кодами.
+func (h *Handler) CreateLink(c *gin.Context) {
+	link := &models.Link{}
+	if _, err := h.helper.HTTP.GetForm(c, link); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if link.App == "" || link.TargetType == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "app и targetType обязательны"})
+		return
+	}
+	item, err := h.Ensure(c.Request.Context(), link)
+	if h.helper.HTTP.HandleError(c, err) {
+		return
+	}
+	c.JSON(http.StatusOK, item)
 }

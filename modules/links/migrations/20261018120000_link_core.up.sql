@@ -16,7 +16,9 @@ on conflict (host) do nothing;
 
 create table if not exists links (
     id uuid default uuid_generate_v4() not null primary key,
-    code varchar not null unique,
+    -- ⚠️ не `code`: Bun резервирует это имя для схемы (индекс-функция) и молча
+    -- пишет пустую строку в обычный insert. В JSON поле остаётся «code».
+    link_code varchar not null unique,
     title varchar,
     app varchar not null,
     target_type varchar,
@@ -38,7 +40,7 @@ create index if not exists links_target_idx on links (target_type, target_id);
 create table if not exists link_hits (
     id uuid default uuid_generate_v4() not null primary key,
     link_id uuid references links (id) on delete cascade,
-    code varchar,
+    link_code varchar,
     ip varchar,
     user_agent varchar,
     referer varchar,
