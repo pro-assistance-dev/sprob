@@ -1,0 +1,198 @@
+package links
+
+import (
+	"context"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/pro-assistance-dev/sprob/helper"
+	"github.com/pro-assistance-dev/sprob/modules/links/qr"
+	"github.com/pro-assistance-dev/sprob/modules/links/models"
+)
+
+// Новая batch-модель для пакетного выпуска («до 6000 QR»): одним запросом —
+// целый этаж/здание/отделение. Идемпотентно по (app, targetType, targetId).
+type ResolverFunc func(ctx context.Context, link *models.Link) (string, error)
+
+type Handler struct {
+	helper   *helper.Helper
+	svc      *Service
+	resolver qr.Resolver
+}
+
+// Service — доменная логика ссылок (коды, домены, пакетный выпуск).
+type Service struct {
+	helper   *helper.Helper
+	resolver qr.Resolver
+}
+
+func New(h *helper.Helper, opts ...Option) *Handler {
+	o := options{}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	svc := &Service{helper: h, resolver: o.resolver}
+	return &Handler{helper: h, svc: svc, resolver: o.resolver}
+}
+
+type options struct {
+	resolver qr.Resolver
+}
+
+type Option func(*options)
+
+// WithResolver — как собирать цель ссылки (адаптер сервиса-потребителя).
+func WithResolver(r qr.Resolver) Option {
+	return func(o *options) { o.resolver = r }
+}
+
+// ResolveTarget — абсолютный URL цели или ошибка домена (ErrBadTarget и т.п.).
+func (h *Handler) ResolveTarget(ctx context.Context, link *models.Link) (string, error) {
+	return h.resolver.Resolve(ctx, link)
+}
+
+// Ensure — вернуть существующую ссылку цели или создать новую (идемпотентно).
+func (h *Handler) Ensure(ctx context.Context, link *models.Link) (*models.Link, error) {
+	db := h.helper.DB.IDB(ctx)
+	existing := &models.Link{}
+	err := db.NewSelect().Model(existing).
+		Where("app = ?", link.App).
+		Where("target_type = ?", link.TargetType).
+		Where("target_id = ?", link.TargetID).
+		Limit(1).
+		Scan(ctx)
+	if err == nil {
+		return existing, nil
+	}
+	if err = h.Create(ctx, link); err != nil {
+		return nil, err
+	}
+	return link, nil
+}
+
+// Create — вставка с генерацией короткого уникального кода (ретраи на коллизию).
+func (h *Handler) Create(ctx context.Context, link *models.Link) error {
+	db := h.helper.DB.IDB(ctx)
+	if link.RedirectKind == 0 {
+		link.RedirectKind = 302
+	}
+	for attempt := 0; attempt < 5; attempt++ {
+		code, err := qr.NewCode()
+		if err != nil {
+			return err
+		}
+		link.Code = code
+		_, err = db.NewInsert().Model(link).Exec(ctx)
+		if err == nil {
+			return nil
+		}
+		if !isUniqueViolation(err) {
+			return err
+		}
+	}
+	return ErrCodeCollision
+}
+
+// DefaultDomain — активный домен обёрток.
+func (h *Handler) DefaultDomain(ctx context.Context) (*models.LinkDomain, error) {
+	domain := &models.LinkDomain{}
+	err := h.helper.DB.IDB(ctx).NewSelect().Model(domain).
+		Where("is_default").
+		Limit(1).
+		Scan(ctx)
+	return domain, err
+}
+
+// ShortURL — обёртка /r/<code> на активном домене.
+func (h *Handler) ShortURL(ctx context.Context, code string) (string, error) {
+	domain, err := h.DefaultDomain(ctx)
+	if err != nil {
+		return "", models.ErrNoDomain
+	}
+	return domain.Scheme + "://" + domain.Host + "/r/" + code, nil
+}
+
+// PurgeHits — ретеншен журнала переходов (LINK_HIT_RETENTION_DAYS, дефолт 180).
+func (h *Handler) PurgeHits(ctx context.Context, days int) (int64, error) {
+	if days <= 0 {
+		days = 180
+	}
+	res, err := h.helper.DB.IDB(ctx).NewDelete().Model((*models.LinkHit)(nil)).
+		Where("created_at < now() - (? || ' days')::interval", days).
+		Exec(ctx)
+	if err != nil {
+		return 0, err
+	}
+	n, _ := res.RowsAffected()
+	return n, nil
+}
+
+// now — единственная точка «текущего времени» для проверки срока (тесты).
+func now() time.Time {
+	return time.Now()
+}
+
+// FindByCode — ссылка по короткому коду (для публичного /r/:code).
+func (h *Handler) FindByCode(ctx context.Context, code string) (*models.Link, error) {
+	link := &models.Link{}
+	err := h.helper.DB.IDB(ctx).NewSelect().Model(link).Where("code = ?", code).Scan(ctx)
+	if err != nil {
+		return nil, models.ErrNotFound
+	}
+	return link, nil
+}
+
+// Hit — журнал перехода (вызывается асинхронно из redirect-обработчика).
+func (h *Handler) Hit(ctx context.Context, link *models.Link, ip, ua, referer string) error {
+	db := h.helper.DB.IDB(ctx)
+	_, err := db.NewInsert().Model(&models.LinkHit{
+		LinkID: link.ID, Code: link.Code, IP: ip, UserAgent: ua, Referer: referer,
+	}).Exec(ctx)
+	if err != nil {
+		return err
+	}
+	_, err = db.NewUpdate().Model((*models.Link)(nil)).
+		Set("hits = hits + 1").
+		Where("id = ?", link.ID).
+		Exec(ctx)
+	return err
+}
+
+// CheckState — можно ли вести по ссылке (включена, не истекла).
+func CheckState(link *models.Link, now time.Time) error {
+	if !link.Enabled {
+		return models.ErrDisabled
+	}
+	if link.ExpiresAt != nil && now.After(*link.ExpiresAt) {
+		return models.ErrExpired
+	}
+	return nil
+}
+
+// ── служебное ───────────────────────────────────────────────────────────────
+
+var ErrCodeCollision = errCodeCollision{}
+
+type errCodeCollision struct{}
+
+func (errCodeCollision) Error() string { return "link code collision" }
+
+// isUniqueViolation — pg-ошибка unique (код 23505) без жёсткой зависимости от драйвера.
+func isUniqueViolation(err error) bool {
+	if err == nil {
+		return false
+	}
+	type sqlStater interface{ SQLState() string }
+	if st, ok := err.(sqlStater); ok {
+		return st.SQLState() == "23505"
+	}
+	return false
+}
+
+// UUIDString — id ссылки строкой (для экспорта/логов).
+func UUIDString(id uuid.NullUUID) string {
+	if !id.Valid {
+		return ""
+	}
+	return id.UUID.String()
+}
