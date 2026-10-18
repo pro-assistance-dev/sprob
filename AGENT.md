@@ -177,7 +177,24 @@ baseR.InitR[models.Event](api, baseR.WithHandler(custom.H), baseR.WithWS(ws), ba
   слоты — `payload jsonb`. Рассчитан на НОВЫЕ проекты (врачи портала, конференции);
   фронт — модуль `schedule` в sprof. ⚠️ Не подключать туда, где уже есть свои
   `schedules`/`perfoms` (pros) — коллизия роутов.
+- **`links`** (18.10.2026) — управляемые ссылки/QR: `Link`/`LinkDomain`/`LinkHit`,
+  публичная обёртка `GET /r/:code` (302 на цель), пакетный выпуск `POST /api/link-registry/batch`,
+  QR на сервере (`GET /api/link-registry/:id/qr?format=svg|png`), свой энкодер в `modules/links/qr`
+  (byte mode, ECC M, проверен реальным декодером — OpenCV, `QR_DECODER=…`).
+  Цель собирает **резолвер потребителя** (`links.WithResolver`); домен обёртки — данные (`LinkDomain`).
+  ⚠️ Админка живёт на `/api/link-registry`, а НЕ `/api/links`: `baseR` регистрирует `/links`
+  (множественное от `Link`) и перехватывает свой путь.
 - **`documents`, `forms`, `extracts`, `settings`** — документы, формы, выписки, настройки.
+
+### ⚠️ Bun: писать поля со своими `bun:"col"`-именами — только прямым SQL
+
+Грабля 18.10 (стоила ~2 ч): поле с `bun:"link_code"` (колонка не совпадает с именем поля)
+через `NewInsert().Model()` уходило **пустым** — `code` в БД был `''`, ссылка получалась
+`//r/`, вторая вставка падала на unique. Не помогли ни `Column(...)`, ни `Value(...)`,
+ни `ExcludeColumn`, ни `bun.Safe` (Bun кэширует схему структуры). Работает `db.QueryRowContext`
+с явным SQL. Вывод: **критичное поле с переименованной колонкой — проверять запросом после
+первой вставки**, а не «на глаз по коду». `?`-плейсхолдеры: драйвер здесь go-pg, `$1` падает
+с `there is no parameter $1`.
 
 ## 📁 Структура
 
