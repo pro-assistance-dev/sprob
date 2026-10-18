@@ -39,14 +39,15 @@ func (h *Handler) QrByCode(c *gin.Context) {
 // BatchEnsure — POST /api/links/batch {app, items[]} — пакетный выпуск.
 func (h *Handler) BatchEnsure(c *gin.Context) {
 	var req struct {
-		App   string             `json:"app"`
-		Items []models.BatchItem `json:"items"`
+		App        string             `json:"app"`
+		TargetType string             `json:"targetType"`
+		Items      []models.BatchItem `json:"items"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := h.EnsureBatch(c.Request.Context(), req.App, req.Items)
+	res, err := h.EnsureBatch(c.Request.Context(), req.App, req.TargetType, req.Items)
 	if h.helper.HTTP.HandleError(c, err) {
 		return
 	}

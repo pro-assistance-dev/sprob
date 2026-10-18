@@ -53,12 +53,15 @@ func (h *Handler) HitsByDay(ctx context.Context, id string, days int) ([]HitStat
 
 // EnsureBatch — пакетный выпуск («этаж/здание/отделение/все диеты» одним
 // действием, идемпотентно): повтор возвращает существующие ссылки.
-func (h *Handler) EnsureBatch(ctx context.Context, app string, items []models.BatchItem) (*models.BatchResult, error) {
+func (h *Handler) EnsureBatch(ctx context.Context, app, defaultTarget string, items []models.BatchItem) (*models.BatchResult, error) {
 	res := &models.BatchResult{Failed: make([]models.BatchItemResult, 0)}
 	for _, item := range items {
 		link := &models.Link{
-			App:        app,
-			TargetType: item.TargetType,
+			App: app,
+			// Тип цели берётся из элемента; если его нет — общий для пакета.
+			// Иначе пакет создаёт ссылки с пустым targetType (наклейка «map/  101»),
+			// и они не резолвятся в карточку.
+			TargetType: firstNonEmpty(item.TargetType, defaultTarget),
 			TargetID:   item.TargetID,
 			Title:      item.Title,
 			Path:       item.Path,
@@ -107,6 +110,16 @@ func (h *Handler) switchDomain(ctx context.Context, host string) error {
 		return fmt.Errorf("домен %q не найден в link_domains", host)
 	}
 	return nil
+}
+
+// firstNonEmpty - первое непустое значение (тип цели: элемент пакета > общий тип пакета).
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 var _ = time.Now
