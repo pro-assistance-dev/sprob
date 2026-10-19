@@ -37,14 +37,13 @@ func InitRoutes(r *gin.Engine, api, apiNoToken *gin.RouterGroup, h *helper.Helpe
 	api.Use(m.InjectFTSP())
 
 	// ⚠️ ПУТЬ АДМИНКИ — /api/link-registry, а не /api/links: авто-CRUD baseR
-	// регистрирует /links (множественное от Link) и, будучи зарегистрирован
-	// раньше, ПЕРЕХВАТЫВАЛ POST /links — писал строку своим обработчиком, и у
-	// модели с полем `code` в БД оказывался ПУСТОЙ код (получалось //r/).
-	// Регистрирую свои ручки ДО baseR и на отдельном префиксе.
-	// ⚠️ POST "" здесь НЕ регистрируем: baseR ниже сам вешает Create (gin паникует
-	// на повторный путь). Модель должна нести `bun:",scanonly"`-нейтральный код —
-	// см. Create в handler: код задаётся на уровне SQL, идемпотентность — Ensure.
+	// регистрирует /links (множественное от Link), и на общем префиксе два
+	// набора ручек мешали друг другу. Свои ручки реестра — на отдельном префиксе.
+	// ⚠️ Свой POST регистрируем ДО baseR: авто-CRUD создаёт строку через
+	// `bun.NewInsert().Model` и писал ПУСТОЙ `link_code` (наклейка `//r/`).
+	// baseR не вешает свой POST на занятый путь (gin паникует на повторе).
 	group := api.Group("/link-registry")
+	group.POST("", handler.CreateEntry)
 	group.POST("/batch", handler.BatchEnsure)
 	registry := baseR.InitR[models.Link](api, baseR.WithKey("link-registry"))
 	// Идемпотентное создание/поиск по цели и служебные ручки реестра.

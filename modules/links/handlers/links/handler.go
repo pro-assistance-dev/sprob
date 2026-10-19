@@ -2,8 +2,10 @@ package links
 
 import (
 	"context"
+	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/modules/links/models"
@@ -77,7 +79,6 @@ func (h *Handler) Ensure(ctx context.Context, link *models.Link) (*models.Link, 
 // на второй ссылке). Column/Value/ExcludeColumn/Safe это не лечат. Код — это
 // идентификатор наклейки, здесь ручной SQL оправдан.
 func (h *Handler) Create(ctx context.Context, link *models.Link) error {
-	db := h.helper.DB.IDB(ctx)
 	if link.RedirectKind == 0 {
 		link.RedirectKind = 302
 	}
@@ -86,7 +87,25 @@ func (h *Handler) Create(ctx context.Context, link *models.Link) error {
 		// сразу после выпуска: новая ссылка всегда включена.
 		link.Enabled = true
 	}
-	for attempt := 0; attempt < 5; attempt++ {
+	return h.InsertGenerated(ctx, link)
+}
+
+// InsertGenerated — вставка с кодом, сгенерированным на уровне SQL.
+//
+// ⚠️ Единая точка вставки ссылки: и `Create`, и авто-CRUD (`POST /link-registry`)
+// идут сюда. baseR зовёт `bun.NewInsert().Model(link)`, а Model-вставка
+// подставляет ПУСТОЙ `link_code` (схема кэширует колонку) — ссылка выходила
+// с кодом `""` (печаталась наклейка `//r/`). Теперь: код генерится в цикле до
+// успешной вставки, а у модели поле `Code` помечено `scanonly` (не пишется).
+func (s *Service) InsertGenerated(ctx context.Context, link *models.Link) error {
+	h := &Handler{helper: s.helper, svc: s, resolver: s.resolver}
+	return h.InsertGenerated(ctx, link)
+}
+
+// InsertGenerated — см. Service.InsertGenerated.
+func (h *Handler) InsertGenerated(ctx context.Context, link *models.Link) error {
+	db := h.helper.DB.IDB(ctx)
+	for attempt := 0; attempt < 8; attempt++ {
 		code, err := qr.NewCode()
 		if err != nil {
 			return err
@@ -106,7 +125,24 @@ func (h *Handler) Create(ctx context.Context, link *models.Link) error {
 	return ErrCodeCollision
 }
 
-// DefaultDomain — активный домен обёрток.
+// CreateEntry — POST /api/link-registry: создать ссылку с коротким кодом.
+//
+// Отличается от baseR-хендлера только вставкой: `InsertGenerated` (а не
+// `NewInsert().Model`), иначе `link_code` остаётся пустым.
+func (h *Handler) CreateEntry(c *gin.Context) {
+	link := &models.Link{}
+	if _, err := h.helper.HTTP.GetForm(c, link); err != nil {
+		h.helper.HTTP.HandleError(c, err)
+		return
+	}
+	if err := h.Create(c.Request.Context(), link); err != nil {
+		h.helper.HTTP.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, link)
+}
+
+// DefaultDomain — активный домен оберток.
 func (h *Handler) DefaultDomain(ctx context.Context) (*models.LinkDomain, error) {
 	domain := &models.LinkDomain{}
 	err := h.helper.DB.IDB(ctx).NewSelect().Model(domain).
