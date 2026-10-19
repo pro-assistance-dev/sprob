@@ -10,7 +10,7 @@
   `//rdkb/food/server/static`): `UPLOAD_DIR`/`UPLOAD_PATH`/`STATIC_DIR`/`APP_DIR`
   из env, иначе `/app/<sub>` (Linux) или `<ROOT>/<NAME>/server/<sub>`.
 - **`models.FileInfo`**: `item_id`/`item_one_id` → `json:",omitempty"` (сервер
-  отдавал объект `{UUID,Valid}`, клиент шлёл его обратно); `UnmarshalJSON` принимает
+  отдавал объект `{UUID,Valid}`, клиент отправлял его обратно); `UnmarshalJSON` принимает
   пустую строку как NULL — раньше `uuid.NullUUID` падал на первом `""` и терялся
   ВЕСЬ остаток тела (включая `id` файла).
 - **`helpers/http.GetForm`**: `id` файла подставляется из ключа multipart, если
