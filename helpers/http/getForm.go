@@ -26,14 +26,69 @@ func (i *HTTP) GetForm(c *gin.Context, item interface{}) (map[string][]*multipar
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		return nil, err
+		return nil, badForm(err)
 	}
 	raw := form.Value["form"]
 	if len(raw) == 0 {
-		return nil, errors.New("multipart field \"form\" is required for non-JSON requests")
+		return nil, badForm(errors.New("multipart field \"form\" is required for non-JSON requests"))
 	}
 	if err = json.Unmarshal([]byte(raw[0]), &item); err != nil {
-		return nil, err
+		return nil, badForm(fmt.Errorf("decode form field: %w", err))
+	}
+	// ⚠️ Файлы ПРИВЯЗАНЫ к записи по `id` (см. `FilesService.Upload`), а клиент мог
+	// не прислать `id` в JSON → файл терялся, запись сохранялась без пути
+	// (`GET /static/` → 404). Дополняем id из ключа файла и перечитываем тело.
+	if fileID := firstFileKey(form.File); fileID != "" && !hasID([]byte(raw[0])) {
+		patched := withID([]byte(raw[0]), fileID)
+		if err = json.Unmarshal(patched, &item); err != nil {
+			return nil, badForm(fmt.Errorf("decode form field: %w", err))
+		}
 	}
 	return form.File, nil
 }
+
+// hasID — есть ли в JSON непустой `id`.
+func hasID(body []byte) bool {
+	var v struct {
+		ID string `json:"id"`
+	}
+	return json.Unmarshal(body, &v) == nil && v.ID != ""
+}
+
+// withID — тело с проставленным `id` (остальные поля как были).
+func withID(body []byte, id string) []byte {
+	var m map[string]json.RawMessage
+	if json.Unmarshal(body, &m) != nil {
+		return body
+	}
+	enc, err := json.Marshal(id)
+	if err != nil {
+		return body
+	}
+	m["id"] = enc
+	out, err := json.Marshal(m)
+	if err != nil {
+		return body
+	}
+	return out
+}
+
+// firstFileKey — имя первого файла в multipart (у file-infos оно равно id записи).
+func firstFileKey(files map[string][]*multipart.FileHeader) string {
+	for key := range files {
+		return key
+	}
+	return ""
+}
+
+// badForm — ошибка ЗАПРОСА (400, а не 500): тело разобрать нельзя —
+// виноват клиент.
+func badForm(err error) error {
+	return badRequestError{err}
+}
+
+type badRequestError struct{ err error }
+
+func (e badRequestError) Error() string  { return e.err.Error() }
+func (e badRequestError) Unwrap() error  { return e.err }
+func (badRequestError) BadRequest() bool { return true }

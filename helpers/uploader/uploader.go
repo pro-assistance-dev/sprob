@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
 )
@@ -37,15 +36,19 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 	if path == nil {
 		return errors.New("file does not relate to anything")
 	}
+	// ⚠️ `filepath.Join(*UploadPath, *path)` — уже абсолютный и КЛЕЕНЫЙ путь.
+	// `filepath.Split` на нём даёт корень `/` в `dirsToFile`, а `os.PathSeparator`
+	// приклеивал ещё один `/` → `//app/...`: на Linux `//` = корень хоста
+	// контейнера, `mkdir` уходил в `/app` и падал `permission denied` (500).
 	dirsToFile, fileName := filepath.Split(filepath.Join(*u.GetUploaderPath(), *path))
-	if runtime.GOOS == "linux" {
-		dirsToFile = string(os.PathSeparator) + dirsToFile
+	if dirsToFile == "" {
+		return errors.New("empty upload dir")
 	}
 	err = os.MkdirAll(dirsToFile, os.ModePerm)
 	if err != nil {
 		return err
 	}
-	err = c.SaveUploadedFile(file[0], filepath.Join([]string{dirsToFile, fileName}...))
+	err = c.SaveUploadedFile(file[0], filepath.Join(dirsToFile, fileName))
 	if err != nil {
 		return err
 	}

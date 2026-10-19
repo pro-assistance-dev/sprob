@@ -12,6 +12,7 @@ import (
 )
 
 type testItem struct {
+	ID   string `json:"id"`
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
@@ -23,7 +24,7 @@ func newTestRouter() *gin.Engine {
 		var item testItem
 		files, err := (&HTTP{}).GetForm(c, &item)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			c.JSON(StatusForError(err), gin.H{"error": err.Error()})
 			return
 		}
 		c.JSON(200, gin.H{"item": item, "files": len(files)})
@@ -118,10 +119,47 @@ func TestGetFormMultipartMissingFormField(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	if w.Code != 500 {
-		t.Fatalf("expected 500 (error), got %d", w.Code)
+	// 400, а не 500: тело запроса разобрать нельзя — виноват клиент.
+	if w.Code != 400 {
+		t.Fatalf("expected 400 (bad request), got %d", w.Code)
 	}
 	if !strings.Contains(w.Body.String(), "form") {
 		t.Fatalf("expected error mentioning form field, got: %s", w.Body.String())
+	}
+}
+
+// Файл привязан к записи по id: если клиент не прислал `id` в JSON, он
+// берётся из ключа файла — иначе upload терялся (запись без пути, 404).
+func TestGetFormMultipartBackfillsIDFromFile(t *testing.T) {
+	router := newTestRouter()
+
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	const id = "6f1a0f2e-0d3b-4b6e-9d5b-2f4a1c7e8b90"
+	_ = mw.WriteField("form", `{"name":"Фото"}`)
+	fw, err := mw.CreateFormFile(id, "photo.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = fw.Write([]byte("png"))
+	_ = mw.Close()
+
+	req := httptest.NewRequest("POST", "/test", &buf)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	if w.Code != 200 {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp struct {
+		Item  testItem `json:"item"`
+		Files int      `json:"files"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	if resp.Item.ID != id || resp.Files != 1 {
+		t.Fatalf("expected id %s and 1 file, got %+v", id, resp)
 	}
 }

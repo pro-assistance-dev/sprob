@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/spf13/viper"
 )
@@ -55,10 +56,39 @@ func loadConfig(path string, name string) (config *Config, err error) {
 	err = viper.Unmarshal(&config)
 	config.DB.Name = config.Project.Name
 	if config.Project.UploadPath == "" {
-		config.Project.UploadPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "static")
+		config.Project.UploadPath = projectSubdir(config.Project.Root, "static")
 	}
 	if config.Project.TemplatesPath == "" {
-		config.Project.TemplatesPath = filepath.Join(config.Project.Root, config.Project.Name, "server", "templates")
+		config.Project.TemplatesPath = projectSubdir(config.Project.Root, "templates")
 	}
 	return config, err
+}
+
+// projectSubdir — путь для загрузок/шаблонов с дефолтами, пригодными в контейнере.
+//
+// ⚠️ Прежний дефолт клеил `<ROOT>/<NAME>/server/<sub>` без учёта значения `ROOT`
+// из прод-`.env` (`/rdkb/`) — получался `//rdkb/food/server/static`, и `mkdir`
+// уходил в корень контейнера (`permission denied`, 500 на загрузке фото).
+//
+// Порядок: `UPLOAD_DIR` → `UPLOAD_PATH` (в `.env` задаётся как `…/static`) →
+// `STATIC_DIR`/`APP_DIR` → `/app`. Для шаблонов тот же base, подкаталог — `sub`.
+func projectSubdir(root string, sub string) string {
+	for _, key := range []string{"UPLOAD_DIR", "UPLOAD_PATH", "STATIC_DIR", "APP_DIR"} {
+		if base := os.Getenv(key); base != "" {
+			return filepath.Join(base, sub)
+		}
+	}
+	if runtime.GOOS == "linux" {
+		return filepath.Join("/app", sub)
+	}
+	return filepath.Join(root, nameFallback(root), "server", sub)
+}
+
+// nameFallback — `NAME` из env, иначе последний сегмент ROOT (локально это имя сервиса).
+func nameFallback(root string) string {
+	if name := os.Getenv("NAME"); name != "" {
+		return name
+	}
+	clean := filepath.Clean(root)
+	return filepath.Base(clean)
 }

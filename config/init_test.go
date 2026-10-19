@@ -3,27 +3,42 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
-// TestLoadTestConfig — smoke-загрузка конфига из минимального test.env
-// (во временной папке): не зависит от локальных файлов/окружения, CI-safe.
-func TestLoadTestConfig(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "test.env"), []byte(
-		"project.name=test\nproject.root=/tmp\ndb.name=test\n"), 0o600); err != nil {
-		t.Fatalf("write test.env: %v", err)
+// Прод-`.env` сервисов rdkb: ROOT=/rdkb/, NAME=food. Прежний дефолт давал
+// `//rdkb/food/server/static` — `mkdir` в корень контейнера → permission denied.
+func TestProjectSubdirLinuxUsesUploadDir(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("linux-only default")
 	}
-	oldWd, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = os.Chdir(oldWd) })
+	t.Setenv("UPLOAD_DIR", "/app")
 
-	if _, err := LoadTestConfig(); err != nil {
-		t.Fatalf("LoadTestConfig: %v", err)
+	got := projectSubdir("/rdkb/", "static")
+	if want := filepath.Join("/app", "static"); got != want {
+		t.Fatalf("projectSubdir = %q, want %q", got, want)
+	}
+	if filepath.Clean(got) != got {
+		t.Fatalf("projectSubdir must be a clean path, got %q", got)
+	}
+}
+
+// UPLOAD_PATH из `.env` — главный путь для сервисов на UPLOAD_PATH=/app/static.
+func TestProjectSubdirUploadPath(t *testing.T) {
+	t.Setenv("UPLOAD_DIR", "")
+	t.Setenv("UPLOAD_PATH", "/app/static")
+	os.Unsetenv("UPLOAD_DIR")
+
+	if got := projectSubdir("/rdkb/", "x"); got != filepath.Join("/app/static", "x") {
+		t.Fatalf("projectSubdir = %q", got)
+	}
+}
+
+func TestProjectSubdirNameFallback(t *testing.T) {
+	t.Setenv("NAME", "")
+	os.Unsetenv("NAME")
+	if got := nameFallback("/home/u/prog/map"); got != "map" {
+		t.Fatalf("nameFallback = %q, want map", got)
 	}
 }
