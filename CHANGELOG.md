@@ -1,3 +1,22 @@
+## v1.12.1 (19.10.2026) — fix: загрузка файлов (галерея food) падала 500
+
+> ЗАЧЕМ. «Профиль» не работал: на проде `POST /api/file-infos` → 500
+> `mkdir //rdkb: permission denied`, а после правки пути — `invalid UUID length: 9`
+> и запись без файла (`/api/static/<id>` → 404). Разобрано по слоям.
+
+- **`helpers/uploader`**: `os.PathSeparator + dirsToFile` приклеивал `/` к уже
+  абсолютному пути → `//app/...`; на Linux `//` = корень контейнера, `mkdir`
+  уходил в `/app(?)`/хост корень и падал `permission denied`. Префикс убран.
+- **`config`**: дефолт `UPLOAD_PATH` больше не клеит `ROOT` (`ROOT=/rdkb/` давал
+  `//rdkb/food/server/static`): берётся `UPLOAD_DIR`/`UPLOAD_PATH`/`STATIC_DIR`/
+  `APP_DIR` из env, иначе `/app/<sub>` (Linux) или `<ROOT>/<NAME>/server/<sub>`.
+- **`models.FileInfo`**: `item_id`/`item_one_id` → `json:",omitempty"` (раньше
+  сервер отдавал объект `{UUID,Valid}`, и клиент отправлял его обратно);
+  `UnmarshalJSON` принимает пустую строку как NULL — раньше `uuid.NullUUID`
+  падал на первом же `""` и терялся ВЕСЬ остаток тела (включая `id` файла).
+- **`helpers/http.GetForm`**: `id` файла подставляется из ключа multipart, если
+  в JSON его нет (сервер ищет файл по `form.id`); битое тело — 400, а не 500.
+
 ## v1.11.0 (09.10.2026) — feat(survey): привязка публикаций к сущностям экосистемы
 
 > ЗАЧЕМ. Формы регистрации/опроса должны создаваться НЕ вручную, а от сущности
