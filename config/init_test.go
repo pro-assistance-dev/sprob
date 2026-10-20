@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -24,14 +25,19 @@ func TestProjectSubdirLinuxUsesUploadDir(t *testing.T) {
 	}
 }
 
-// UPLOAD_PATH из `.env` — главный путь для сервисов на UPLOAD_PATH=/app/static.
+// UPLOAD_PATH из `.env` — это УЖЕ каталог статики (`/app/static`), `sub` к нему
+// не приклеивается: иначе получалось `/app/static/static` (файлы уезжали туда,
+// `GET /api/static/<id>` отдавал 404 — прод pros 20.10).
 func TestProjectSubdirUploadPath(t *testing.T) {
 	t.Setenv("UPLOAD_DIR", "")
-	t.Setenv("UPLOAD_PATH", "/app/static")
 	os.Unsetenv("UPLOAD_DIR")
+	t.Setenv("UPLOAD_PATH", "/app/static")
 
-	if got := projectSubdir("/rdkb/", "x"); got != filepath.Join("/app/static", "x") {
-		t.Fatalf("projectSubdir = %q", got)
+	if got := projectSubdir("/rdkb/", "static"); got != "/app/static" {
+		t.Fatalf("projectSubdir = %q, want /app/static", got)
+	}
+	if got := projectSubdir("/rdkb/", "static"); strings.Contains(got, "static/static") {
+		t.Fatalf("projectSubdir must not nest static: %q", got)
 	}
 }
 

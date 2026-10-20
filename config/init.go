@@ -72,8 +72,16 @@ func loadConfig(path string, name string) (config *Config, err error) {
 //
 // Порядок: `UPLOAD_DIR` → `UPLOAD_PATH` (в `.env` задаётся как `…/static`) →
 // `STATIC_DIR`/`APP_DIR` → `/app`. Для шаблонов тот же base, подкаталог — `sub`.
+//
+// ⚠️ Явный `UPLOAD_PATH` — это УЖЕ каталог статики (pros: `/app/static`, его
+// монтируют из папки репозитория), поэтому `sub` к нему не приклеивается:
+// `filepath.Join("/app/static", "static")` давал `/app/static/static` — файлы
+// уезжали туда, а `GET /api/static/<id>` искал рядом и отдавал 404.
 func projectSubdir(root string, sub string) string {
-	for _, key := range []string{"UPLOAD_DIR", "UPLOAD_PATH", "STATIC_DIR", "APP_DIR"} {
+	if base := os.Getenv("UPLOAD_PATH"); base != "" {
+		return base
+	}
+	for _, key := range []string{"UPLOAD_DIR", "STATIC_DIR", "APP_DIR"} {
 		if base := os.Getenv(key); base != "" {
 			return filepath.Join(base, sub)
 		}
