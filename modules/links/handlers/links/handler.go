@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/pro-assistance-dev/sprob/handlers/basehandler"
 	"github.com/pro-assistance-dev/sprob/helper"
 	"github.com/pro-assistance-dev/sprob/modules/links/models"
 	"github.com/pro-assistance-dev/sprob/modules/links/qr"
@@ -66,19 +67,19 @@ func (h *Handler) Ensure(ctx context.Context, link *models.Link) (*models.Link, 
 	if err == nil {
 		return existing, nil
 	}
-	if err = h.Create(ctx, link); err != nil {
+	if err = h.CreateEntryPoint(ctx, link); err != nil {
 		return nil, err
 	}
 	return link, nil
 }
 
-// Create — вставка с генерацией короткого уникального кода (ретраи на коллизию).
+// CreateEntryPoint — вставка с генерацией короткого уникального кода (ретраи на коллизию).
 //
 // ⚠️ Прямой SQL, не модель: Bun кэширует схему структуры, и авто-подстановка
 // значения для `link_code` молча давала ПУСТОЙ код (ссылка //r/ и duplicate key
 // на второй ссылке). Column/Value/ExcludeColumn/Safe это не лечат. Код — это
 // идентификатор наклейки, здесь ручной SQL оправдан.
-func (h *Handler) Create(ctx context.Context, link *models.Link) error {
+func (h *Handler) CreateEntryPoint(ctx context.Context, link *models.Link) error {
 	if link.RedirectKind == 0 {
 		link.RedirectKind = 302
 	}
@@ -130,12 +131,65 @@ func (h *Handler) InsertGenerated(ctx context.Context, link *models.Link) error 
 // Отличается от baseR-хендлера только вставкой: `InsertGenerated` (а не
 // `NewInsert().Model`), иначе `link_code` остаётся пустым.
 func (h *Handler) CreateEntry(c *gin.Context) {
+	h.createEntry(c)
+}
+
+// Create — реализация baseR IHandler: авто-CRUD (`POST /api/link-registry`)
+// должен проходить ТУ ЖЕ вставку с генерацией кода.
+//
+// ⚠️ Без этого baseR (handlers/basehandler → bun.NewInsert().Model) вставляет
+// строку с ПУСТЫМ `link_code`: у модели поле помечено `scanonly`, и Postgres
+// отдаёт `null value in column "link_code" ... violates not-null constraint`
+// (проверено 25.10: POST /api/link-registry → 23502). Поэтому baseR для модели
+// Link монтируется с ЭТИМ handler'ом (`baseR.WithHandler(h)`, см. router.go),
+// а отдельный POST "" больше не регистрируется (gin паниковал на дубле пути).
+func (h *Handler) Create(c *gin.Context) {
+	h.createEntry(c)
+}
+
+// GetAll — baseR IHandler: список реестра (полный handler нужен для WithHandler).
+func (h *Handler) GetAll(c *gin.Context) {
+	h.base().GetAll(c)
+}
+
+// Get — baseR IHandler: одна ссылка по id (см. redirect.go — там же Hints).
+// Get определён в redirect.go; здесь он не нужен.
+
+// Update — baseR IHandler: правка ссылки по id.
+func (h *Handler) Update(c *gin.Context) {
+	h.base().Update(c)
+}
+
+// Delete — baseR IHandler: удаление ссылки по id.
+func (h *Handler) Delete(c *gin.Context) {
+	h.base().Delete(c)
+}
+
+// FTSP — baseR IHandler: постраничный список/фильтры реестра.
+func (h *Handler) FTSP(c *gin.Context) {
+	h.base().FTSP(c)
+}
+
+// Options — baseR IHandler: справочник значений для селектов админки.
+func (h *Handler) Options(c *gin.Context) {
+	h.base().Options(c)
+}
+
+// base — авто-CRUD базового handler'а (чтение/правка/удаление модели Link).
+// Создание переопределено выше: base() намеренно НЕ используется в Create.
+func (h *Handler) base() *basehandler.Handler[models.Link] {
+	b := basehandler.NewH[models.Link](h.helper)
+	return &b
+}
+
+// createEntry — общая вставка для Create и CreateEntry.
+func (h *Handler) createEntry(c *gin.Context) {
 	link := &models.Link{}
 	if _, err := h.helper.HTTP.GetForm(c, link); err != nil {
 		h.helper.HTTP.HandleError(c, err)
 		return
 	}
-	if err := h.Create(c.Request.Context(), link); err != nil {
+	if err := h.CreateEntryPoint(c.Request.Context(), link); err != nil {
 		h.helper.HTTP.HandleError(c, err)
 		return
 	}

@@ -1,3 +1,22 @@
+## v1.12.2 (25.10.2026) — fix(links): сервис links не стартовал (дубль POST-роута)
+
+> ЗАЧЕМ. Коммит v1.12.1 добавил `group.POST("", handler.CreateEntry)` в
+> `/api/link-registry`, а ниже `baseR.InitR` вешает свой Create на ТОТ ЖЕ путь.
+> gin падает на регистрации: `panic: handlers are already registered for path
+> '/api/link-registry'` — процесс умирал в цикле, весь сервис links отдавал 502
+> (включая `/api/health` и публичные `/r/<code>`).
+
+- **`modules/links/router.go`**: свой `POST ""` убран; `baseR.InitR[models.Link]`
+  монтируется с нашим handler'ом (`baseR.WithHandler(handler)`) — дубля пути нет.
+- **`modules/links/handlers/links/handler.go`**: `Handler` реализует IHandler
+  baseR (`GetAll/Get/Update/Delete/FTSP/Options` — делегируют в
+  `basehandler.NewH[Link]`), а `Create` идёт через `InsertGenerated`. Без этого
+  baseR-Create вставлял через `bun.NewInsert().Model`, а `link_code` у модели
+  `scanonly` → Postgres: `null value in column "link_code" ... violates not-null`
+  (проверено на dev: POST /api/link-registry → 500/23502).
+- Доменный `Create(ctx, *Link)` переименован в `CreateEntryPoint` (не конфликтует
+  с gin-обработчиком `Create(c)`).
+
 ## v1.12.1 (19.10.2026) — fix: загрузка файлов (галерея food) + пустой код ссылки
 
 > ЗАЧЕМ. Два прод-бага одного дня. (1) Загрузка фото (галерея диет food) падала

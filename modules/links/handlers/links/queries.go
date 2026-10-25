@@ -76,7 +76,7 @@ func (h *Handler) EnsureBatch(ctx context.Context, app, defaultTarget string, it
 			res.Existed++
 			continue
 		}
-		if err = h.Create(ctx, link); err != nil {
+		if err = h.CreateEntryPoint(ctx, link); err != nil {
 			res.Failed = append(res.Failed, models.BatchItemResult{TargetID: item.TargetID, Error: err.Error()})
 			continue
 		}

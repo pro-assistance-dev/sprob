@@ -39,13 +39,17 @@ func InitRoutes(r *gin.Engine, api, apiNoToken *gin.RouterGroup, h *helper.Helpe
 	// ⚠️ ПУТЬ АДМИНКИ — /api/link-registry, а не /api/links: авто-CRUD baseR
 	// регистрирует /links (множественное от Link), и на общем префиксе два
 	// набора ручек мешали друг другу. Свои ручки реестра — на отдельном префиксе.
-	// ⚠️ Свой POST регистрируем ДО baseR: авто-CRUD создаёт строку через
-	// `bun.NewInsert().Model` и писал ПУСТОЙ `link_code` (наклейка `//r/`).
-	// baseR не вешает свой POST на занятый путь (gin паникует на повторе).
+	//
+	// ⚠️ POST "" отдельно НЕ регистрируем (gin падал бы на дубле пути:
+	// `handlers are already registered for path '/api/link-registry'`), но и
+	// штатный baseR-Create не годится: он вставляет через
+	// `bun.NewInsert().Model`, а `link_code` у модели `scanonly` → Postgres
+	// отдаёт `null value in column "link_code" ... violates not-null` (23502).
+	// Решение: baseR монтируется с НАШИМ handler'ом (WithHandler) — его Create
+	// идёт через InsertGenerated (код генерится SQL-вставкой).
 	group := api.Group("/link-registry")
-	group.POST("", handler.CreateEntry)
 	group.POST("/batch", handler.BatchEnsure)
-	registry := baseR.InitR[models.Link](api, baseR.WithKey("link-registry"))
+	registry := baseR.InitR[models.Link](api, baseR.WithKey("link-registry"), baseR.WithHandler(handler))
 	// Идемпотентное создание/поиск по цели и служебные ручки реестра.
 	registry.POST("/ensure", handler.CreateLink)
 	registry.GET("/:id/qr", handler.QrCode)
