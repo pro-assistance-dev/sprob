@@ -2,7 +2,6 @@ package fileinfos
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pro-assistance-dev/sprob/models"
 )
@@ -29,7 +28,6 @@ func (s *Service) Upsert(c context.Context, item *models.FileInfo) error {
 	if item == nil {
 		return nil
 	}
-	fmt.Println(item, item)
 	return s.r.Upsert(c, item)
 }
 

@@ -18,6 +18,7 @@ type Uploader interface {
 	GetUploaderPath() *string
 	GetFullPath(*string) *string
 	Upload(*gin.Context, []*multipart.FileHeader, *string) error
+	Remove(*string) error
 	ReadFiles(paths ...string) ([][]byte, error)
 }
 
@@ -57,6 +58,24 @@ func (u *LocalUploader) Upload(c *gin.Context, file []*multipart.FileHeader, pat
 
 func (u *LocalUploader) GetUploaderPath() *string {
 	return u.UploadPath
+}
+
+// Remove удаляет ранее загруженный файл по его ОТНОСИТЕЛЬНОМУ пути
+// (`fileSystemPath`), не трогая каталог статики.
+//
+// ⚠️ Нужен при ПЕРЕЗАПИСИ файла (повторная обрезка фото в галерее): сервер
+// присваивает новому файлу новый путь, а старый оставался на диске навсегда —
+// «мусорные» файлы копились на каждый кроп. Ошибку отсутствия файла глотаем:
+// у старых записей путь мог быть уже почищен.
+func (u *LocalUploader) Remove(fileSystemPath *string) error {
+	if fileSystemPath == nil || *fileSystemPath == "" {
+		return nil
+	}
+	full := filepath.Join(*u.GetUploaderPath(), *fileSystemPath)
+	if err := os.Remove(full); err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	return nil
 }
 
 func (u *LocalUploader) GetFullPath(path *string) *string {
