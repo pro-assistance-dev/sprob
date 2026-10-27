@@ -2,6 +2,7 @@ package filter
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	project "github.com/pro-assistance-dev/sprob/helpers/project"
@@ -116,15 +117,12 @@ func (f *FilterModel) whereFragment() (schema.QueryWithArgs, bool) {
 			if f.isLike() {
 				f.Value1 = TranslitToRu(f.Value1)
 				f.likeToString()
-				// Регистронезависимо и без пунктуации.
-				//
-				// ⚠️ Колонку передаём ОТДЕЛЬНЫМ `?` с `bun.Ident`, а не вклеиваем
-				// в строку выражения: bun разбирает точку (`table.col`) только в
-				// самом `Ident`, а внутри произвольного выражения видит её в
-				// тексте и ломает идентификатор (42P01).
+				// Регистронезависимо и без пунктуации. Колонку в выражение
+				// вклеиваем сами (`likeColFrag`) — `bun.Ident` внутри выражения
+				// таблицу не резолвит.
 				return schema.QueryWithArgs{
-					Query: "lower(regexp_replace(?, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g')) ? lower(?)",
-					Args:  []interface{}{bun.Ident(col), opFrag(f.Operator), f.Value1},
+					Query: likeColFrag(col) + " ? lower(?)",
+					Args:  []interface{}{opFrag(f.Operator), f.Value1},
 				}, true
 			}
 			return schema.QueryWithArgs{
@@ -143,6 +141,31 @@ func (f *FilterModel) whereFragment() (schema.QueryWithArgs, bool) {
 		}, true
 	}
 	return schema.QueryWithArgs{}, false
+}
+
+// likeColFrag — левая часть LIKE-условия: `lower(regexp_replace(table.col, …, 'g'))`.
+//
+// ⚠️ Колонку НЕЛЬЗЯ передавать `bun.Ident` внутрь выражения: bun резолвит
+// таблицу только для одиночного идентификатора, а в `Query` с текстом вокруг
+// `?` точка остаётся текстом (`lower(regexp_replace(position.name, …))`) и
+// Postgres ругается «missing FROM-clause» → фильтр молча не применялся
+// (должности/типы документов hr, sprob ≤ 1.12.2).
+//
+// Идентификатор безопасен по построению: имя колонки получено из схемы модели
+// (`getTableAndCol`, не из запроса) и проходит белый список символов. Всё
+// остальное (оператор, значение) по-прежнему параметры.
+func likeColFrag(col string) string {
+	return fmt.Sprintf("lower(regexp_replace(%s, '[^а-яА-Яa-zA-Z0-9 ]', '', 'g'))", safeIdent(col))
+}
+
+var identRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$`)
+
+// safeIdent — имя таблицы/колонки в SQL: только буквы, цифры, `_` и одна точка.
+func safeIdent(s string) string {
+	if !identRe.MatchString(s) {
+		panic("filter: недопустимый идентификатор " + s)
+	}
+	return s
 }
 
 func (f *FilterModel) constructWhere(query *bun.SelectQuery) {

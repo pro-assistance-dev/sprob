@@ -156,8 +156,7 @@ func TestConstructWhereIn_SetIsParameter(t *testing.T) {
 // `lower(regexp_replace(news`, и Postgres отвечает:
 //   missing FROM-clause entry for table "lower(regexp_replace(news" (42P01).
 //
-// Ловится по наличию КАВЫЧЕК вокруг таблицы и колонки (`"rooms"."name"`),
-// а не по «сырому» `rooms.name` без кавычек.
+// Ловится по наличию колонки в выражении: `regexp_replace("rooms"."name", …)`.
 func TestConstructWhere_LikeQuotesDottedColumn(t *testing.T) {
 	f := &FilterModel{
 		Model:    "room",
@@ -172,13 +171,50 @@ func TestConstructWhere_LikeQuotesDottedColumn(t *testing.T) {
 	if !strings.Contains(query, "regexp_replace(") {
 		t.Fatalf("LIKE-фильтр не использует regexp_replace: %s", query)
 	}
-	// Колонка обязана быть ОТКВОЧЕНА как идентификатор — иначе bun примет
-	// точку внутри функции за разделитель таблица.колонка.
-	if !strings.Contains(query, `"rooms"."name"`) {
-		t.Fatalf("колонка внутри regexp_replace не отвочена: %s", query)
+	// Колонка попадает в выражение целиком (`таблица.колонка`), а не одним
+	// `bun.Ident`: внутри выражения bun точку в тексте не резолвит.
+	if !strings.Contains(query, "regexp_replace(rooms.name,") {
+		t.Fatalf("колонка не попала в regexp_replace: %s", query)
 	}
-	if strings.Contains(query, "regexp_replace(rooms.name") {
-		t.Fatalf("колонка ушла в выражение без кавычек (42P01): %s", query)
+	if strings.Contains(query, "regexp_replace(NULL") {
+		t.Fatalf("колонка потеряна (nil-идентификатор): %s", query)
+	}
+}
+
+// Регрессия: LIKE-фильтр обязан применяться (sprob ≤ 1.12.2 он молча не
+// применялся — таблица внутри выражения не резолвилась).
+func TestConstructWhere_LikeAppliesFilter(t *testing.T) {
+	f := &FilterModel{
+		Model:    "room",
+		Col:      "name",
+		Type:     StringType,
+		Operator: Like,
+		Value1:   "иван",
+	}
+
+	query := buildQuery(t, f)
+
+	if !strings.Contains(query, " WHERE ") {
+		t.Fatalf("LIKE-фильтр не попал в запрос: %s", query)
+	}
+	if !strings.Contains(query, "%иван%") {
+		t.Fatalf("значение LIKE-фильтра потеряно: %s", query)
+	}
+}
+
+func TestSafeIdent(t *testing.T) {
+	if got := safeIdent("positions.name"); got != "positions.name" {
+		t.Fatalf("валидный идентификатор изменён: %s", got)
+	}
+	for _, bad := range []string{"name;drop", "name)", "", "a.b.c", "name--"} {
+		func() {
+			defer func() {
+				if recover() == nil {
+					t.Fatalf("недопустимый идентификатор %q прошёл в SQL", bad)
+				}
+			}()
+			safeIdent(bad)
+		}()
 	}
 }
 
