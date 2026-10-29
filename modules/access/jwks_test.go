@@ -19,6 +19,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -694,6 +695,13 @@ func withFakeOldRow(t *testing.T, row map[string]interface{}) {
 // formRequest - запрос записи в формате sprof: multipart с JSON в поле `form`.
 func formRequest(t *testing.T, method, url string, payload map[string]interface{}) *http.Request {
 	t.Helper()
+	return formRequestAs(t, method, url, payload, "r01_hoz")
+}
+
+// formRequestAs - то же, но с явной ролью в токене (роль нужна, чтобы проверить
+// разные ветки матрицы: владелец W / читатель R / админ).
+func formRequestAs(t *testing.T, method, url string, payload map[string]interface{}, role string) *http.Request {
+	t.Helper()
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 	b, err := json.Marshal(payload)
@@ -708,7 +716,7 @@ func formRequest(t *testing.T, method, url string, payload map[string]interface{
 	}
 	req := httptest.NewRequest(method, url, &buf)
 	req.Header.Set("Content-Type", mw.FormDataContentType())
-	req.Header.Set("token", roleToken(t, mustRSAKey(t), "kid1", "r01_hoz"))
+	req.Header.Set("token", roleToken(t, mustRSAKey(t), "kid1", role))
 	return req
 }
 
@@ -741,6 +749,44 @@ func newEnforceRouter(t *testing.T, rows map[string]map[string]map[string]string
 	r.POST("/api/rooms", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 	r.PUT("/api/room-engineerings/:id", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 	return r
+}
+
+// newEnforceRouterWithM2M - как newEnforceRouter, но реестр сущностей явно
+// описывает rooms с m2m-связями (hazardFactors/soutClasses в Fields, Relations
+// и M2M). Без M2M middleware не знает, что связь лежит в join-таблице, и
+// считает такие поля всегда изменёнными.
+//
+// oldM2M — что «уже лежит в БД» для каждой связи (nil = пусто).
+func newEnforceRouterWithM2M(t *testing.T, rows map[string]map[string]map[string]string) *gin.Engine {
+	t.Helper()
+	prev := Entities()
+	Register([]*Entity{{
+		Key:   "rooms",
+		Table: "rooms",
+		Fields: map[string]FieldInfo{
+			"name":          {Owner: "R01_HOZ"},
+			"hazardFactors": {Owner: "R06_OT"},
+			"soutClasses":   {Owner: "R06_OT"},
+		},
+		Relations: map[string]string{
+			"hazardFactors": "spr-hazard-factors",
+			"soutClasses":   "spr-sout-classes",
+		},
+		M2M: map[string]M2MRelation{
+			"hazardFactors": {Table: "room_hazard_factors", OwnerColumn: "room_id", ValueColumn: "spr_hazard_factor_id"},
+			"soutClasses":   {Table: "room_sout_classes", OwnerColumn: "room_id", ValueColumn: "spr_sout_class_id"},
+		},
+	}})
+	t.Cleanup(func() { Register(prev) })
+
+	// По умолчанию в БД обе связи пусты — как у помещения из бага.
+	prevM2M := fetchOldM2MFn
+	fetchOldM2MFn = func(_ *Middleware, _ context.Context, _ M2MRelation, _ string) map[string]bool {
+		return map[string]bool{}
+	}
+	t.Cleanup(func() { fetchOldM2MFn = prevM2M })
+
+	return newEnforceRouter(t, rows)
 }
 
 // Матрица для тестов: у R01_HOZ есть W на rooms.name; на остальные поля — R/нет.
@@ -801,6 +847,93 @@ func TestAccessControlEnforcePutChangedWField200(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Fatalf("code = %d, want 200 (изменено W-поле)", w.Code)
+	}
+}
+
+// Матрица со связями many-to-many: hazardFactors/soutClasses есть в Fields
+// (значит проверяются на запись), но физически лежат в join-таблицах
+// (room_hazard_factors / room_sout_classes), а не в строке rooms. В Relations
+// они тоже перечислены — по этому признаку middleware отличает m2m от колонки.
+var testMatrixWithM2M = map[string]map[string]map[string]string{
+	"rooms": {
+		"name":          {"R01_HOZ": "W", "R00_ADMIN": "W"},
+		"hazardFactors": {"R06_OT": "W", "R00_ADMIN": "W"},
+		"soutClasses":   {"R06_OT": "W", "R00_ADMIN": "W"},
+	},
+}
+
+// PUT полного объекта с m2m-полями, которые НЕ меняются → 200.
+//
+// Баг 29.10 (реальный 403 «нет права записи на поля: hazardFactors,soutClasses»):
+// m2m-связи не попадают в строку rooms (они в join-таблицах), поэтому
+// fieldChanged не находил их в oldRow и всегда отвечал «изменилось» →
+// любая правка помещения ролью не-R06_OT получала 403, даже если клиент
+// присылал те же (пустые) значения, что уже лежат в БД.
+func TestAccessControlEnforcePutUnchangedM2MAllowed(t *testing.T) {
+	t.Setenv("ACCESS_ENFORCE", "true")
+	// Старая строка — как реальный SELECT из rooms: m2m-полей в ней НЕТ.
+	withFakeOldRow(t, map[string]interface{}{"name": "Кабинет 101"})
+	r := newEnforceRouterWithM2M(t, testMatrixWithM2M)
+
+	// Клиент присылает весь объект; в БД у помещения тоже пусто.
+	payload := map[string]interface{}{
+		"id":            "123",
+		"name":          "Кабинет 101",
+		"hazardFactors": []interface{}{},
+		"soutClasses":   []interface{}{},
+	}
+	req := formRequest(t, http.MethodPut, "/api/rooms/123", payload)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("code = %d, want 200 (m2m не менялись); body: %s", w.Code, w.Body.String())
+	}
+}
+
+// PUT, где m2m-поле РЕАЛЬНО добавлено ролью без W → 403 (защита не должна ослабнуть).
+func TestAccessControlEnforcePutChangedM2MDenied403(t *testing.T) {
+	t.Setenv("ACCESS_ENFORCE", "true")
+	withFakeOldRow(t, map[string]interface{}{"name": "Кабинет 101"})
+	r := newEnforceRouterWithM2M(t, testMatrixWithM2M)
+
+	payload := map[string]interface{}{
+		"id":            "123",
+		"name":          "Кабинет 101",
+		"hazardFactors": []interface{}{map[string]interface{}{"id": "hf-1"}},
+		"soutClasses":   []interface{}{},
+	}
+	req := formRequest(t, http.MethodPut, "/api/rooms/123", payload)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("code = %d, want 403 (m2m-поле реально изменено)", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "hazardFactors") {
+		t.Fatalf("в ошибке должно быть имя поля, получено: %s", w.Body.String())
+	}
+}
+
+// PUT, где m2m-поле меняет роль С правом W → 200 (проверка не должна блокировать законное).
+func TestAccessControlEnforcePutChangedM2MAllowedForOwner(t *testing.T) {
+	t.Setenv("ACCESS_ENFORCE", "true")
+	withFakeOldRow(t, map[string]interface{}{"name": "Кабинет 101"})
+	r := newEnforceRouterWithM2M(t, testMatrixWithM2M)
+
+	payload := map[string]interface{}{
+		"id":            "123",
+		"name":          "Кабинет 101",
+		"hazardFactors": []interface{}{map[string]interface{}{"id": "hf-1"}},
+		"soutClasses":   []interface{}{},
+	}
+	// R06_OT — владелец hazardFactors/soutClasses в тестовой матрице.
+	req := formRequestAs(t, http.MethodPut, "/api/rooms/123", payload, "R06_OT")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("code = %d, want 200 (у роли есть W); body: %s", w.Code, w.Body.String())
 	}
 }
 

@@ -103,6 +103,33 @@ func (m *Middleware) fetchOldRow(ctx context.Context, entity *Entity, id string)
 	return row
 }
 
+// fetchOldM2M читает текущие идентификаторы m2m-связей сущности из join-таблицы.
+// Возвращает nil, если прочитать не удалось (тогда middleware оставляет
+// проверку поля в силе — «не смогли прочитать» не равно «не менялось»).
+//
+// Зачем отдельная выборка: m2m-поля (hazardFactors, soutClasses) физически
+// лежат в join-таблицах, а не в строке сущности, поэтому fetchOldRow их не
+// видит, и обычный fieldChanged всегда отвечал бы «изменилось».
+func (m *Middleware) fetchOldM2M(ctx context.Context, rel M2MRelation, id string) map[string]bool {
+	if id == "" || rel.Table == "" || rel.OwnerColumn == "" || rel.ValueColumn == "" || m.helper == nil {
+		return nil
+	}
+	var ids []string
+	err := m.helper.DB.IDB(ctx).NewSelect().
+		TableExpr("?0", bun.Ident(rel.Table)).
+		ColumnExpr("?0::text", bun.Ident(rel.ValueColumn)).
+		Where("?0 = ?", bun.Ident(rel.OwnerColumn), id).
+		Scan(ctx, &ids)
+	if err != nil {
+		return nil
+	}
+	set := make(map[string]bool, len(ids))
+	for _, v := range ids {
+		set[v] = true
+	}
+	return set
+}
+
 // auditWriteErrors - счётчик ошибок записи журнала корректуры (В6): потери
 // записей должны быть заметны (метрика/лог), а не только log.Printf.
 var auditWriteErrors atomic.Int64

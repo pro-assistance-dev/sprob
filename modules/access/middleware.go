@@ -154,12 +154,13 @@ func (m *Middleware) AccessControl() gin.HandlerFunc {
 				// Иначе любой не-админ получил бы 403 на сохранение (у него нет W
 				// на большинстве полей, но он их не меняет) — Б3.
 				var oldRow map[string]interface{}
+				var oldID string
 				if c.Request.Method == http.MethodPut {
-					id := c.Param("id")
+					oldID = c.Param("id")
 					if s, ok := payload["id"].(string); ok && s != "" {
-						id = s
+						oldID = s
 					}
-					oldRow = fetchOldRowFn(m, ctx, entity, id)
+					oldRow = fetchOldRowFn(m, ctx, entity, oldID)
 				}
 				var denied []string
 				for field, newVal := range payload {
@@ -167,6 +168,38 @@ func (m *Middleware) AccessControl() gin.HandlerFunc {
 						continue // id не проверяется при записи
 					}
 					if _, known := entity.Fields[field]; !known {
+						continue
+					}
+					// m2m-связь (hazardFactors, soutClasses): живёт в join-таблице,
+					// а не в колонке сущности, поэтому в oldRow её нет и обычный
+					// fieldChanged всегда отвечал бы «изменилось» — отсюда ложный
+					// 403 «нет права записи на поля: hazardFactors,soutClasses» на
+					// КАЖДОЕ сохранение помещения ролью не-R06_OT (баг 29.10).
+					// Сравниваем с реальным набором из join-таблицы.
+					//   PUT  — читаем текущие id и сравниваем как множества;
+					//   POST — сравнивать не с чем, проверяем право (создание).
+					if rel, isM2M := entity.M2M[field]; isM2M {
+						if c.Request.Method != http.MethodPut {
+							if !m.matrix.CanWrite(ctx, entity.Key, field, uc.Roles) {
+								denied = append(denied, field)
+							}
+							continue
+						}
+						cur := fetchOldM2MFn(m, ctx, rel, oldID)
+						if cur != nil && !m2mChanged(cur, newVal) {
+							continue // набор тот же — не блокируем
+						}
+						if cur == nil {
+							// прочитать не смогли — «неизвестно» не считаем «не менялось»,
+							// но и не наказываем за неизменное: сравниваем по пустому
+							// набору только при непустом новом значении.
+							if len(extractIDs(newVal)) == 0 {
+								continue
+							}
+						}
+						if !m.matrix.CanWrite(ctx, entity.Key, field, uc.Roles) {
+							denied = append(denied, field)
+						}
 						continue
 					}
 					if oldRow != nil && !fieldChanged(oldRow, field, newVal) {
@@ -292,6 +325,12 @@ var fetchOldRowFn = func(m *Middleware, ctx context.Context, entity *Entity, id 
 	return m.fetchOldRow(ctx, entity, id)
 }
 
+// fetchOldM2MFn - точка расширения для тестов: в проде читает текущие id
+// m2m-связи из join-таблицы (fetchOldM2M), в тестах подменяется фейковым набором.
+var fetchOldM2MFn = func(m *Middleware, ctx context.Context, rel M2MRelation, id string) map[string]bool {
+	return m.fetchOldM2M(ctx, rel, id)
+}
+
 // fieldChanged - изменилось ли значение поля относительно текущей строки БД.
 // json-имя поля -> snake_case колонка (для связей — суффикс _id). Временные
 // значения сравниваются по инстансу (клиент шлёт ISO, БД — timestamptz).
@@ -321,6 +360,64 @@ func fieldChanged(oldRow map[string]interface{}, field string, newVal interface{
 		return false
 	}
 	return true
+}
+
+// m2mChanged — изменился ли набор m2m-связей относительно текущего в БД.
+// old — текущие id из join-таблицы, newVal — то, что прислал клиент
+// (массив объектов с `id`, либо массив идентификаторов, либо nil).
+//
+// Сравниваем как МНОЖЕСТВА, а не как списки: порядок связей в ответе БД и в
+// объекте клиента не обязан совпадать, и это не изменение.
+func m2mChanged(old map[string]bool, newVal interface{}) bool {
+	next := extractIDs(newVal)
+	if len(old) != len(next) {
+		return true
+	}
+	for id := range next {
+		if !old[id] {
+			return true
+		}
+	}
+	return false
+}
+
+// extractIDs собирает идентификаторы из значения m2m-поля запроса.
+// Понимает: nil, []{объект с id}, []string, одиночный объект.
+func extractIDs(v interface{}) map[string]bool {
+	out := map[string]bool{}
+	switch t := v.(type) {
+	case nil:
+		return out
+	case []interface{}:
+		for _, item := range t {
+			addID(out, item)
+		}
+	case []string:
+		for _, s := range t {
+			if s != "" {
+				out[s] = true
+			}
+		}
+	default:
+		addID(out, v)
+	}
+	return out
+}
+
+// addID добавляет идентификатор из элемента-объекта или строки.
+func addID(dst map[string]bool, item interface{}) {
+	switch t := item.(type) {
+	case nil:
+		return
+	case string:
+		if t != "" {
+			dst[t] = true
+		}
+	case map[string]interface{}:
+		if id, ok := t["id"].(string); ok && id != "" {
+			dst[id] = true
+		}
+	}
 }
 
 // normalizeValue приводит значение к каноническому виду для сравнения:
