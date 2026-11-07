@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/uptrace/bun/migrate"
 
@@ -38,10 +39,31 @@ func (i *DB) initDB() {
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", i.config.User, i.config.Password, i.config.Host, i.config.Port, i.config.Name)
 	conn := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 	db := bun.NewDB(conn, pgdialect.New())
+
+	// ⚠️ Пул соединений. Без настроек `database/sql` держит соединения БЕЗ
+	// ВРЕМЕННОГО ЛИМИТА и без продления: после рестарта БД (или её контейнера)
+	// в пуле остаются «мёртвые» сокеты, и запрос падает
+	// `read tcp …:5432: i/o timeout` → 500 у клиента (найдено 07.11: список
+	// работников hr пустел после `docker restart hr-db`, `drv=…` в логе не было).
+	// Продление по возрасту заставляет пул переподключаться сам.
+	db.SetConnMaxLifetime(connMaxLifetime)
+	db.SetConnMaxIdleTime(connMaxIdleTime)
+	db.SetMaxIdleConns(connMaxIdle)
+	db.SetMaxOpenConns(connMaxOpen)
+
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`)
 	_, _ = db.Exec(`CREATE EXTENSION IF NOT EXISTS tablefunc;`)
 	i.DB = db
 }
+
+const (
+	// connMaxLifetime — возраст соединения, после которого оно закрывается
+	// при возврате в пул (докер/k8s рвут «долгие» сокеты тише, чем мы узнаём).
+	connMaxLifetime = 30 * time.Minute
+	connMaxIdleTime = 5 * time.Minute
+	connMaxIdle     = 10
+	connMaxOpen     = 50
+)
 
 func (i *DB) DoAction(migrations []*migrate.Migrations, name string, action *string) error {
 	if len(migrations) == 0 {
