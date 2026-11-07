@@ -6,26 +6,15 @@ import (
 )
 
 func (items FilterModels) mergeJoins() {
-	joinModels := make(map[string]*FilterModel)
-	for i := range items {
-		if items[i].Type == JoinType && items[i].Operator == In {
-			items[i].JoinIn = []string{items[i].Col}
-			items[i].JoinSets = [][]string{items[i].Set}
-
-			findedModel, ok := joinModels[items[i].JoinTable]
-
-			if ok {
-
-				findedModel.JoinIn = append(findedModel.JoinIn, items[i].Col)
-				findedModel.JoinSets = append(findedModel.JoinSets, items[i].Set)
-
-				items[i].ignore = true
-			} else {
-				joinModels[items[i].JoinTable] = items[i]
-			}
-
-		}
-	}
+	// ⚠️ 🔴 НЕ заполняем `JoinIn`/`JoinSets` из `Col`: `constructJoinV3` уже
+	// строит условие по `Col` (и только когда `Set` непуст), а старый путь
+	// добавлял ВТОРОЕ такое же `JoinOn` — дубль `IN` в ON и «отдел ≠ должность»
+	// при двух фильтрах одной таблицы (жалоба 08.11: фильтры «не работают»).
+	//
+	// Сейчас функция ничего не склеивает: второй join-фильтр по той же таблице
+	// остаётся отдельным элементом и добавляет условие в ОДИН `JOIN ON`, а сам
+	// `JOIN` повторно не делается (`FilterModel.Joined`, см. `CreateFilter`).
+	_ = items
 }
 
 func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
@@ -39,6 +28,11 @@ func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
 	// `WhereGroup` с OR, остальные — обычным `Where` (AND).
 	groups := make(map[int][]schema.QueryWithArgs)
 	var groupOrder []int
+
+	// Join-таблицы, уже присоединённые в ЭТОМ запросе: повторный `JOIN` той же
+	// таблицы Postgres отвергает («table name specified more than once»), а
+	// условия второго фильтра добавляются в тот же `JOIN ON`.
+	joined := make(map[string]bool)
 
 	for _, filterModel := range items {
 		if filterModel.ignore {
@@ -62,6 +56,19 @@ func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
 		case StringType, BooleanType, NumberType:
 			items.apply(filterModel, query, groups, &groupOrder)
 		case JoinType:
+			// Метку ставит `CreateFilter`, а не `constructJoinV3`: модель
+			// переиспользуется между запросами (сортировка прогоняет запрос
+			// дважды), и флаг на ней «залипал» бы — второй запрос потерял бы JOIN.
+			if filterModel.JoinTableModel == "" {
+				continue
+			}
+			if joined[filterModel.JoinTableModel] {
+				filterModel.Joined = true
+				filterModel.constructJoin(query)
+				continue
+			}
+			joined[filterModel.JoinTableModel] = true
+			filterModel.Joined = false
 			filterModel.constructJoin(query)
 		default:
 			return

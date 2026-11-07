@@ -45,6 +45,11 @@ type FilterModel struct { //nolint:golint
 	JoinIn   []string
 	JoinSets [][]string
 
+	// Joined — фильтр уже присоединил свою таблицу (`constructJoinV3`). Второй
+	// фильтр по той же паре (модель, join-модель) добавляет условие в JOIN ON,
+	// а не делает `JOIN` повторно (Postgres: «table name specified more than once»).
+	Joined bool `json:"-"`
+
 	ignore bool
 }
 
@@ -197,25 +202,112 @@ func (f *FilterModel) constructJoin(query *bun.SelectQuery) {
 	f.constructJoinV3(query)
 }
 
+// constructJoinV3 — join-фильтр: `JOIN <joinModel> ON <model>.id = <join>.«<model>Id»`
+// плюс условие по колонке присоединяемой модели.
+//
+// ⚠️ `col` адресуется к ПРИСОЕДИНЯЕМОЙ модели (`wrk-фильтр «Отдел»` — это
+// `worker_positions.department_id`, а не колонка `workers`). Ветку метаданных
+// (`JoinIn`/`JoinSets`) оставляем как была для вызовов, которые её заполняют
+// (`mergeJoins` она больше не наполняет — см. `Filter.go`).
 func (f *FilterModel) constructJoinV3(query *bun.SelectQuery) {
 	model := project.SchemasLib.GetSchema(f.Model)
 	joinModel := project.SchemasLib.GetSchema(f.JoinTableModel)
+	if model == nil || joinModel == nil {
+		return
+	}
 
 	modelTable := model.GetTableName()
 	joinTable := joinModel.GetTableName()
-	joinCondition := fmt.Sprintf("%s.id = %s.%s", modelTable, joinTable, joinModel.GetColName(f.Model+"Id"))
 
-	query.Join(fmt.Sprintf("JOIN %s", joinTable))
+	// «Колонка модели-владельца»: `<join>.<родитель>_id` (workerPosition →
+	// worker_position.worker_id). Если такой колонки в схеме нет — это не
+	// has-many, а belongs-to: FK лежит у самой модели (`<model>.<join>_id`).
+	// ⚠️ `GetColName` паникует на отсутствующем поле — только через `GetField`.
+	var joinCondition string
+	if parent := joinModel.GetField(f.Model + "Id"); parent != nil {
+		joinCondition = fmt.Sprintf("%s.id = %s.%s", safeIdent(modelTable), safeIdent(joinTable), safeIdent(parent.NameCol))
+	} else if mine := model.GetField(f.JoinTableModel + "Id"); mine != nil {
+		joinCondition = fmt.Sprintf("%s.%s = %s.id", safeIdent(modelTable), safeIdent(mine.NameCol), safeIdent(joinTable))
+	} else {
+		// Связать нечем (схема не описывает FK) — фильтр пропускаем, а не
+		// роняем запрос паникой.
+		return
+	}
+
+	// Второй фильтр по той же таблице JOIN не повторяет (Postgres: «table name
+	// specified more than once»), но условие добавляет в тот же `JOIN ON`.
+	if !f.Joined {
+		query.Join(fmt.Sprintf("JOIN %s", safeIdent(joinTable)))
+	}
 	query.JoinOn(joinCondition)
+
+	// Условие по значению — ЗДЕСЬ (в ON), а не в WHERE: так фильтр по
+	// присоединённой строке не выкидывает другие её строки и не требует
+	// DISTINCT (иначе пагинатор считал бы позиции, а не работников).
+	if len(f.Set) > 0 {
+		if colField := joinModel.GetField(f.Col); colField != nil {
+			col := fmt.Sprintf("%s.%s", safeIdent(joinTable), safeIdent(colField.NameCol))
+			if f.Operator != In {
+				query.JoinOn(fmt.Sprintf("%s %s ?", col, string(f.Operator)), f.Value1)
+			} else {
+				query.JoinOn(fmt.Sprintf("%s IN (?)", col), bun.In(f.Set))
+			}
+		}
+	} else if frag, ok := f.joinValueFragment(joinModel, joinTable); ok {
+		// Не-IN join-фильтр несёт значение в `Value1` (`Set` пуст).
+		query.JoinOn(frag.Query, frag.Args...)
+	}
 
 	for _, joinIn := range f.JoinIn {
 		joinStr := "%s.%s in (?)"
 		if len(f.JoinSets) == 1 {
 			joinStr = "%s.%s in ?"
 		}
-		joinCondition = fmt.Sprintf(joinStr, joinTable, joinModel.GetColName(joinIn))
+		// Старый путь (`JoinIn`/`JoinSets`): колонка тоже резолвится схемой.
+		joinField := joinModel.GetField(joinIn)
+		if joinField == nil {
+			continue
+		}
+		joinCondition = fmt.Sprintf(joinStr, safeIdent(joinTable), safeIdent(joinField.NameCol))
 		query.JoinOn(joinCondition, bun.In(f.JoinSets))
 	}
+}
+
+// joinValueFragment — условие по значению для join-фильтра БЕЗ `Set`
+// (`=`, `!=`, `>`, `like`, …). Колонка — у присоединяемой модели.
+//
+// Значение — всегда параметр: оператор из `const`-набора, имя колонки — из
+// схемы (`GetField`, не `GetColName`: та паникует на неизвестном поле).
+func (f *FilterModel) joinValueFragment(joinModel *project.Schema, joinTable string) (schema.QueryWithArgs, bool) {
+	if f.Col == "" || len(f.Set) > 0 {
+		return schema.QueryWithArgs{}, false
+	}
+	colField := joinModel.GetField(f.Col)
+	if colField == nil {
+		return schema.QueryWithArgs{}, false
+	}
+	col := fmt.Sprintf("%s.%s", safeIdent(joinTable), safeIdent(colField.NameCol))
+	if f.isLike() {
+		f.Value1 = TranslitToRu(f.Value1)
+		f.likeToString()
+		return schema.QueryWithArgs{
+			Query: likeColFrag(col) + " ? lower(?)",
+			Args:  []interface{}{opFrag(f.Operator), f.Value1},
+		}, true
+	}
+	if f.isBetween() {
+		return schema.QueryWithArgs{
+			Query: col + " between ? AND ?", Args: []interface{}{f.Value1, f.Value2},
+		}, true
+	}
+	if f.isNull() {
+		return schema.QueryWithArgs{
+			Query: col + " " + string(f.Operator),
+		}, true
+	}
+	return schema.QueryWithArgs{
+		Query: col + " " + string(f.Operator) + " ?", Args: []interface{}{f.Value1},
+	}, true
 }
 
 func (f *FilterModel) datesToString() {

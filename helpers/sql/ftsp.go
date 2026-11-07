@@ -153,6 +153,12 @@ func (i *FTSP) Validate() error {
 			if fm.Col != "" && join.GetField(fm.Col) == nil {
 				return ErrUnknownField{Model: fm.JoinTableModel, Field: fm.Col}
 			}
+			// ⚠️ Колонка модели-владельца нужна, только если у join-модели нет
+			// `<model>Id` (belongs-to: FK лежит у модели). Проверяем — иначе
+			// `GetColName` вернёт пустую строку, и SQL уйдёт битым (`workers. = …`).
+			if join.GetField(fm.Model+"Id") == nil && schema.GetField(fm.JoinTableModel+"Id") == nil {
+				return ErrUnknownField{Model: fm.Model, Field: fm.JoinTableModel + "Id"}
+			}
 			continue
 		}
 		if fm.Col != "" && schema.GetField(fm.Col) == nil {

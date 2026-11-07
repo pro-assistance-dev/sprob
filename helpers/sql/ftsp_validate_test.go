@@ -37,6 +37,8 @@ func testSchemas() {
 		NameCamel:  "building",
 		FieldsMap: map[string]*project.SchemaField{
 			"name": {NamePascal: "Name", NameCamel: "name", NameCol: "name"},
+			// has-many: у «многих» (комнаты) лежит FK на «одного» (buildings).
+			"roomId": {NamePascal: "RoomId", NameCamel: "roomId", NameCol: "room_id"},
 		},
 	}
 	project.SchemasLib = project.SchemasMap{"room": room, "building": building}

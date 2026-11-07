@@ -25,7 +25,7 @@ func (i *Paginator) CreatePagination(query *bun.SelectQuery) {
 	if i.CursorMode {
 		i.Cursor.createPagination(query)
 	} else {
-		query = query.Offset(i.Offset)
+		query.Offset(i.Offset)
 	}
 	query.Limit(i.RowsPerPage)
 }
