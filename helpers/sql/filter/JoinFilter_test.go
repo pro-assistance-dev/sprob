@@ -93,6 +93,33 @@ func TestJoinFilter_TwoColumnsOneJoin(t *testing.T) {
 	}
 }
 
+// ⚠️ БАРЬЕР (07.11): обычный фильтр + OR-группа обязаны склеиваться через `AND`.
+//
+// `WhereGroup` у bun после уже добавленного условия клеит группу БЕЗ `AND`
+// (`WHERE (A)((B OR C))`) — Postgres отвечал 42601, и поиск «иванов» вместе с
+// «без email» в hr отдавал 500. Группа собирается одним фрагментом `(B OR C)`.
+func TestORGroup_AndWithPlainFilter(t *testing.T) {
+	testSchema()
+	db := bun.NewDB(nil, pgdialect.New())
+	sel := db.NewSelect().Table("rooms")
+	FilterModels{
+		{Model: "room", Col: "roomId", Type: NumberType, Operator: Eq, Value1: "0"},
+		{Model: "room", Col: "name", Type: StringType, Operator: Like, Value1: "x", Group: 1},
+		{Model: "room", Col: "roomId", Type: StringType, Operator: Like, Value1: "y", Group: 1},
+	}.CreateFilter(sel)
+
+	query := sel.String()
+	if !strings.Contains(query, ") AND (((") {
+		t.Fatalf("между обычным фильтром и OR-группой нет AND: %s", query)
+	}
+	if !strings.Contains(query, ") OR (") && !strings.Contains(query, " OR ") {
+		t.Fatalf("внутри группы нет OR: %s", query)
+	}
+	if strings.Contains(query, ")(") {
+		t.Fatalf("условия склеены без оператора: %s", query)
+	}
+}
+
 func TestJoinFilter_BelongsToFKOnModel(t *testing.T) {
 	worker := &project.Schema{
 		NameTable:  "workers",

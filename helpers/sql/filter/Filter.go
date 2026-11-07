@@ -3,6 +3,7 @@ package filter
 import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/schema"
+	"strings"
 )
 
 func (items FilterModels) mergeJoins() {
@@ -76,20 +77,39 @@ func (items FilterModels) CreateFilter(query *bun.SelectQuery) {
 	}
 
 	// OR-группы применяем в порядке появления — результат детерминирован.
-	// `WhereGroup("(", fn)`: условия внутри fn объединяются через `Where`/`WhereOr`.
+	//
+	// ⚠️ Собираем группу ОДНИМ фрагментом `(A OR B)`, а не `query.WhereGroup`:
+	// `WhereGroup` после уже добавленного условия клеит группу БЕЗ `AND` —
+	// `WHERE (A)((B OR C))` → Postgres 42601 «syntax error at or near (»
+	// (07.11: поиск «иванов» вместе с «без email» давал 500). Обычный
+	// `query.Where("(…)", args…)` сам ставит `AND` между условиями.
 	for _, g := range groupOrder {
 		frags := groups[g]
-		query = query.WhereGroup("(", func(q *bun.SelectQuery) *bun.SelectQuery {
-			for i, fr := range frags {
-				if i > 0 {
-					q = q.WhereOr(fr.Query, fr.Args...)
-					continue
-				}
-				q = q.Where(fr.Query, fr.Args...)
-			}
-			return q
-		})
+		if len(frags) == 0 {
+			continue
+		}
+		frag := orGroupFragment(frags)
+		query.Where(frag.Query, frag.Args...)
 	}
+}
+
+// orGroupFragment склеивает фрагменты одной OR-группы в `(A OR B OR …)`.
+// Значения — параметры (`?`), поэтому склейка текста безопасна.
+func orGroupFragment(frags []schema.QueryWithArgs) schema.QueryWithArgs {
+	var b strings.Builder
+	args := make([]interface{}, 0, len(frags))
+	b.WriteString("(")
+	for i, fr := range frags {
+		if i > 0 {
+			b.WriteString(" OR ")
+		}
+		b.WriteString("(")
+		b.WriteString(fr.Query)
+		b.WriteString(")")
+		args = append(args, fr.Args...)
+	}
+	b.WriteString(")")
+	return schema.QueryWithArgs{Query: b.String(), Args: args}
 }
 
 // apply применяет фрагмент фильтра: в OR-группу или сразу в запрос (AND).
