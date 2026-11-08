@@ -11,16 +11,36 @@ import (
 var ErrNotSearchable = errors.New("справочник не поддерживает поиск")
 
 const (
-	// SearchLimitDefault — сколько опций отдаём, когда клиент не задал limit.
+	// SearchLimitDefault — сколько опций отдаём при ПОИСКЕ (`?query=`), когда
+	// клиент не задал limit. Для поиска 50 — норма: пользователь уточняет.
 	SearchLimitDefault = 50
+	// OptionsLimitDefault — сколько опций отдаём в ПОЛНОМ справочнике
+	// (`/options/<label>/<value>` без поиска).
+	//
+	// ⚠️ Раньше здесь был тот же `SearchLimitDefault = 50`, и справочник молча
+	// обрезался: у отделов hr ~143 записи, в селекте «Отдел» было 50 — ЦСО,
+	// Диспетчерскую, Оперблок выбрать было НЕЛЬЗЯ (07.11). «Полный» справочник
+	// обязан быть полным в пределах разумного потолка.
+	OptionsLimitDefault = 500
 	// SearchLimitMax — потолок: защищает от `?limit=100000` (лишняя нагрузка).
 	SearchLimitMax = 500
 )
 
-// searchLimit приводит запрошенный лимит к допустимому диапазону.
+// searchLimit приводит лимит ПОИСКА к допустимому диапазону.
 func searchLimit(limit int) int {
 	if limit <= 0 {
 		return SearchLimitDefault
+	}
+	if limit > SearchLimitMax {
+		return SearchLimitMax
+	}
+	return limit
+}
+
+// optionsLimit — лимит ПОЛНОГО справочника (без поиска).
+func optionsLimit(limit int) int {
+	if limit <= 0 {
+		return OptionsLimitDefault
 	}
 	if limit > SearchLimitMax {
 		return SearchLimitMax
@@ -137,7 +157,12 @@ func (r *Repository[T]) optionsQuery(
 		q = q.Order(labelCol)
 	}
 
-	q = q.Limit(searchLimit(limit))
+	// Поиск — свой лимит (50), полный справочник — 500 (см. OptionsLimitDefault).
+	if query == "" {
+		q = q.Limit(optionsLimit(limit))
+	} else {
+		q = q.Limit(searchLimit(limit))
+	}
 
 	err := q.Scan(c, &items)
 

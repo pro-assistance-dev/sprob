@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pro-assistance-dev/sprob/helper"
 	dbhelper "github.com/pro-assistance-dev/sprob/helpers/db"
 	sqlhelper "github.com/pro-assistance-dev/sprob/helpers/sql"
-	"github.com/pro-assistance-dev/sprob/helper"
 
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/sqlitedialect"
@@ -282,5 +282,41 @@ func TestHandler_Options_NotSearchable400(t *testing.T) {
 	router.ServeHTTP(w, req)
 	if w.Code != http.StatusBadRequest {
 		t.Errorf("options?query= на не-searchable = %d, want 400", w.Code)
+	}
+}
+
+// TestRepository_Options_NotCappedAtSearchLimit — полный справочник НЕ режется
+// лимитом поиска (07.11).
+//
+// ⚠️ ЧТО ЗАЩИЩАЕМ. `/options/<label>/<value>` без `?query=` отдавал 50 записей
+// (тот же `SearchLimitDefault`, что и для поиска). У отделов hr ~143 записи —
+// в селекте фильтра было 50, и «ЦСО»/«Диспетчерскую» выбрать было НЕЛЬЗЯ.
+func TestRepository_Options_NotCappedAtSearchLimit(t *testing.T) {
+	h := newTestHelper(t)
+	repo := Repository[testItem]{helper: h}
+	repo.relation = testItem{}.Relation
+	ctx := context.Background()
+
+	// 60 записей — больше SearchLimitDefault (50), меньше OptionsLimitDefault.
+	items := make([]*testItem, 0, 60)
+	for i := 0; i < 60; i++ {
+		items = append(items, &testItem{ID: "opt-" + string(rune('a'+i%26)) + string(rune('a'+i/26)), Name: "Отдел"})
+	}
+	if _, err := repo.helper.DB.IDB(ctx).NewInsert().Model(&items).Exec(ctx); err != nil {
+		t.Fatalf("insert: %v", err)
+	}
+
+	opts, err := repo.Options(ctx, "name", "id")
+	if err != nil {
+		t.Fatalf("Options: %v", err)
+	}
+	if len(opts) != 60 {
+		t.Fatalf("Options() вернул %d из 60 — справочник обрезан лимитом поиска", len(opts))
+	}
+
+	// А лимиты поиска НЕ изменились: дефолт и потолок те же.
+	if SearchLimitDefault != 50 || SearchLimitMax != 500 || OptionsLimitDefault != 500 {
+		t.Fatalf("лимиты разъехались: search=%d/%d options=%d",
+			SearchLimitDefault, SearchLimitMax, OptionsLimitDefault)
 	}
 }
