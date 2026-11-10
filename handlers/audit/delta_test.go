@@ -63,3 +63,14 @@ func TestHumanValue_Reference(t *testing.T) {
 		t.Fatalf("ссылка = %q, want «ссылка e3f61a88»", got)
 	}
 }
+
+// Пустая колонка не должна ронять подпись (10.11: паника `col[:1]` давала 500
+// на всей ручке чтения журнала).
+func TestFieldLabel_Empty(t *testing.T) {
+	if got := fieldLabel(""); got != "" {
+		t.Fatalf("fieldLabel(\"\") = %q, want пусто", got)
+	}
+	if got := fieldLabel("date_birth"); got != "Дата рождения" {
+		t.Fatalf("fieldLabel(date_birth) = %q", got)
+	}
+}

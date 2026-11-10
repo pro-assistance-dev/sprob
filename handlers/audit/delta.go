@@ -187,6 +187,12 @@ func fieldLabel(col string) string {
 	if l, ok := fieldLabels[col]; ok {
 		return l
 	}
+	// ⚠️ ПУСТАЯ колонка — паника `col[:1]` (index out of range). Фильтр может
+	// прийти без `col` (или с пустым `field` у старой записи журнала), и это
+	// валило ВСЮ ручку чтения журнала 500-й (поймано 10.11 после переноса в sprob).
+	if col == "" {
+		return ""
+	}
 	return strings.ToUpper(col[:1]) + strings.ReplaceAll(col[1:], "_", " ")
 }
 
