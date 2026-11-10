@@ -49,8 +49,11 @@ type Query struct {
 	Entity    string
 	Operation string
 	ObjectID  string
-	Offset    int
-	Limit     int
+	// UserName — фильтр по конкретному пользователю (10.11: «хочу посмотреть
+	// изменения конкретного пользователя»).
+	UserName string
+	Offset   int
+	Limit    int
 }
 
 // Handler — ручки чтения и отк��та.
@@ -69,6 +72,7 @@ func Register(r *gin.RouterGroup, a *Audit) {
 	handler = &Handler{audit: a}
 	r.GET("", handler.Get)
 	r.GET("/operations", handler.Operations)
+	r.GET("/users", handler.Users)
 	r.POST("/revert", handler.Revert)
 }
 
@@ -79,6 +83,7 @@ func (h *Handler) Get(c *gin.Context) {
 		Entity:    strings.TrimSpace(c.Query("entity")),
 		Operation: strings.TrimSpace(c.Query("operation")),
 		ObjectID:  strings.TrimSpace(c.Query("objectId")),
+		UserName:  strings.TrimSpace(c.Query("userName")),
 	}
 	q.Offset, _ = strconv.Atoi(c.DefaultQuery("offset", "0"))
 	q.Limit, _ = strconv.Atoi(c.DefaultQuery("limit", "25"))
@@ -102,6 +107,9 @@ func (h *Handler) Get(c *gin.Context) {
 		}
 		if q.ObjectID != "" {
 			sq = sq.Where("audit_log.object_id = ?", q.ObjectID)
+		}
+		if q.UserName != "" {
+			sq = sq.Where("audit_log.user_name = ?", q.UserName)
 		}
 		if q.Search != "" {
 			like := "%" + strings.ToLower(q.Search) + "%"
@@ -190,6 +198,30 @@ func (h *Handler) Operations(c *gin.Context) {
 		{Value: "delete", Label: "Удаление"},
 	}
 	c.JSON(http.StatusOK, out)
+}
+
+// Users — список пользователей, которые есть в журнале (для фильтра).
+//
+//	GET <prefix>/users
+//
+// ⚠️ Из САМОГО журнала, а не из справочника пользователей: в фильтре нужны
+// только те, кто реально что-то менял (иначе — сотни пустых пунктов).
+func (h *Handler) Users(c *gin.Context) {
+	type userRow struct {
+		UserName string `bun:"user_name" json:"userName"`
+		Count    int    `bun:"cnt" json:"count"`
+	}
+	rows := make([]userRow, 0)
+	if err := h.audit.helper.DB.IDB(c.Request.Context()).NewRaw(`
+		SELECT coalesce(user_name, '') AS user_name, count(*) AS cnt
+		FROM audit_log
+		WHERE coalesce(user_name, '') <> ''
+		GROUP BY 1
+		ORDER BY 2 DESC`).Scan(c.Request.Context(), &rows); err != nil {
+		h.audit.helper.HTTP.HandleError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, rows)
 }
 
 // matchKeys — ключи словаря, чья ПОДПИСЬ или КЛЮЧ содержит запрос.
