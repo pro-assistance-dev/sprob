@@ -98,18 +98,36 @@ func (h *Handler) Revert(c *gin.Context) {
 		result.Skipped = skipped
 		result.Reverted = n
 	} else {
-		applied, skipped, aerr := h.applySnapshot(ctx, row.Entity, row.ObjectID, *row.OldValue)
-		if aerr != nil {
-			h.audit.helper.HTTP.HandleError(c, aerr)
-			return
+		// ⚠️ CREATE откатывается УДАЛЕНИЕМ созданной строки (снимка «до» у
+		// создания нет — строка появилась этим действием).
+		if row.Operation == "create" {
+			if derr := h.undoCreate(ctx, row.Entity, row.ObjectID); derr != nil {
+				c.JSON(http.StatusUnprocessableEntity, gin.H{"error": derr.Error()})
+				return
+			}
+			result.Applied = []string{"удалено"}
+			result.Reverted = 1
+		} else {
+			applied, skipped, aerr := h.applySnapshot(ctx, row.Entity, row.ObjectID, *row.OldValue)
+			if aerr != nil {
+				h.audit.helper.HTTP.HandleError(c, aerr)
+				return
+			}
+			if len(applied) == 0 {
+				c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "нечего восстанавливать"})
+				return
+			}
+			// ⚠️ После DELETE строка уже не существует: UPDATE задевает 0
+			// строк, и «успех» был бы ложью. Вставляем строку из снимка.
+			if row.Operation == "delete" {
+				if inserted, ierr := h.restoreMissing(ctx, row.Entity, row.ObjectID, *row.OldValue); ierr == nil && inserted {
+					applied = append(applied, "восстановлена строка")
+				}
+			}
+			result.Applied = applied
+			result.Skipped = skipped
+			result.Reverted = 1
 		}
-		if len(applied) == 0 {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "нечего восстанавливать"})
-			return
-		}
-		result.Applied = applied
-		result.Skipped = skipped
-		result.Reverted = 1
 	}
 
 	// Сам откат — тоже изменение: пишем в журнал, иначе «кто вернул» потеряется.
