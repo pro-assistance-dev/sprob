@@ -321,3 +321,17 @@ func pluralObjects(n int) string {
 		return fmt.Sprintf("пакет: %d объектов", n)
 	}
 }
+
+// UserFromTokenH — identity из токена через ОБЩИЙ движок access (sprob).
+//
+// ⚠️ Вынесено из проекта (10.11): раньше жило в `hr/access`, и после переезда
+// журнала в sprob модуль `hr/access` исчез — функция нужна и журналу, и auth.
+func UserFromTokenH(h *helper.Helper, r *http.Request) (userID, userName, role string) {
+	uc := accessPack.RolesFromRequest(r.Context(), h, r)
+	userID = uc.UserID
+	userName = uc.UserName
+	if len(uc.Roles) > 0 {
+		role = uc.Roles[0]
+	}
+	return
+}
