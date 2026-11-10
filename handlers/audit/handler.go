@@ -21,12 +21,16 @@ type Item struct {
 	Entity    string `json:"entity" bun:"entity"`
 	EntityRus string `json:"entityRus" bun:"-"`
 	ObjectID  string `json:"objectId" bun:"object_id"`
-	Code      string `json:"code" bun:"code"`
-	Field     string `json:"field" bun:"field"`
-	FieldRus  string `json:"fieldRus" bun:"-"`
-	OldValue  string `json:"oldValue" bun:"old_value"`
-	NewValue  string `json:"newValue" bun:"new_value"`
-	Operation string `json:"operation" bun:"operation"`
+	// ObjectTitle — ЧЕЛОВЕКОЧИТАЕМОЕ имя объекта («Выхристюк Юлия», «Отдел»).
+	// ⚠️ id обычному пользователю ничего не говорит (10.11): в журнале нужно
+	// имя, а id оставить только для ссылки.
+	ObjectTitle string `json:"objectTitle" bun:"-"`
+	Code        string `json:"code" bun:"code"`
+	Field       string `json:"field" bun:"field"`
+	FieldRus    string `json:"fieldRus" bun:"-"`
+	OldValue    string `json:"oldValue" bun:"old_value"`
+	NewValue    string `json:"newValue" bun:"new_value"`
+	Operation   string `json:"operation" bun:"operation"`
 
 	// Delta — ЧЕЛОВЕКОЧИТАЕМАЯ разница «было → стало» по полям.
 	// Пусто у create (сравнивать не с чем) и у старых записей без `old_value`.
@@ -96,6 +100,9 @@ func (h *Handler) Get(c *gin.Context) {
 
 	ctx := c.Request.Context()
 	a := h.audit
+	// ⚠️ Кэш имён объектов живёт в пределах ОДНОГО ответа: в списке одни и те
+	// же объекты повторяются десятки раз, а данные между запросами меняются.
+	a.resetTitles()
 
 	// Общие условия — в одном месте: и `count`, и страница фильтруются одинаково.
 	applyWhere := func(sq *bun.SelectQuery) *bun.SelectQuery {
@@ -172,6 +179,7 @@ func (h *Handler) Get(c *gin.Context) {
 			it.EntityRus = it.Entity
 		}
 		it.FieldRus = fieldLabel(it.Field)
+		it.ObjectTitle = a.objectTitle(ctx, it)
 		it.IsRevert = strings.Contains(it.NewValue, `"revertedFrom"`)
 		if it.IsRevert {
 			// У отката дельты нет: это служебная запись, а не правка полей.

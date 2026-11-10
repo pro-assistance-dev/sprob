@@ -85,6 +85,8 @@ type Options struct {
 type Audit struct {
 	helper  *helper.Helper
 	options Options
+	// titles — кэш «имя объекта» в пределах одного запроса списка журнала.
+	titles map[titleKey]string
 }
 
 // NewAudit — журнал с настройками проекта.
