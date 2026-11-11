@@ -19,7 +19,9 @@ import (
 // в моделях.
 var titleQueries = map[string]struct {
 	table string
-	expr  string
+	// expr — готовое SQL-выражение имени; пусто — собирается из колонок
+	// `title`/`name` по фактической схеме (см. `exprFor`).
+	expr string
 }{
 	"humans": {table: "humans",
 		expr: `nullif(trim(concat_ws(' ', surname, name, patronymic)), '')`},
@@ -72,10 +74,16 @@ func (a *Audit) objectTitle(ctx context.Context, it *Item) string {
 		return v
 	}
 
+	expr, err := a.exprFor(ctx, spec)
+	if err != nil || expr == "" {
+		a.titles[key] = firstNonEmpty(it.Code, "")
+		return a.titles[key]
+	}
+
 	var rows []struct {
 		Title *string `bun:"title"`
 	}
-	q := fmt.Sprintf(`SELECT %s AS title FROM %s WHERE id = ?`, spec.expr, spec.table)
+	q := fmt.Sprintf(`SELECT %s AS title FROM %s WHERE id = ?`, expr, spec.table)
 	if err := a.helper.DB.IDB(ctx).NewRaw(q, it.ObjectID).Scan(ctx, &rows); err != nil || len(rows) == 0 {
 		a.titles[key] = firstNonEmpty(it.Code, "")
 		return a.titles[key]
@@ -83,6 +91,42 @@ func (a *Audit) objectTitle(ctx context.Context, it *Item) string {
 	title := firstNonEmpty(deref(rows[0].Title), it.Code, "")
 	a.titles[key] = title
 	return title
+}
+
+// exprFor — SQL-выражение имени объекта.
+//
+// ⚠️ Если у сущности задано `expr` — берём его (ФИО, специальные случаи).
+// Иначе собираем по ФАКТИЧЕСКИМ колонкам таблицы: `title` (портал) и/или
+// `name` (rdkb). Так список не падает, если колонки нет — и не требует
+// отдельной карты на каждый проект.
+func (a *Audit) exprFor(ctx context.Context, spec struct {
+	table string
+	expr  string
+}) (string, error) {
+	if spec.expr != "" {
+		return spec.expr, nil
+	}
+	cols, err := a.scalarColumns(ctx, spec.table)
+	if err != nil {
+		return "", err
+	}
+	has := func(c string) bool {
+		for _, x := range cols {
+			if x == c {
+				return true
+			}
+		}
+		return false
+	}
+	switch {
+	case has("title") && has("name"):
+		return `coalesce(nullif(title, ''), nullif(name, ''))`, nil
+	case has("title"):
+		return `nullif(title, '')`, nil
+	case has("name"):
+		return `nullif(name, '')`, nil
+	}
+	return "", nil
 }
 
 // resetTitles — очистить кэш имён перед формированием страницы.
