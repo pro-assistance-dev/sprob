@@ -240,6 +240,15 @@ func (a *Audit) Middleware() gin.HandlerFunc {
 
 		payload := readPayload(c)
 
+		// ⚠️ При CREATE id объекта рождается на сервере: его нет ни в пути, ни в
+		// теле запроса — он приходит в ОТВЕТЕ. Без этого `object_id` оставался
+		// пустым, и в журнале не было ни имени объекта, ни ссылки на карточку
+		// (11.11: портал, «Новость | create | ''»).
+		createdID := ""
+		if method == http.MethodPost {
+			c.Writer = &responseCapture{ResponseWriter: c.Writer, body: &createdID}
+		}
+
 		// ⚠️ Состояние ДО читаем ДО `c.Next()`: после него строка уже изменена,
 		// и «старое» значение взять неоткуда. Без этого в журнале был только
 		// `new_value` — «что отправили», а не «было → стало», и откат был
@@ -258,6 +267,10 @@ func (a *Audit) Middleware() gin.HandlerFunc {
 		objectID := c.Param("id")
 		if s, ok := payload["id"].(string); ok && s != "" {
 			objectID = s
+		}
+		// id из ответа на создание (см. `responseCapture`).
+		if objectID == "" && createdID != "" {
+			objectID = createdID
 		}
 		code := ""
 		for _, k := range []string{"code", "fullCode", "number", "name"} {
@@ -295,6 +308,37 @@ func (a *Audit) Middleware() gin.HandlerFunc {
 			log.Printf("[audit] writeAudit: %v (entity=%s op=%s)", err, entity, item.Operation)
 		}
 	}
+}
+
+// responseCapture — перехват тела ответа ради id созданного объекта.
+//
+// ⚠️ Пишем в буфер и СРАЗУ отдаём клиенту (Write/WriteHeader проксируются):
+// буферизовать весь ответ нельзя — клиент получил бы его только после
+// middleware, а потоковые ответы (файлы) сломались бы.
+type responseCapture struct {
+	gin.ResponseWriter
+	body *string
+}
+
+func (r *responseCapture) Write(b []byte) (int, error) {
+	if *r.body == "" && len(b) > 0 {
+		*r.body = extractID(b)
+	}
+	return r.ResponseWriter.Write(b)
+}
+
+// extractID — `"id":"<uuid>"` из JSON ответа (первое совпадение).
+func extractID(b []byte) string {
+	const marker = `"id":"`
+	i := strings.Index(string(b), marker)
+	if i < 0 {
+		return ""
+	}
+	rest := string(b)[i+len(marker):]
+	if j := strings.IndexByte(rest, '"'); j == 36 {
+		return rest[:36]
+	}
+	return ""
 }
 
 // payloadIDs — список id из тела (`ids`) для пакетных ручек.
