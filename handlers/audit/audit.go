@@ -246,6 +246,10 @@ func (a *Audit) Middleware() gin.HandlerFunc {
 		// (11.11: портал, «Новость | create | ''»).
 		createdID := ""
 		if method == http.MethodPost {
+			// ⚠️ Оборачиваем `c.Writer` и подменяем его — хендлеры sprob пишут
+			// через `gin.Context.JSON` → `c.Writer.Write`, то есть через наш
+			// wrapper. Собственный `c.Writer` — интерфейс, доступ к внутреннему
+			// `writermem` не нужен.
 			c.Writer = &responseCapture{ResponseWriter: c.Writer, body: &createdID}
 		}
 
