@@ -36,11 +36,12 @@ var titleQueries = map[string]struct {
 	"worker-document-fields": {table: "worker_document_fields", expr: "value"},
 	"worker-positions":       {table: "worker_positions", expr: "id::text"},
 	"users":                  {table: "users", expr: "name"},
-	// ⚠️ У портала те же сущности называются `title`, а не `name`: выражение
-	// через `coalesce` работает в обоих проектах без карты на каждый сервис.
-	"news":         {table: "news", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
-	"pages":        {table: "pages", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
-	"publications": {table: "publications", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
+	// ⚠️ У портала имя — `title`, у rdkb — `name`. `expr` НЕ задаём: выражение
+	// собирается по фактическим колонкам в `exprFor` (иначе SQL падал на
+	// несуществующей колонке, и `objectTitle` оставался пустым — 11.11).
+	"news":         {table: "news"},
+	"pages":        {table: "pages"},
+	"publications": {table: "publications"},
 	"rooms":        {table: "rooms", expr: "name"},
 	"buildings":    {table: "buildings", expr: "name"},
 	"floors":       {table: "floors", expr: "name"},
