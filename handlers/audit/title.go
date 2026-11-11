@@ -34,14 +34,16 @@ var titleQueries = map[string]struct {
 	"worker-document-fields": {table: "worker_document_fields", expr: "value"},
 	"worker-positions":       {table: "worker_positions", expr: "id::text"},
 	"users":                  {table: "users", expr: "name"},
-	"news":                   {table: "news", expr: "name"},
-	"pages":                  {table: "pages", expr: "name"},
-	"publications":           {table: "publications", expr: "name"},
-	"rooms":                  {table: "rooms", expr: "name"},
-	"buildings":              {table: "buildings", expr: "name"},
-	"floors":                 {table: "floors", expr: "name"},
-	"polygons":               {table: "polygons", expr: "name"},
-	"faq":                    {table: "faq", expr: "question"},
+	// ⚠️ У портала те же сущности называются `title`, а не `name`: выражение
+	// через `coalesce` работает в обоих проектах без карты на каждый сервис.
+	"news":         {table: "news", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
+	"pages":        {table: "pages", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
+	"publications": {table: "publications", expr: `coalesce(nullif(title, ''), nullif(name, ''))`},
+	"rooms":        {table: "rooms", expr: "name"},
+	"buildings":    {table: "buildings", expr: "name"},
+	"floors":       {table: "floors", expr: "name"},
+	"polygons":     {table: "polygons", expr: "name"},
+	"faq":          {table: "faq", expr: "question"},
 }
 
 // titleCache — кэш имён в пределах ОДНОГО запроса (в списке журнала одни и те
