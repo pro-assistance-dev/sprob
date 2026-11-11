@@ -327,6 +327,7 @@ type responseCapture struct {
 func (r *responseCapture) Write(b []byte) (int, error) {
 	if *r.body == "" && len(b) > 0 {
 		*r.body = extractID(b)
+		log.Printf("[audit-debug] Write %d байт, id=%q", len(b), *r.body)
 	}
 	return r.ResponseWriter.Write(b)
 }
