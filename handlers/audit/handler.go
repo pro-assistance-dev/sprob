@@ -181,12 +181,7 @@ func (h *Handler) Get(c *gin.Context) {
 		it.FieldRus = fieldLabel(it.Field)
 		it.ObjectTitle = a.objectTitle(ctx, it)
 		it.IsRevert = strings.Contains(it.NewValue, `"revertedFrom"`)
-		if it.IsRevert {
-			// У отката дельты нет: это служебная запись, а не правка полей.
-			it.Delta = []DeltaItem{}
-		} else {
-			it.Delta = BuildDelta(it.OldValue, it.NewValue)
-		}
+		it.Delta = deltaForOperation(it.Operation, it.OldValue, it.NewValue, it.IsRevert)
 		_, tableOK := a.options.RevertTables[it.Entity]
 		it.CanRevert = tableOK && strings.TrimSpace(it.OldValue) != "" && it.ObjectID != ""
 	}

@@ -200,7 +200,55 @@ func buildItem(method, entity, objectID, code string, newVal *string, userID, us
 	if method == http.MethodDelete {
 		op = "delete"
 	}
+	return newAuditItem(op, entity, objectID, code, newVal, userID, userName, role)
+}
 
+// actionOperations — POST-ручки, которые НЕ создают запись, а меняют состояние
+// существующей (массовые операции и переходы статуса).
+//
+// ⚠️ ЗАЧЕМ (15.11). Операция определялась ТОЛЬКО по HTTP-методу, и
+// `POST /worker-positions/dismiss` (уволить всех на должности) попадал в
+// журнал как «Создание» с телом запроса в `new_value`. В журнале hr это
+// выглядело так, будто массовое увольнение СОЗДАЛО ставки — при откате
+// журнала такие записи ещё и пытались бы удалить объект.
+// Значение — что писать в `operation`; оно же попадает в фильтр журнала
+// (`handler.go`, `Operations`).
+var actionOperations = map[string]string{
+	// название последнего сегмента пути → операция
+	"dismiss":     "update",
+	"bulk-accept": "update",
+	"accept":      "update",
+	"revert":      "update",
+	"restore":     "update",
+}
+
+// operationFor — какую операцию писать в журнал для этого запроса.
+//
+// ⚠️ Смотрим ПОСЛЕДНИЙ сегмент пути, а не метод: `POST` без id в пути и без
+// `id` в теле почти всегда не создаёт объект, а выполняет действие над
+// набором (`/dismiss`, `/bulk-accept`). Действие над набором пишем как
+// `update`: объект не появился, он изменился.
+func operationFor(method, path string, payload map[string]interface{}) string {
+	segment := path
+	if i := strings.LastIndex(strings.Trim(segment, "/"), "/"); i >= 0 {
+		segment = strings.Trim(segment, "/")[i+1:]
+	} else {
+		segment = strings.Trim(segment, "/")
+	}
+	if op, ok := actionOperations[strings.ToLower(segment)]; ok && method == http.MethodPost {
+		return op
+	}
+	// POST с id в теле — это тоже не создание (обновление по «составному» телу).
+	if method == http.MethodPost {
+		if id, ok := payload["id"].(string); ok && id != "" {
+			return "update"
+		}
+	}
+	return ""
+}
+
+// newAuditItem — сборка строки журнала с явной операцией.
+func newAuditItem(op, entity, objectID, code string, newVal *string, userID, userName, role string) *AuditLog {
 	item := &AuditLog{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -292,6 +340,11 @@ func (a *Audit) Middleware() gin.HandlerFunc {
 			newVal = &s
 		}
 		item := buildItem(method, entity, objectID, code, newVal, userID, userName, role)
+		// ⚠️ Массовые операции (`POST …/dismiss`, `…/bulk-accept`) — не
+		// «Создание»: объект не появился, он изменился (см. `operationFor`).
+		if explicit := operationFor(method, c.Request.URL.Path, payload); explicit != "" {
+			item.Operation = explicit
+		}
 		// «Было» — снимок строки ДО запроса (для update/delete). Из него
 		// строится дельта в журнале и работает откат.
 		item.OldValue = encodeSnapshot(before)

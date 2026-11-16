@@ -32,9 +32,25 @@ var titleQueries = map[string]struct {
 	"positions":              {table: "positions", expr: "name"},
 	"document-types":         {table: "document_types", expr: "name"},
 	"documents":              {table: "documents", expr: "name"},
-	"worker-documents":       {table: "worker_documents", expr: "code"},
+	"worker-documents": {table: "worker_documents wd",
+		// ⚠️ Было `expr: "code"` — код документа у сотрудника почти всегда
+		// пустой, и в журнале стояло «Изменение · Документ сотрудника» без
+		// имени: непонятно, какой документ правили (15.11). Показываем ТИП
+		// документа — это то, чем он и назван в карточке («Прививка от кори»).
+		expr: "(SELECT dt.name FROM document_types dt WHERE dt.id = wd.document_type_id)"},
 	"worker-document-fields": {table: "worker_document_fields", expr: "value"},
-	"worker-positions":       {table: "worker_positions", expr: "id::text"},
+	"worker-positions": {table: "worker_positions wp",
+		// ⚠️ Было `expr: "id::text"` — в журнале стоял ГОЛЫЙ UUID
+		// («Должность сотрудника · 2c07689a-…»), хотя претензия «uuid ничего
+		// не говорит» закрывалась ещё 10.11. Собираем «ФИО · должность»:
+		// именно так ставку называют в карточке сотрудника.
+		expr: `(SELECT nullif(trim(concat_ws(' · ',
+		          nullif(trim(concat_ws(' ', h.surname, h.name, h.patronymic)), ''),
+		          p.name)), '')
+		        FROM workers w
+		          LEFT JOIN humans h ON h.id = w.human_id
+		          LEFT JOIN positions p ON p.id = wp.position_id
+		        WHERE w.id = wp.worker_id)`},
 	"users":                  {table: "users", expr: "name"},
 	// ⚠️ У портала имя — `title`, у rdkb — `name`. `expr` НЕ задаём: выражение
 	// собирается по фактическим колонкам в `exprFor` (иначе SQL падал на
@@ -90,8 +106,38 @@ func (a *Audit) objectTitle(ctx context.Context, it *Item) string {
 		return a.titles[key]
 	}
 	title := firstNonEmpty(deref(rows[0].Title), it.Code, "")
+	// ⚠️ Последняя страховка (15.11): если выражение вернуло САМ UUID (баг
+	// выражения или таблица без имени), в журнале не должно быть uuid —
+	// владелец: «в журнале вообще не нужно указывать id». Лучше пусто (фронт
+	// покажет только название сущности), чем «Должность сотрудника ·
+	// 2c07689a-…».
+	if looksLikeUUID(title) {
+		title = firstNonEmpty(it.Code, "")
+	}
 	a.titles[key] = title
 	return title
+}
+
+// looksLikeUUID — строка вида 8-4-4-4-12.
+//
+// ⚠️ Не путать с коротким кодом: проверяем и длину, и дефисы на позициях.
+func looksLikeUUID(s string) bool {
+	if len(s) != 36 {
+		return false
+	}
+	for i, r := range s {
+		switch i {
+		case 8, 13, 18, 23:
+			if r != '-' {
+				return false
+			}
+		default:
+			if !((r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F')) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // exprFor — SQL-выражение имени объекта.

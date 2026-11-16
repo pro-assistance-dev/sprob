@@ -11,8 +11,13 @@ import "testing"
 //   - вложенный объект (`human: {surname}`) сравнивается с плоским снимком;
 //   - порядок стабильный (ФИО первым).
 func TestBuildDelta(t *testing.T) {
-	oldRaw := `{"id":"w1","surname":"Выхристюк","name":"Юлия","archived":false,"comment":null}`
-	newRaw := `{"human":{"surname":"Иванова","name":"Юлия","patronymic":"Петровна"},"archived":true,"comment":null,"id":"w1"}`
+	// ⚠️ ФИО у `workers` хранится в отдельной таблице `humans`: снимок
+	// сотрудника содержит `human_id`, а не `human`. Поэтому «ФИО до» в снимке
+	// нет, и вложенный `human` из тела — это шум вложенной сущности (см.
+	// `TestBuildDelta_NoNestedNoise`). Здесь проверяем то, что реально
+	// сравнимо: скалярные поля и правку с ОБЕИХ сторон.
+	oldRaw := `{"id":"w1","archived":false,"comment":"старый","phone":"123"}`
+	newRaw := `{"id":"w1","archived":true,"comment":"новый","phone":"123","human":{"surname":"Иванова"}}`
 
 	got := BuildDelta(oldRaw, newRaw)
 
@@ -21,28 +26,57 @@ func TestBuildDelta(t *testing.T) {
 		byField[d.Field] = d
 	}
 
-	if d, ok := byField["surname"]; !ok || d.Old != "Выхристюк" || d.New != "Иванова" {
-		t.Fatalf("фамилия не попала в дельту: %+v", byField["surname"])
-	}
-	if byField["surname"].Label != "Фамилия" {
-		t.Fatalf("подпись поля = %q, want «Фамилия»", byField["surname"].Label)
-	}
 	if d, ok := byField["archived"]; !ok || d.Old != "нет" || d.New != "да" {
 		t.Fatalf("bool не человекочитаем: %+v", byField["archived"])
 	}
-	if d, ok := byField["patronymic"]; !ok || d.Old != "—" || d.New != "Петровна" {
-		t.Fatalf("новое поле не показано как «—» → значение: %+v", byField["patronymic"])
+	if d, ok := byField["comment"]; !ok || d.Old != "старый" || d.New != "новый" {
+		t.Fatalf("текстовое поле не попало в дельту: %+v", byField["comment"])
 	}
-	// Неизменённое не шумит; `id` в дельту не идёт.
-	if _, ok := byField["name"]; ok {
-		t.Fatal("неизменённое поле попало в дельту")
+	// Неизменённое не шумит; `id` в дельту не идёт; вложенная сущность,
+	// которой нет в снимке, — тоже.
+	for _, absent := range []string{"id", "phone", "human"} {
+		if _, ok := byField[absent]; ok {
+			t.Fatalf("%q попал в дельту без изменений", absent)
+		}
 	}
-	if _, ok := byField["id"]; ok {
-		t.Fatal("id попал в дельту")
+}
+
+// Плоский ФИО (как реально приходит у `humans`) — поля по отдельности.
+//
+// ⚠️ Живой снимок hr: `{"surname":"T907839","name":"Юлия",…}` — без обёртки
+// `human`. Здесь дельта обязана показать «Фамилия: было → стало», а не одну
+// связь: это правка ФИО человека, и человек ищет в журнале именно фамилию.
+func TestBuildDelta_FlatHuman(t *testing.T) {
+	oldRaw := `{"id":"h1","surname":"Выхристюк","name":"Юлия","patronymic":"Петровна"}`
+	newRaw := `{"id":"h1","surname":"Иванова","name":"Юлия","patronymic":"Петровна"}`
+
+	got := BuildDelta(oldRaw, newRaw)
+	if len(got) != 1 {
+		t.Fatalf("ожидалась одна строка дельты, получили %+v", got)
 	}
-	// ФИО — первым.
-	if len(got) == 0 || got[0].Field != "surname" {
-		t.Fatalf("первым должно идти ФИО, получили %+v", got)
+	if got[0].Field != "surname" || got[0].Old != "Выхристюк" || got[0].New != "Иванова" {
+		t.Fatalf("фамилия не попала в дельту: %+v", got[0])
+	}
+	if got[0].Label != "Фамилия" {
+		t.Fatalf("подпись поля = %q, want «Фамилия»", got[0].Label)
+	}
+}
+
+// Поля вложенных сущностей НЕ должны попадать в дельту своей правкой.
+//
+// ⚠️ Замер 15.11: правка `accepted` у документа давала 23 строки, потому что
+// тело содержит `worker: {archived, phonesCount, docsAccepted…}`. Этих полей
+// в снимке `worker_documents` нет — значит, и изменений по ним нет.
+func TestBuildDelta_NoNestedNoise(t *testing.T) {
+	oldRaw := `{"id":"d1","accepted":true,"comment":""}`
+	newRaw := `{"id":"d1","accepted":false,"comment":"","worker":{"archived":false,"phonesCount":0,"docsAccepted":3}}`
+
+	got := BuildDelta(oldRaw, newRaw)
+	if len(got) != 1 || got[0].Field != "accepted" {
+		t.Fatalf("в дельту попал шум вложенных сущностей: %+v", got)
+	}
+	if got[0].Old != "да" || got[0].New != "нет" {
+		t.Fatalf("bool не человекочитаем: %+v", got[0])
 	}
 }
 

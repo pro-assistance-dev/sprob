@@ -113,15 +113,38 @@ func humanValue(field string, v interface{}) string {
 		}
 		return strings.Join(parts, ", ")
 	case map[string]interface{}:
-		b, _ := json.Marshal(val)
-		return string(b)
+		// ⚠️ Вложенный объект в дельте — это НЕ значение поля, а «связанная
+		// сущность» (в теле запроса клиент присылает `worker: {...}`,
+		// `contact: {...}`, `documentType: {...}` целиком). Печатать их JSON
+		// в «стало» бессмысленно: получалось
+		// «Contact: — → {"description":"","emails":[…]}» — владелец
+		// справедливо не понял, что изменилось (15.11).
+		// Показываем ЧЕЛОВЕЧЕСКУЮ подпись связи, если её удаётся собрать
+		// (ФИО/название/код).
+		if label := nestedLabel(val); label != "" {
+			return label
+		}
+		// ⚠️ Подписи нет, но объект — это ссылка с `id`: показываем единым
+		// видом «ссылка <8 симв.>», как у снимка БД. Иначе одна и та же
+		// связь («Сотрудник: ссылка a717770d» → «ссылка») считалась
+		// изменённой (замер 15.11).
+		if id := strOf(val["id"]); isUUID(id) {
+			return "ссылка " + id[:8]
+		}
+		return "ссылка"
 	default:
 		s := strings.TrimSpace(fmt.Sprintf("%v", val))
 		if s == "" || s == "0001-01-01T00:00:00Z" {
 			return "—"
 		}
-		// UUID ссылки — показываем коротко, но узнаваемо.
-		if len(s) == 36 && strings.Count(s, "-") == 4 && strings.HasSuffix(field, "_id") {
+		// UUID — это ССЫЛКА на другую сущность. Показываем единым видом
+		// («ссылка 227614fd») независимо от того, пришла ли она из снимка БД
+		// (`document_type_id`) или из тела запроса (`fileInfo: {id}`).
+		// ⚠️ Раньше без этого правила одна и та же связь сравнивалась как
+		// «ссылка 227614fd → ссылка» и попадала в дельту ложным изменением
+		// (замер 15.11). Если подпись удаётся собрать (`nestedLabel`), до
+		// этого места дело не доходит — там уже ФИО/название.
+		if isUUID(s) {
 			return "ссылка " + s[:8]
 		}
 		// Даты из БД приходят с временем — оставляем только дату.
@@ -130,6 +153,135 @@ func humanValue(field string, v interface{}) string {
 		}
 		return s
 	}
+}
+
+// nestedLabel — человекочитаемая подпись СВЯЗАННОГО объекта из тела запроса.
+//
+// ⚠️ Вложенные объекты в теле — это связи (`worker`, `contact`, `position`,
+// `documentType`), и печатать их JSON'ом бессмысленно (см. `humanValue`).
+// Собираем подпись по известным полям в порядке «самое узнаваемое»:
+// ФИО (в `human`), название, код. Ничего не нашли — пустая строка, и
+// вызывающий покажет «ссылка».
+func nestedLabel(v map[string]interface{}) string {
+	// ФИО живёт внутри `human` (или плоско в самом объекте).
+	for _, holder := range []map[string]interface{}{v, asMap(v["human"])} {
+		if holder == nil {
+			continue
+		}
+		name := strings.TrimSpace(strings.Join(nonEmpty(
+			strOf(holder["surname"]), strOf(holder["name"]), strOf(holder["patronymic"]),
+		), " "))
+		if name != "" {
+			return name
+		}
+		if full := strOf(holder["fullName"]); full != "" {
+			return full
+		}
+	}
+	for _, key := range []string{"name", "title", "label", "code"} {
+		if s := strOf(v[key]); s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
+// isUUID — строка выглядит как UUID (8-4-4-4-12).
+func isUUID(s string) bool {
+	return len(s) == 36 && strings.Count(s, "-") == 4
+}
+
+func asMap(v interface{}) map[string]interface{} {
+	m, _ := v.(map[string]interface{})
+	return m
+}
+
+func strOf(v interface{}) string {
+	s, ok := v.(string)
+	if !ok {
+		return ""
+	}
+	return strings.TrimSpace(s)
+}
+
+func nonEmpty(values ...string) []string {
+	out := make([]string, 0, len(values))
+	for _, v := range values {
+		if v != "" {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+// deltaForOperation — какую дельту показывает запись журнала.
+//
+// ⚠️ ЗАЧЕМ (15.11). Владелец: «если было создание сущности — не нужно
+// показывать создание каждого из полей». До этого дельта строилась ОДИНАКОВО
+// для всех операций, и у создания (снимка «до» нет) каждое поле выглядело как
+// «— → значение»: «Создание · Id — → a1b2…, Contact — → {…}, CreatedAt — → …».
+// Это не «что изменилось», а «вот все поля объекта».
+//
+// Правила:
+//   - create   — ПУСТО: имя объекта в колонке «Что сделал» уже отвечает на
+//                вопрос «что произошло»;
+//   - update   — дельта полей (единственное, где она содержательна);
+//   - delete   — что БЫЛО в записи (`old` → пусто), `id` отсекает `BuildDelta`;
+//   - откат    — пусто: служебная запись, а не правка полей.
+//
+// ⚠️ Пустой результат — `[]`, а не `nil`: фронт делает `.length` без проверок.
+func deltaForOperation(operation, oldValue, newValue string, isRevert bool) []DeltaItem {
+	if isRevert || operation == "create" {
+		return []DeltaItem{}
+	}
+	if operation == "delete" {
+		return buildDeleted(oldValue)
+	}
+	return BuildDelta(oldValue, newValue)
+}
+
+// buildDeleted — что было в удалённой записи.
+//
+// ⚠️ Через `BuildDelta(old, "")` не получается (15.11): там поля есть в «до»,
+// но отсутствуют в «после», и `BuildDelta` считает их «не трогали» — на
+// удалении это ВСЕ поля, и дельта выходила пустой. Здесь наоборот: пустое
+// «после» — это и есть факт удаления, поэтому показываем заполненные поля
+// снимка «до».
+// ⚠️ `id` и служебные технические поля не показываем: «Идентификатор: было
+// удалено» не отвечает на «что удалили».
+func buildDeleted(oldRaw string) []DeltaItem {
+	oldMap := parseJSONMap(oldRaw)
+	out := make([]DeltaItem, 0, len(oldMap))
+	for k, v := range oldMap {
+		if k == "id" || isTechnicalField(k) {
+			continue
+		}
+		val := humanValue(k, v)
+		if val == "" || val == "—" {
+			continue
+		}
+		out = append(out, DeltaItem{Field: k, Label: fieldLabel(k), Old: val, New: "—"})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		pi, pj := deltaPriority(out[i].Field), deltaPriority(out[j].Field)
+		if pi != pj {
+			return pi < pj
+		}
+		return out[i].Label < out[j].Label
+	})
+	return out
+}
+
+// isTechnicalField — служебные поля, которые не описывают суть записи.
+//
+// ⚠️ Держим рядом с правилом удаления: «Что удалили» должно отвечать на
+// вопрос про ОБЪЕКТ, а `created_at`/`updated_by` — про учёт.
+func isTechnicalField(col string) bool {
+	switch col {
+	case "created_at", "updated_at", "created_by", "updated_by", "search", "is_new":
+		return true
+	}
+	return strings.HasSuffix(col, "_id") || strings.HasSuffix(col, "Id")
 }
 
 // BuildDelta — дельта между снимками «до» и «после».
@@ -144,7 +296,11 @@ func BuildDelta(oldRaw, newRaw string) []DeltaItem {
 	// `new_value` у update-записей может быть телом запроса, где поля вложены
 	// (`human: {...}`, `workerPosition: {...}`) — раскладываем их на верхний
 	// уровень, иначе сравнение с плоским снимком даёт мусор.
-	newMap = flatten(newMap)
+	oldKeys := make(map[string]bool, len(oldMap))
+	for k := range oldMap {
+		oldKeys[k] = true
+	}
+	newMap = flatten(newMap, oldKeys)
 
 	keys := make(map[string]bool, len(oldMap)+len(newMap))
 	for k := range oldMap {
@@ -221,35 +377,86 @@ func parseJSONMap(raw string) map[string]interface{} {
 	return out
 }
 
-// flatten — поднимает вложенные объекты на верхний уровень (кроме `id`).
+// flatten — приводит тело запроса к виду, сравнимому со снимком БД.
 //
-// ⚠️ `new_value` — это ТЕЛО ЗАПРОСА, а не строка БД: в нём приходят поля в
-// camelCase (`dateBirth`, `editNameMode`, `isMale`) и служебные флаги экрана.
-// Сравнивать их с колонками БД (`date_birth`, `is_male`) нельзя — получались
-// ложные «изменения» вида «EditNameMode: — → нет» (08.11). Имена приводим к
-// змеиному виду, а «флаги UI» отбрасываем.
-func flatten(m map[string]interface{}) map[string]interface{} {
+// ⚠️ ЗАЧЕМ ГЛУБОКАЯ ПЕРЕРАБОТКА (15.11). Разбор живого журнала hr показал, что
+// дельта была НЕЧИТАЕМОЙ по двум причинам сразу:
+//
+//  1. `old_value` — ПЛОСКИЙ снимок строки (`document_type_id`, `worker_id`),
+//     а `new_value` — ПОЛНОЕ тело от клиента (`documentType: {…}`,
+//     `worker: {…, human: {…}}`). Названия полей разные (`document_type_id` vs
+//     `documentTypeId`), и сравнение давало мусор.
+//  2. Прежний `flatten` ПОДНИМАЛ вложенные объекты на верхний уровень — из
+//     `worker: {human: {surname}}` в дельту попадали `Surname: — → …`,
+//     `Archived: — → нет` и ещё 20 строк на ОДНУ правку галочки.
+//
+// Новая логика:
+//   - вложенные объекты НЕ разворачиваем: это СВЯЗЬ, её подпись даёт
+//     `humanValue` → `nestedLabel` («Прививка от кори», ФИО);
+//   - id-ссылки приводим к паре «имя поля + _id» (`documentTypeId` →
+//     `documentType` со значением-ссылкой), чтобы совпасть со снимком;
+//   - поля, которых НЕ БЫЛО в снимке «до», в дельту не идут: клиент присылает
+//     весь объект, но у документа нет колонки `archived` — это поле
+//     сотрудника из вложенного `worker`.
+func flatten(m map[string]interface{}, oldKeys map[string]bool) map[string]interface{} {
 	out := make(map[string]interface{}, len(m))
-	put := func(k string, v interface{}) {
+	for k, v := range m {
 		col := toSnake(k)
 		if ignoredRequestFields[col] {
-			return
-		}
-		out[col] = v
-	}
-	for k, v := range m {
-		if nested, ok := v.(map[string]interface{}); ok {
-			for nk, nv := range nested {
-				if nk == "id" {
-					continue
-				}
-				put(nk, nv)
-			}
 			continue
 		}
-		put(k, v)
+		if nested, ok := v.(map[string]interface{}); ok {
+			// ⚠️ Связь, а не набор полей: кладём объект целиком под её именем
+			// (значение свернёт `humanValue` → `nestedLabel`).
+			// ⚠️ Имя связи приводим к виду КОЛОНКИ из снимка: клиент шлёт
+			// `documentType`, а в БД `document_type_id`. Без общего ключа одна
+			// и та же связь сравнивалась сама с собой («ссылка» у обеих сторон
+			// или ложное «— → ссылка»).
+			key := alignKey(col, oldKeys)
+			// ⚠️ Связи, которой НЕТ в снимке этой сущности, в дельту не берём.
+			// Тело документа сотрудника содержит `worker: {…}` целиком, но
+			// колонки `worker` у `worker_documents` нет — правку отметки
+			// приёма «Сотрудник: — → ссылка» не объясняло (замер 15.11).
+			if len(oldKeys) > 0 && !oldKeys[key] && !oldKeys[col+"_id"] {
+				continue
+			}
+			out[key] = nested
+			continue
+		}
+		// ⚠️ Поля, которого НЕТ в снимке «до», в дельту не идёт: клиент шлёт
+		// весь объект, включая вычисляемые поля UI (`docsAccepted`,
+		// `phonesCount`) и поля вложенных сущностей. Без этого отсева одна
+		// правка галочки давала 23 строки «— → нет» (замер 15.11).
+		// ⚠️ Исключение — `create` (снимка нет вовсе): там `oldKeys` пуст, и
+		// отсев не применяется.
+		key := alignKey(col, oldKeys)
+		if len(oldKeys) > 0 && !oldKeys[key] {
+			continue
+		}
+		out[key] = v
 	}
 	return out
+}
+
+// alignKey — привести имя поля из тела запроса к имени КОЛОНКИ снимка.
+//
+// ⚠️ Расхождение форм (15.11): клиент шлёт `documentTypeId`, `workerId`,
+// `employmentFormId`, а снимок БД — `document_type_id`, `worker_id`,
+// `employment_form_id`. Без сопоставления одна и та же связь считалась
+// изменённой («— → ссылка»), а настоящее изменение маскировалось.
+//
+// Варианты в порядке вероятности: `col` как есть, `col + "_id"` (связь),
+// версия с `_uuid` (легаси). Первое совпадение со снимком и берём.
+func alignKey(col string, oldKeys map[string]bool) string {
+	if len(oldKeys) == 0 || oldKeys[col] {
+		return col
+	}
+	for _, candidate := range []string{col + "_id", col + "_uuid"} {
+		if oldKeys[candidate] {
+			return candidate
+		}
+	}
+	return col
 }
 
 // ignoredRequestFields — поля тела, которым НЕ соответствует колонка БД:
