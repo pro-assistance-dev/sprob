@@ -74,8 +74,21 @@ func (r *Repository) GetForm(c context.Context, formID uuid.NullUUID) (*forms.Fo
 	// Поэтому: форма; секции отдельно; поля отдельно; справочник типов
 	// отдельно. Четыре запроса по uuid — это доли миллисекунды, а не
 	// «оптимизация на потом».
+	// ⚠️ `Scan(&item)` без `Relation` НЕ означает «без вложенных сущностей»:
+	// bun сам подгружает `rel:has-many` из МОДЕЛИ (`Form.FormSections`,
+	// `FormSection.Fields`, `Field.AnswerVariants`). Именно поэтому дубли
+	// возникали даже после того, как я убрал `Relation` из запроса — это
+	// была не ошибка запроса, а поведение bun по умолчанию.
+	//
+	// ⚠️ Лечение: `ExcludeColumn` не помогает (это про колонки, не про
+	// relation). Правильный путь — ОДИН явный `Relation` на верхнем уровне:
+	// `FormSections` без вложенных полей. Дальше поля, варианты и типы
+	// грузятся отдельными запросами ниже. Один has-many дублей не даёт.
 	err := r.db.NewSelect().
 		Model(&item).
+		Relation("FormSections", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Order("form_sections.item_order")
+		}).
 		Where("forms.id = ?", formID).
 		Scan(c)
 	if err != nil {
@@ -83,13 +96,24 @@ func (r *Repository) GetForm(c context.Context, formID uuid.NullUUID) (*forms.Fo
 	}
 
 	// ── Секции ──────────────────────────────────────────────────────
-	sections := forms.FormSections{}
-	if err := r.db.NewSelect().
-		Model(&sections).
-		Where("form_id = ?", formID).
-		Order("form_sections.item_order").
-		Scan(c); err != nil {
-		return nil, err
+	// Загружены `Relation` выше. ⚠️ Пустой `Fields` у них — норма:
+	// поля приходят отдельным запросом (см. ниже), иначе два has-many
+	// в одном join снова дадут произведение.
+	sections := item.FormSections
+
+	// ⚠️ ОБНУЛЯЕМ поля у секций перед загрузкой.
+	//
+	// `Relation("FormSections")` тянет `FormSection.Fields` — это ВЛОЖЕННЫЙ
+	// has-many, и bun подгружает его сам, потому что relation объявлен в
+	// модели (`bun:"rel:has-many"`), а не в запросе. После этого `Scan`
+	// собирает join «секции × поля × варианты», и каждое поле приходит
+	// несколько раз.
+	//
+	// ⚠️ `ExcludeColumn` тут не работает: он про колонки, а не про relation.
+	// Поэтому просто обнуляем — ниже поля загружаются ОТДЕЛЬНЫМ запросом,
+	// и вложение от bun нам не нужно вовсе.
+	for i := range sections {
+		sections[i].Fields = nil
 	}
 
 	// ── Поля ────────────────────────────────────────────────────────

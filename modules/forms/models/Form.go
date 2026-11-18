@@ -22,6 +22,17 @@ type Form struct {
 	// ImageURL — картинка-шапка формы (путь /api/static/... из file_infos).
 	ImageURL string `json:"imageUrl"`
 
+	// Description — ВВОДНЫЙ ТЕКСТ над полями: даты, правила, куда писать.
+	//
+	// ⚠️ Это НЕ поле формы (`Fields`). Поле ввода имеет значение ответа и
+	// попадает в `field_fills`; описание — статический текст, ответа не
+	// имеет. Если сделать его полем, оно попало бы в выгрузки и аналитику
+	// как «вопрос без ответа».
+	//
+	// ⚠️ Показывается на публичной странице между заголовком и первым
+	// вопросом, и правится в конструкторе — один раз, не в каждом проекте.
+	Description string `bun:"description,notnull,default:''" json:"description"`
+
 	FormSections FormSections `bun:"rel:has-many" json:"formSections"`
 
 	Order uint `bun:"item_order" json:"order"`
