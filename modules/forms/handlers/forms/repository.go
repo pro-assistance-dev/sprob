@@ -68,6 +68,9 @@ func (r *Repository) GetAll(c context.Context) (items models.FormsWithCount, err
 	r.helper.SQL.ExtractFTSP(c).HandleQuery(query)
 
 	items.Count, err = query.ScanAndCount(c)
+	if err == nil {
+		dedupeFormFields(formsOf(items))
+	}
 	return items, err
 }
 
@@ -234,10 +237,76 @@ func (r *Repository) GetForExport(c context.Context, idPool []string) (items mod
 	query.Join("join researches_domains on researches_domains.research_id = Forms.id and researches_domains.domain_id in (?)", bun.In(middleware.ClaimDomainIDS.FromContextSlice(c)))
 	// r.helper.SQL.ExtractFTSP(c).HandleQuery(query)
 	err = query.Scan(c)
+	if err == nil {
+		dedupeFormFields(formsOf(items))
+	}
 	return items, err
 }
 
 func (r *Repository) UpdateMany(c context.Context, item models.Forms) (err error) {
 	_, err = r.helper.DB.IDB(c).NewUpdate().Model(item).Exec(c)
 	return err
+}
+
+// dedupeFormFields — убрать повторы полей после Scan.
+//
+// ⚠️ ЗАЧЕМ. Запрос собирает ДВА has-many отношения в одном join:
+//
+//	Relation("FormSections.Fields.AnswerVariants")
+//	Relation("FormSections.Fields.FieldRules")
+//
+// Два has-many дают ДЕКАРТОВО ПРОИЗВЕДЕНИЕ: каждое поле повторяется
+// (варианты × правила) раз. Замер на живых данных: 13 полей у формы
+// ярмарки, API отдавал 52 — каждое ×4. В конструкторе это 26 полей вместо
+// 13, в публичной форме — повторяющиеся вопросы.
+//
+// Дедупликация по `id` поля, а НЕ по `code`: у Яндекс-форм бывали
+// одинаковые коды у разных полей, и склеивание по коду потеряло бы
+// настоящий вопрос.
+func dedupeFormFields(forms models.Forms) {
+	for _, form := range forms {
+
+		if form == nil {
+			continue
+		}
+		for _, sec := range form.FormSections {
+			if sec == nil {
+				continue
+			}
+			seen := make(map[uuid.UUID]bool, len(sec.Fields))
+			out := make(models.Fields, 0, len(sec.Fields))
+			for _, f := range sec.Fields {
+				if f == nil {
+					continue
+				}
+				if f.ID.Valid {
+					if seen[f.ID.UUID] {
+						continue
+					}
+					seen[f.ID.UUID] = true
+				}
+				out = append(out, f)
+			}
+			sec.Fields = out
+		}
+	}
+}
+
+// formsOf — доставить срез форм из разных типов ответа (Forms / FormsWithCount).
+//
+// ⚠️ `GetAll` возвращает `FormsWithCount` (список + счётчик), а `Get` —
+// `Forms`. Дедупликация нужна обоим, но тип разный, поэтому единая точка
+// приведения вместо двух копий функции.
+func formsOf(v any) models.Forms {
+	switch t := v.(type) {
+	case models.FormsWithCount:
+		return t.Forms
+	case *models.FormsWithCount:
+		return t.Forms
+	case models.Forms:
+		return t
+	case *models.Forms:
+		return *t
+	}
+	return nil
 }

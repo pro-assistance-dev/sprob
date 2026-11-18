@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	basemodels "github.com/pro-assistance-dev/sprob/models"
 	forms "github.com/pro-assistance-dev/sprob/modules/forms/models"
 	"github.com/pro-assistance-dev/sprob/modules/survey/models"
 
@@ -62,20 +63,95 @@ func (r *Repository) GetPublishedBySlug(c context.Context, slug string) (*models
 // одного — дешевле, чем дедупликация в каждом потребителе.
 func (r *Repository) GetForm(c context.Context, formID uuid.NullUUID) (*forms.Form, error) {
 	item := forms.Form{}
+	// ⚠️ ЗАПРОС БЕЗ ВЛОЖЕННЫХ RELATION — и это вынужденно.
+	//
+	// Даже `Relation("FormSections")` + `Relation("FormSections.Fields")` —
+	// это ДВА has-many. bun собирает их join-ом, и строки размножаются:
+	// 13 полей у формы ярмарки превращались в 52 ответа (поле ×4).
+	// Тот же эффект даёт любая цепочка из двух has-many, даже без
+	// AnswerVariants/FieldRules.
+	//
+	// Поэтому: форма; секции отдельно; поля отдельно; справочник типов
+	// отдельно. Четыре запроса по uuid — это доли миллисекунды, а не
+	// «оптимизация на потом».
 	err := r.db.NewSelect().
 		Model(&item).
-		Relation("FormSections", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Order("form_sections.item_order")
-		}).
-		Relation("FormSections.Fields", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Order("fields.item_order")
-		}).
-		Relation("FormSections.Fields.ValueType").
 		Where("forms.id = ?", formID).
 		Scan(c)
 	if err != nil {
 		return nil, err
 	}
+
+	// ── Секции ──────────────────────────────────────────────────────
+	sections := forms.FormSections{}
+	if err := r.db.NewSelect().
+		Model(&sections).
+		Where("form_id = ?", formID).
+		Order("form_sections.item_order").
+		Scan(c); err != nil {
+		return nil, err
+	}
+
+	// ── Поля ────────────────────────────────────────────────────────
+	sectionIDs := make([]uuid.UUID, 0, len(sections))
+	secByID := make(map[uuid.UUID]*forms.FormSection, len(sections))
+	for _, sec := range sections {
+		if sec.ID.Valid {
+			sectionIDs = append(sectionIDs, sec.ID.UUID)
+			secByID[sec.ID.UUID] = sec
+		}
+	}
+	allFields := forms.Fields{}
+	if len(sectionIDs) > 0 {
+		if err := r.db.NewSelect().
+			Model(&allFields).
+			Where("form_section_id IN (?)", bun.In(sectionIDs)).
+			Order("fields.item_order").
+			Scan(c); err != nil {
+			return nil, err
+		}
+	}
+
+	// ── Справочник типов ────────────────────────────────────────────
+	typeIDs := make([]uuid.UUID, 0, 16)
+	for _, f := range allFields {
+		if f != nil && f.ValueTypeID.Valid {
+			typeIDs = append(typeIDs, f.ValueTypeID.UUID)
+		}
+	}
+	if len(typeIDs) > 0 {
+		vts := []*basemodels.ValueType{}
+		if err := r.db.NewSelect().
+			Model(&vts).
+			Where("id IN (?)", bun.In(typeIDs)).
+			Scan(c); err != nil {
+			return nil, err
+		}
+		vtByID := make(map[uuid.UUID]*basemodels.ValueType, len(vts))
+		for _, vt := range vts {
+			if vt.ID.Valid {
+				vtByID[vt.ID.UUID] = vt
+			}
+		}
+		for _, f := range allFields {
+			if f != nil && f.ValueTypeID.Valid {
+				if vt, ok := vtByID[f.ValueTypeID.UUID]; ok {
+					f.ValueType = vt
+				}
+			}
+		}
+	}
+
+	// ── Раскладка полей по секциям ──────────────────────────────────
+	for _, f := range allFields {
+		if f == nil || !f.FormSectionID.Valid {
+			continue
+		}
+		if sec, ok := secByID[f.FormSectionID.UUID]; ok {
+			sec.Fields = append(sec.Fields, f)
+		}
+	}
+	item.FormSections = sections
 
 	// Плоский список полей — чтобы одним запросом достать варианты и
 	// правила и разложить их по местам.
