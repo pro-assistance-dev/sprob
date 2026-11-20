@@ -27,6 +27,27 @@ type Fetch struct {
 	IdleTimeout time.Duration
 	// Client — подменить клиент в тестах (httptest).
 	Client *http.Client
+	// Attempts — сколько раз пытаться при ПУСТОМ/битом ответе. RSSHub
+	// нестабилен: замер 20.11 с прод-контейнера — «0 байт», затем сразу
+	// 55297 байт на следующем запросе. Без повтора синк «терял» ленту.
+	// По умолчанию 3.
+	Attempts int
+	// RetryPause — пауза между попытками (по умолчанию 1 с).
+	RetryPause time.Duration
+}
+
+func (f *Fetch) attempts() int {
+	if f.Attempts > 0 {
+		return f.Attempts
+	}
+	return 3
+}
+
+func (f *Fetch) retryPause() time.Duration {
+	if f.RetryPause > 0 {
+		return f.RetryPause
+	}
+	return time.Second
 }
 
 func (f *Fetch) timeout() time.Duration {
@@ -160,4 +181,39 @@ func (f *Fetch) readBody(body io.Reader) ([]byte, error) {
 // источник, а не отдаём полупустую ленту.
 func isXMLComplete(body []byte, root string) bool {
 	return bytes.Contains(body, []byte("</"+root+">"))
+}
+
+// GetComplete — GET с проверкой, что документ ДОШЁЛ ЦЕЛИКОМ (есть `</root>`),
+// и повтором при пустом или оборванном ответе.
+//
+// ⚠️ ЗАЧЕМ (20.11.2026, замеры с прод-контейнера): RSSHub отвечает
+// нестабильно — один запрос даёт 0 байт, следующий 55297 байт и `</rss>`.
+// Раньше синк видел пустоту и писал «RSSHub недоступен»; лента просто
+// пропускала цикл. Теперь: пусто/оборвано — повторяем (Attempts раз).
+func (f *Fetch) GetComplete(url, root string) ([]byte, error) {
+	attempts := f.attempts()
+	var lastErr error
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			time.Sleep(f.retryPause())
+		}
+		body, err := f.Get(url)
+		if err != nil {
+			lastErr = err
+			continue
+		}
+		if len(body) == 0 {
+			lastErr = fmt.Errorf("пустой ответ")
+			continue
+		}
+		if root != "" && !isXMLComplete(body, root) {
+			lastErr = fmt.Errorf("ответ оборван (%d байт, нет </%s>)", len(body), root)
+			continue
+		}
+		return body, nil
+	}
+	if lastErr == nil {
+		lastErr = fmt.Errorf("пустой ответ")
+	}
+	return nil, fmt.Errorf("после %d попыток: %w", attempts, lastErr)
 }

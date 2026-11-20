@@ -75,16 +75,14 @@ func (t Telegram) fromRSS() ([]Post, error) {
 	if strings.TrimSpace(t.RSSURL) == "" {
 		return nil, fmt.Errorf("rsshub: адрес не задан (TELEGRAM_NEWS_RSS_URL)")
 	}
-	body, err := t.Fetcher.Get(t.RSSURL)
-	if err != nil {
-		return nil, fmt.Errorf("rsshub: %w", err)
-	}
 	// ⚠️ Обрыв документа (darbore, 29.10): RSSHub рвётся на медиа-вставке и
 	// отдаёт кусок без `</rss>`. `xml.Unmarshal` скажет `unexpected EOF` —
-	// это выглядит как «RSSHub недоступен», хотя причина другая (битый ответ,
-	// и его надо перезапросить/взять запасной источник, а не ждать).
-	if !isXMLComplete(body, "rss") {
-		return nil, fmt.Errorf("rsshub: ответ оборван (%d байт, нет </rss>)", len(body))
+	// это выглядит как «RSSHub недоступен», хотя причина другая (битый ответ).
+	// ⚠️ Плюс нестабильность (20.11): один запрос — 0 байт, следующий — полный
+	// документ. Поэтому GetComplete: проверка `</rss>` + повтор.
+	body, err := t.Fetcher.GetComplete(t.RSSURL, "rss")
+	if err != nil {
+		return nil, fmt.Errorf("rsshub: %w", err)
 	}
 	var doc rssDoc
 	if err := xml.Unmarshal(body, &doc); err != nil {
