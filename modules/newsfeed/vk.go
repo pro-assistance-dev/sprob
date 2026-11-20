@@ -147,9 +147,16 @@ func (v VK) convert(raw vkWallPost) Post {
 		PublishedAt: time.Unix(raw.Date, 0).UTC(),
 	}
 	text := CleanSpaces(CleanArtifacts(raw.Text))
+	// ⚠️ Хештеги — метки, а не текст (100 постов в ленте, замечание 20.11).
+	// Чистим ДО разбора ссылок, чтобы тег вида `#vk.com/…` не стал адресом.
+	text = StripHashtags(text)
 	// ⚠️ ВК-упоминания `[club1|Подпись]` — обычный текст в API, не `<a>`.
 	// Без разбора на сайте видно сырые скобки с вертикальной чертой (20.11).
 	text, mentionLinks := SplitVKMentions(text)
+	// ⚠️ Голые адреса (`https://vk.ru/album…`) — тоже текст, не `<a>`:
+	// на сайте были некликабельны (замечание 20.11).
+	text, urlLinks := SplitBareURLs(text)
+	mentionLinks = append(mentionLinks, urlLinks...)
 	if text != "" {
 		p.Blocks = append(p.Blocks, Block{Kind: BlockText, Text: text, Links: mentionLinks})
 	} else if len(mentionLinks) > 0 {
