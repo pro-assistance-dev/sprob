@@ -147,8 +147,14 @@ func (v VK) convert(raw vkWallPost) Post {
 		PublishedAt: time.Unix(raw.Date, 0).UTC(),
 	}
 	text := CleanSpaces(CleanArtifacts(raw.Text))
+	// ⚠️ ВК-упоминания `[club1|Подпись]` — обычный текст в API, не `<a>`.
+	// Без разбора на сайте видно сырые скобки с вертикальной чертой (20.11).
+	text, mentionLinks := SplitVKMentions(text)
 	if text != "" {
-		p.Blocks = append(p.Blocks, Block{Kind: BlockText, Text: text})
+		p.Blocks = append(p.Blocks, Block{Kind: BlockText, Text: text, Links: mentionLinks})
+	} else if len(mentionLinks) > 0 {
+		// пост из одних упоминаний — не теряем ссылки
+		p.Blocks = append(p.Blocks, Block{Kind: BlockText, Text: mentionLinks[0].Text, Links: mentionLinks})
 	}
 
 	var photos []string
@@ -158,6 +164,10 @@ func (v VK) convert(raw vkWallPost) Post {
 			if a.Photo == nil {
 				continue
 			}
+			// ⚠️ ВСЕ фото поста, а не только лучшее (20.11.2026, замечание
+			// владельца: «у поста много фотографий, хочу галереей»). В посте
+			// vk-2274 их семь, а в БД попадало одно — галерею показывать было
+			// нечем. Порядок вложений = порядок в посте.
 			if u := bestPhoto(a.Photo.Sizes); u != "" {
 				photos = append(photos, u)
 			}
