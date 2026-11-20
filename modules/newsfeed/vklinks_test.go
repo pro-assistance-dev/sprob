@@ -84,3 +84,31 @@ func TestVKProfileURL(t *testing.T) {
 		}
 	}
 }
+
+// ⚠️ Реальные форматы из ленты (20.11.2026): ссылка на статью ВК и плашка
+// «[Ссылка]». Первая должна стать ссылкой, вторая — исчезнуть.
+func TestSplitVKMentions_ArticleURL(t *testing.T) {
+	clean, links := SplitVKMentions("Читайте в [https://vk.ru/@srednevekovka-kak-dobratsya|статье], подробнее там")
+	if len(links) != 1 {
+		t.Fatalf("ссылок %d: %+v", len(links), links)
+	}
+	if links[0].Href != "https://vk.ru/@srednevekovka-kak-dobratsya" {
+		t.Errorf("адрес: %q", links[0].Href)
+	}
+	if links[0].Text != "статье" {
+		t.Errorf("подпись: %q", links[0].Text)
+	}
+	if strings.Contains(clean, "[") {
+		t.Errorf("разметка осталась: %q", clean)
+	}
+}
+
+func TestSplitVKMentions_DropsBadge(t *testing.T) {
+	clean, _ := SplitVKMentions("[Ссылка] Студия цыганского творчества «Рада»")
+	if strings.Contains(clean, "[Ссылка]") {
+		t.Errorf("плашка осталась: %q", clean)
+	}
+	if !strings.Contains(clean, "Студия цыганского") {
+		t.Errorf("текст потерялся: %q", clean)
+	}
+}

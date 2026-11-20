@@ -24,7 +24,17 @@ import (
 // ⚠️ Подпись может содержать `|` и скобки (имя с чертой, название с эмодзи),
 // поэтому «до первой `]`», а не «до первой `|`»: `[^\]]*` и разрезание по
 // ПЕРВОЙ черте внутри уже найденной строки.
-var vkMentionRe = regexp.MustCompile(`\[([a-zA-Z0-9_.]+)\|([^\]]{0,200})\]`)
+var vkMentionRe = regexp.MustCompile(`\[([^\]|]{1,200})\|([^\]]{0,200})\]`)
+
+// vkURLMentionRe — `[https://vk.ru/@slug|подпись]`: в ВК так оформляют ссылки
+// на статьи и внешние страницы. Отдельная регулярка, потому что owner здесь —
+// полный URL с `:` и `/`, а не имя/id.
+var vkURLMentionRe = regexp.MustCompile(`\[(https?://[^\]|]{4,300})\|([^\]]{0,200})\]`)
+
+// vkBadgeRe — `[Ссылка]` — подпись-плашка ВК без адреса. Сама по себе она
+// бесполезна (некуда вести), но в тексте выглядит мусором: «[Ссылка] Студия…».
+// Убираем, оставляя текст вокруг.
+var vkBadgeRe = regexp.MustCompile(`\[(?:Ссылка|Фото|Видео|Опрос|Файл|Ссылка\s+удалена)\]\s*`)
 
 // SplitVKMentions — находит ВК-упоминания и отдаёт текст + ссылки.
 //
@@ -45,7 +55,30 @@ func SplitVKMentions(text string) (string, []Link) {
 		return text, nil
 	}
 	var links []Link
-	clean := vkMentionRe.ReplaceAllStringFunc(text, func(m string) string {
+
+	// 1) ссылки-статьи `[https://…|подпись]` — до общей регулярки, иначе owner
+	// с `:` и `/` в неё не попадёт.
+	clean := vkURLMentionRe.ReplaceAllStringFunc(text, func(m string) string {
+		sub := vkURLMentionRe.FindStringSubmatch(m)
+		if len(sub) < 3 {
+			return m
+		}
+		href, label := strings.TrimSpace(sub[1]), strings.TrimSpace(sub[2])
+		if href == "" {
+			return m
+		}
+		if label == "" {
+			label = href
+		}
+		links = append(links, Link{Text: label, Href: href})
+		return label
+	})
+
+	// 2) плашки без адреса — просто мусор в тексте.
+	clean = vkBadgeRe.ReplaceAllString(clean, "")
+
+	// 3) упоминания `[club123|Подпись]` / `[id123|Имя]`.
+	clean = vkMentionRe.ReplaceAllStringFunc(clean, func(m string) string {
 		sub := vkMentionRe.FindStringSubmatch(m)
 		if len(sub) < 3 {
 			return m
